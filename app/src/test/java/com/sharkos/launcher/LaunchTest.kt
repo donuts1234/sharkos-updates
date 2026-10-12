@@ -51,6 +51,18 @@ class LaunchTest {
         compose.onNodeWithContentDescription("Driver seat heat low").assertExists()
         compose.onNodeWithContentDescription("Passenger warmer").performClick()
         val app = compose.activity.application as SharkOsApp
+
+        // An empty + spot opens the picker; with no apps installed on the test device it just shows the picker title
+        val before = app.apps.dock.value.size
+        compose.onAllNodesWithContentDescription("Add an app to the bar")[0].performClick()
+        compose.onNodeWithText("Add to the bar").assertExists()
+        compose.onNodeWithText("Cancel").performClick()
+        compose.onNodeWithText("Now playing".uppercase()).assertExists()
+        assertEquals(before, app.apps.dock.value.size)
+        app.apps.pin("com.example.maps")
+        assertEquals(before + 1, app.apps.dock.value.size)
+        app.apps.unpin("com.example.maps")
+        assertEquals(before, app.apps.dock.value.size)
         assertEquals(1, app.car.climate.value.driverSeat.heat)
         assertEquals(23f, app.car.climate.value.driverTemp)   // warmed once on the Climate page
         assertEquals(24f, app.car.climate.value.passengerTemp) // zones were linked at 23; the bar splits them and warms the passenger

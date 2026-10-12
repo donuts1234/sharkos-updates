@@ -72,6 +72,21 @@ class Apps(private val context: Context) {
         return true
     }
 
+    /** Add [pkg] to the end of the bar if there's room and it isn't there already. */
+    fun pin(pkg: String): Boolean {
+        val cur = _dock.value
+        if (pkg in cur) return true
+        if (cur.size >= MAX_DOCK) return false
+        _dock.value = cur + pkg
+        prefs.dock = _dock.value
+        return true
+    }
+
+    fun unpin(pkg: String) {
+        _dock.value = _dock.value - pkg
+        prefs.dock = _dock.value
+    }
+
     /** Icon at [px] square, decoded once and cached. Blocking: call from a background dispatcher. */
     fun icon(pkg: String, px: Int): Bitmap? {
         val key = "$pkg@$px"
@@ -105,6 +120,7 @@ class Apps(private val context: Context) {
         const val PKG_PHONE = "com.byd.bluetoothcall"
         const val PKG_CAMERA_360 = "com.byd.avm"
         const val PKG_CAR_SETTINGS = "com.byd.carsettings"
-        val DEFAULT_DOCK = listOf(PKG_MAPS, PKG_MUSIC, PKG_PHONE, PKG_CAMERA_360, PKG_CAR_SETTINGS)
+        /** Three BYD apps to start; the other two spots stay empty (+) for the driver to fill. */
+        val DEFAULT_DOCK = listOf(PKG_MUSIC, PKG_PHONE, PKG_CAMERA_360)
     }
 }

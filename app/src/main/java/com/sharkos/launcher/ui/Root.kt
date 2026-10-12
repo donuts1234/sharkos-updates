@@ -93,6 +93,8 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
 
     // Tell the driver when the car turns a command down; quiet on a bench with no car.
     var notice by remember { mutableStateOf<String?>(null) }
+    var picking by remember { mutableStateOf(false) }
+    LaunchedEffect(screen) { if (screen != Screen.APPS) picking = false }
     LaunchedEffect(Unit) {
         car.commandResults.collect { r ->
             if (r.result.isFailure && car.link.value == CarLink.CONNECTED) {
@@ -116,6 +118,8 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
             apps = { onScreen(Screen.APPS) },
             climate = { onScreen(Screen.CLIMATE) },
             launch = apps::launch,
+            addApp = { picking = true; onScreen(Screen.APPS) },
+            removeApp = { d -> apps.unpin(d.pkg); notice = "Removed ${d.label} from the bar" },
         )
     }
 
@@ -166,9 +170,16 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                             allApps, dock,
                             onOpen = apps::launch,
                             onTogglePin = { pkg ->
-                                if (!apps.togglePin(pkg)) notice = "The bar holds ${Apps.MAX_DOCK} apps: remove one first"
+                                if (picking) {
+                                    if (apps.pin(pkg)) onScreen(Screen.HOME)
+                                    else notice = "The bar holds ${Apps.MAX_DOCK} apps: hold one on the bar to remove it"
+                                } else if (!apps.togglePin(pkg)) {
+                                    notice = "The bar holds ${Apps.MAX_DOCK} apps: hold one on the bar to remove it"
+                                }
                             },
                             onSettings = { onScreen(Screen.SETTINGS) },
+                            picking = picking,
+                            onCancelPick = { onScreen(Screen.HOME) },
                         )
                         Screen.OFFROAD -> OffroadScreen(
                             attitude.takeIf { inclino.available },

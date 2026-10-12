@@ -39,6 +39,10 @@ class BarActions(
     val apps: () -> Unit,
     val climate: () -> Unit,
     val launch: (String) -> Unit,
+    /** Tap on an empty + spot: pick an app for it. */
+    val addApp: () -> Unit,
+    /** Hold a pinned app: take it off the bar. */
+    val removeApp: (DockApp) -> Unit,
 )
 
 /**
@@ -67,10 +71,13 @@ fun BottomBar(climate: ClimateState, dock: List<DockApp>, screen: Screen, a: Bar
         ) {
             BarIcon(ShIcons.home, "Home", screen == Screen.HOME, onClick = a.home)
             for (app in dock) {
-                Box(Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).press({ a.launch(app.pkg) }, label = app.label), contentAlignment = Alignment.Center) {
-                    AppIcon(app.pkg, app.label, 46.dp)
-                }
+                Box(
+                    Modifier.size(56.dp).clip(RoundedCornerShape(14.dp))
+                        .press({ a.launch(app.pkg) }, onLongClick = { a.removeApp(app) }, label = app.label),
+                    contentAlignment = Alignment.Center,
+                ) { AppIcon(app.pkg, app.label, 46.dp) }
             }
+            repeat((DOCK_SLOTS - dock.size).coerceAtLeast(0)) { AddSlot(a.addApp) }
             BarIcon(ShIcons.grid, "All apps", screen == Screen.APPS, onClick = a.apps)
             Box(Modifier.width(1.dp).height(36.dp).background(Sh.line))
             BarIcon(ShIcons.snow, "A/C", climate.ac && climate.power, onClick = a.toggleAc, onColor = Sh.blue)
@@ -83,6 +90,19 @@ fun BottomBar(climate: ClimateState, dock: List<DockApp>, screen: Screen, a: Bar
         SeatButton(ShIcons.vent, climate.driverSeat.vent, Sh.cyan, "Driver seat cooling") { a.cycleVent(Zone.DRIVER) }
         Gap(8.dp)
         SeatButton(ShIcons.flame, climate.driverSeat.heat, Sh.orange, "Driver seat heat") { a.cycleHeat(Zone.DRIVER) }
+    }
+}
+
+const val DOCK_SLOTS = 5
+
+/** An empty spot on the bar: a dashed-looking + that opens the app picker. */
+@Composable
+private fun AddSlot(onClick: () -> Unit) = Box(
+    Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).press(onClick, label = "Add an app to the bar"),
+    contentAlignment = Alignment.Center,
+) {
+    Box(Modifier.size(46.dp).clip(RoundedCornerShape(12.dp)).background(Sh.card), contentAlignment = Alignment.Center) {
+        Glyph(ShIcons.plus, Sh.faint, 20.dp)
     }
 }
 

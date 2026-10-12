@@ -27,13 +27,29 @@ import com.sharkos.launcher.apps.AppEntry
 
 /** Every installed app, A to Z. Hold an app to add it to (or take it off) the bottom bar. */
 @Composable
-fun AppsScreen(apps: List<AppEntry>, pinned: List<String>, onOpen: (String) -> Unit, onTogglePin: (String) -> Unit, onSettings: () -> Unit) {
+fun AppsScreen(
+    apps: List<AppEntry>,
+    pinned: List<String>,
+    onOpen: (String) -> Unit,
+    onTogglePin: (String) -> Unit,
+    onSettings: () -> Unit,
+    /** True when opened from a + spot on the bar: a tap adds the app instead of opening it. */
+    picking: Boolean = false,
+    onCancelPick: () -> Unit = {},
+) {
     Column(Modifier.fillMaxSize().padding(start = 32.dp, end = 32.dp, top = 24.dp)) {
         Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-            Txt("Apps", Sh.text(30.sp, FontWeight.Bold, spacing = (-0.5).sp), Modifier.weight(1f))
-            Txt("Hold an app to add it to the bar", Sh.text(15.sp, color = Sh.dim))
-            Gap(16.dp)
-            RoundButton(ShIcons.gear, "SharkOS settings", onSettings, size = 44.dp, iconSize = 20.dp, bg = Sh.card, tint = Sh.dim)
+            if (picking) {
+                Txt("Add to the bar", Sh.text(30.sp, FontWeight.Bold, spacing = (-0.5).sp), Modifier.weight(1f))
+                Txt("Tap an app to put it in the empty spot", Sh.text(15.sp, color = Sh.dim))
+                Gap(16.dp)
+                PillButton("Cancel", onCancelPick)
+            } else {
+                Txt("Apps", Sh.text(30.sp, FontWeight.Bold, spacing = (-0.5).sp), Modifier.weight(1f))
+                Txt("Hold an app to add it to the bar or take it off", Sh.text(15.sp, color = Sh.dim))
+                Gap(16.dp)
+                RoundButton(ShIcons.gear, "SharkOS settings", onSettings, size = 44.dp, iconSize = 20.dp, bg = Sh.card, tint = Sh.dim)
+            }
         }
         Gap(12.dp)
         LazyVerticalGrid(
@@ -45,7 +61,7 @@ fun AppsScreen(apps: List<AppEntry>, pinned: List<String>, onOpen: (String) -> U
                 val isPinned = app.pkg in pinned
                 Column(
                     Modifier.padding(4.dp).clip(RoundedCornerShape(20.dp))
-                        .press({ onOpen(app.pkg) }, onLongClick = { onTogglePin(app.pkg) }, label = app.label)
+                        .press({ if (picking) onTogglePin(app.pkg) else onOpen(app.pkg) }, onLongClick = { onTogglePin(app.pkg) }, label = app.label)
                         .padding(vertical = 14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(10.dp),

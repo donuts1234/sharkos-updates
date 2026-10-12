@@ -62,11 +62,9 @@ class Snapshots {
         odometerKm = 21883.0, speedKph = 0.0, outsideTempC = 14.0,
         tyres = listOf(Tyre(37.9, 0), Tyre(37.9, 0), Tyre(41.3, 0), Tyre(41.6, 0)),
     )
-    private val dock = listOf(
-        DockApp("maps", "Maps"), DockApp("music", "Music"), DockApp("phone", "Phone"),
-        DockApp("avm", "360 View"), DockApp("settings", "Car Settings"),
-    )
-    private val bar = BarActions({ _, _ -> }, {}, {}, {}, {}, {}, {}, {})
+    // The out-of-the-box bar: three BYD apps and two empty + spots
+    private val dock = listOf(DockApp("music", "Music"), DockApp("phone", "Phone"), DockApp("avm", "360 View"))
+    private val bar = BarActions({ _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {})
     private val home = HomeActions({}, {}, {}, {}, {}, {}, {})
     private val track = Track("Sample Song Title", "Artist Name", "Bluetooth audio", null, true, 102_000, 238_000, 0)
     // 9:41 on Tuesday 13 October 2026 (local), fixed so the clock doesn't change between runs
@@ -109,6 +107,12 @@ class Snapshots {
             "Photos", "Radio", "Rage Mode", "Scene Modes", "Spotify", "Weather", "YouTube")
         val list = names.map { AppEntry(it, it.lowercase().replace(" ", ""), "Main") }
         Frame(Screen.APPS) { AppsScreen(list, listOf("maps", "music"), {}, {}, {}) }
+    }
+
+    @Test fun appsPicking() = paparazzi.snapshot {
+        val names = listOf("360 View", "Bluetooth", "Car Settings", "Maps", "Music", "Phone", "Spotify", "YouTube")
+        val list = names.map { AppEntry(it, it.lowercase().replace(" ", ""), "Main") }
+        Frame(Screen.APPS) { AppsScreen(list, listOf("music", "phone", "360view"), {}, {}, {}, picking = true) }
     }
 
     @Test fun offroad() = paparazzi.snapshot {
