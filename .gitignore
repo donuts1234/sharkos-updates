@@ -1,0 +1,14 @@
+*.iml
+.gradle/
+.kotlin/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+app/build/
+/captures/
+
+# Signing: the key and its passwords never go in git
+keystore.properties
+*.jks
+*.keystore
