@@ -1,3 +1,0 @@
--keep class com.sharkos.lights.LightsService { <init>(); }
--keep class com.sharkos.lights.PrimeScanService { <init>(); }
--keep class com.sharkos.lights.SetupActivity { <init>(); }

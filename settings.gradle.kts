@@ -15,4 +15,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "SharkOS"
 include(":app")
-include(":lightshelper")

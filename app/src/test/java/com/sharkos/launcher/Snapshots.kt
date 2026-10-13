@@ -236,7 +236,18 @@ class Snapshots {
     }
 
     @Test fun settingsHvac() = settingsPage(SettingsPage.HVAC)
-    @Test fun settingsAmbient() = settingsPage(SettingsPage.AMBIENT)
+    private fun ambient(linked: Boolean) = paparazzi.snapshot {
+        val c = androidx.compose.ui.platform.LocalContext.current
+        androidx.compose.runtime.remember {
+            com.sharkos.launcher.lights.Lights.init(c)
+            com.sharkos.launcher.lights.Lights.preview(linked)
+            com.sharkos.launcher.lights.Lights.previewAddress = "BE:16:8B:53:40:A6"
+        }
+        Frame(Screen.SETTINGS) { SettingsScreen(SettingsInfo("0.1.16", true, true, CarLink.CONNECTED, "bydauto", true), SettingsActions({}, {}, {}, {}), start = SettingsPage.AMBIENT) }
+    }
+
+    @Test fun settingsAmbient() = ambient(linked = true)
+    @Test fun settingsAmbientZones() = ambient(linked = false)
     @Test fun settingsSystem() = settingsPage(SettingsPage.SYSTEM)
     @Test fun settingsAbout() = settingsPage(SettingsPage.ABOUT)
     @Test fun settingsVehicle() = settingsPage(SettingsPage.VEHICLE)

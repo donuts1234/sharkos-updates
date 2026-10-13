@@ -102,15 +102,17 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     }
     val askLights = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
-    ) { r -> if (r.values.any { !it }) notice = "The car didn't allow it: use the adb command under Ambient lighting" }
+    ) { r ->
+        if (r.values.any { !it }) notice = "The car didn't allow it: use the adb command under Ambient lighting"
+        else com.sharkos.launcher.lights.Lights.connect(ctx)
+    }
     val lightsActions = remember {
         LightsActions(
-            requestPermission = { askLights.launch(com.sharkos.launcher.lights.AmbientLights.permissionsNeeded()) },
+            requestPermission = { askLights.launch(com.sharkos.launcher.lights.Lights.permissionsNeeded()) },
             enableBluetooth = {
                 if (!openSettings(ctx, Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE)) &&
                     !openSettings(ctx, Intent(Settings.ACTION_BLUETOOTH_SETTINGS))) notice = "Turn Bluetooth on in the car's settings"
             },
-            openLocation = { if (!openSettings(ctx, Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))) notice = HIDDEN_PAGE },
         )
     }
     LifecycleResumeEffect(Unit) {
@@ -123,6 +125,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
         carData = nowCarData
         if (mediaAccess) NowPlaying.attach(ctx)
         CarPlayLink.start(ctx)
+        com.sharkos.launcher.lights.Lights.start(ctx)
         scope.launch { apps.refresh() }
         scope.launch { updater.checkDaily() }
         onPauseOrDispose { }

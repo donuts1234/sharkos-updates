@@ -55,6 +55,8 @@ object AutoLaunch {
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Log.w("SharkOS/AutoLaunch", "start-up broadcast: ${intent.action}")
+        // Ambient lighting reconnects at start-up whether or not SharkOS opens itself
+        com.sharkos.launcher.lights.Lights.start(context.applicationContext)
         if (!Prefs(context).autoLaunch) return
         AutoLaunch.schedule(context.applicationContext)
     }

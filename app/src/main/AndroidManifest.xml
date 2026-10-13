@@ -32,7 +32,7 @@
     <!-- Over-the-air updates: internet only to fetch latest.json and the APK; install via Android's installer. -->
     <!-- Desay CarPlay service (now playing). Granted only if the unit allows it; harmless otherwise. -->
     <uses-permission android:name="car.permission.CARPLAY_APP" />
-    <!-- Ambient lighting (experimental): Bluetooth LE to the aftermarket LED box. Android 11 needs
+    <!-- Ambient lighting: Bluetooth LE to the aftermarket LED box. Android 11 needs
          location to search for Bluetooth devices; 12+ uses the Bluetooth permissions instead. -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
@@ -41,9 +41,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
-    <!-- Talks to the SharkOS Lights helper app; only apps with the SharkOS key hold this -->
-    <permission android:name="com.sharkos.permission.LIGHTS" android:protectionLevel="signature" />
-    <uses-permission android:name="com.sharkos.permission.LIGHTS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
@@ -76,6 +74,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Ambient lighting: holds the connection to the LED box; the wake-up search runs apart -->
+        <service android:name=".lights.LightsService" android:exported="false" />
+        <service android:name=".lights.PrimeScanService" android:exported="false" android:process=":scan" />
 
         <receiver
             android:name=".BootReceiver"

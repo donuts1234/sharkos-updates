@@ -2,6 +2,7 @@ package com.sharkos.launcher.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -12,12 +13,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -37,155 +37,147 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sharkos.launcher.lights.AmbientLights
+import com.sharkos.launcher.lights.Lights
+import com.sharkos.launcher.lights.Lights.Zone
 import kotlinx.coroutines.delay
 
-/** What the Ambient lighting page asks Root for: things that need an Activity. */
+/** What the Ambient lighting page needs an Activity for. */
 class LightsActions(
     val requestPermission: () -> Unit = {},
     val enableBluetooth: () -> Unit = {},
-    val openLocation: () -> Unit = {},
 )
 
-/**
- * Settings → Ambient lighting. Experimental: setup, the three test controls (on/off, brightness,
- * colour) and diagnostics, all on this one page and in [AmbientLights].
- */
+/** Settings → Ambient lighting: the two zones, then setup. */
 @Composable
 fun AmbientPage(a: LightsActions) {
     val ctx = LocalContext.current
-    remember { AmbientLights.init(ctx) }
-    val link by AmbientLights.link.collectAsStateWithLifecycle()
-    val found by AmbientLights.found.collectAsStateWithLifecycle()
-    val name by AmbientLights.connectedName.collectAsStateWithLifecycle()
-    val log by AmbientLights.log.collectAsStateWithLifecycle()
-    val protocol by AmbientLights.protocol.collectAsStateWithLifecycle()
+    remember { Lights.init(ctx) }
+    val link by Lights.link.collectAsStateWithLifecycle()
+    val zones by Lights.zones.collectAsStateWithLifecycle()
+    val linked by Lights.linked.collectAsStateWithLifecycle()
 
-    // Permission and switch states, rechecked every second while the page is open (cheap reads)
+    // Settings that live outside a flow, re-read every couple of seconds while the page is open
     var tick by remember { mutableIntStateOf(0) }
-    LaunchedEffect(Unit) { while (true) { delay(1000); tick++ } }
-    val present = remember(tick) { AmbientLights.bluetoothPresent(ctx) }
-    val btOn = remember(tick) { AmbientLights.bluetoothOn(ctx) }
-    val allowed = remember(tick) { AmbientLights.hasPermission(ctx) }
-    val locOn = remember(tick) { AmbientLights.locationOn(ctx) }
-    val saved = remember(tick) { AmbientLights.savedName(ctx) }
-    val helper = remember(tick) { AmbientLights.helperInstalled(ctx) }
-    LaunchedEffect(helper) { if (helper) AmbientLights.helperStatus(ctx) }
+    LaunchedEffect(Unit) { while (true) { delay(2000); tick++ } }
+    val btOn = remember(tick) { Lights.bluetoothOn(ctx) }
+    val allowed = remember(tick) { Lights.hasPermission(ctx) }
+    var address by remember { mutableStateOf(Lights.address(ctx)) }
+    var auto by remember { mutableStateOf(Lights.autoConnect(ctx)) }
+    var swapped by remember { mutableStateOf(Lights.swapped(ctx)) }
+    var editing by remember { mutableStateOf(address == null) }
 
-    var on by remember { mutableStateOf(true) }
-    var bright by remember { mutableFloatStateOf(1f) }
-    var hue by remember { mutableFloatStateOf(0.6f) }
-
-    Txt("Experimental. Controls the aftermarket LED kit used with the Magic CarLight and Lotus Lamp X apps. Close the phone app first: the lights take one controller at a time.",
-        Sh.text(15.sp, color = Sh.dim), maxLines = 3)
-
-    SettingsGroup("Setup") {
+    SettingsGroup("Lights") {
         SettingsItem(
-            "SharkOS Lights helper",
-            if (helper) "Installed. It holds the connection to the lights in the background, the way Sharkware's helper does."
-            else "A small companion app that holds the Bluetooth connection. Install it once from a computer.",
-            status = if (helper) "Installed" to Sh.green else "Not installed" to Sh.orange,
-        ) { if (helper) PillButton("Allow location", { AmbientLights.helperSetup(ctx) }) }
-        if (!helper) SettingsHint("adb install SharkOS-Lights-1.0.apk")
-        SettingsItem("Bluetooth", when { !present -> "No Bluetooth adapter found."; btOn -> "On."; else -> "Bluetooth is off." },
-            status = if (btOn) "On" to Sh.green else "Off" to Sh.orange) {
-            if (present && !btOn) PillButton("Turn on", a.enableBluetooth, bg = Sh.blue, fg = Color.White)
-        }
-        SettingsItem("Location permission", "Android 11 only lets apps search for Bluetooth devices with this. SharkOS never reads where you are.",
-            status = if (allowed) "Allowed" to Sh.green else "Needed" to Sh.orange) {
-            if (!allowed) PillButton("Allow", a.requestPermission, bg = Sh.blue, fg = Color.White)
-        }
-        if (!allowed) SettingsHint("If no prompt appears: adb shell pm grant com.sharkos.launcher android.permission.ACCESS_FINE_LOCATION")
-        SettingsItem("Location services", if (locOn) "On." else "Searching finds nothing while the car's location is off.",
-            status = if (locOn) "On" to Sh.green else "Off" to Sh.orange) {
-            if (!locOn) PillButton("Open", a.openLocation)
-        }
-        if (!locOn) SettingsHint("Or: adb shell settings put secure location_mode 3")
-        SettingsItem(
-            "Lights",
-            when (link) {
-                AmbientLights.Link.CONNECTED -> "Connected to ${name ?: "the lights"}."
-                AmbientLights.Link.CONNECTING -> "Connecting…"
-                AmbientLights.Link.SEARCHING -> "Searching nearby…"
-                AmbientLights.Link.IDLE -> saved?.let { "Saved: $it. Connects when you use a control." } ?: "Not set up yet."
+            "Connection",
+            when {
+                address == null -> "Enter your lights' Bluetooth address below to get started."
+                link == Lights.Link.CONNECTED -> "Connected. SharkOS keeps the lights connected and reconnects at start-up."
+                link == Lights.Link.CONNECTING -> "Looking for your lights… Close the phone app if it's connected to them."
+                else -> "Not connected."
             },
             status = when (link) {
-                AmbientLights.Link.CONNECTED -> "Connected" to Sh.green
-                AmbientLights.Link.CONNECTING, AmbientLights.Link.SEARCHING -> "Working" to Sh.orange
-                AmbientLights.Link.IDLE -> null
+                Lights.Link.CONNECTED -> "Connected" to Sh.green
+                Lights.Link.CONNECTING -> "Connecting" to Sh.orange
+                Lights.Link.OFF -> "Off" to Sh.faint
             },
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                when (link) {
-                    AmbientLights.Link.CONNECTED -> PillButton("Release", { AmbientLights.disconnect() })
-                    AmbientLights.Link.SEARCHING -> PillButton("Stop", { AmbientLights.stopScan() })
-                    else -> {
-                        if (saved != null) PillButton("Connect", { AmbientLights.connectSaved(ctx) }, bg = Sh.blue, fg = Color.White)
-                        PillButton("Search", { AmbientLights.search(ctx) }, bg = if (saved == null) Sh.blue else Sh.raised, fg = if (saved == null) Color.White else Sh.ink)
-                    }
-                }
-            }
-        }
-        for (f in found.take(8)) {
-            SettingsItem(f.name, "${f.address} · signal ${f.rssi} dBm" + if (f.lights) " · looks like the lights" else "",
-                status = if (f.lights) "Lights" to Sh.green else null) {
-                PillButton("Connect", { AmbientLights.connect(ctx, f.address, f.name) })
-            }
+        ) { if (link == Lights.Link.OFF && address != null) PillButton("Connect", { Lights.connect(ctx) }, bg = Sh.blue, fg = Color.White) }
+        SettingsItem("Same settings for both zones", "Off to set the door trims and the pockets and footwells separately.") {
+            Switch(linked, { Lights.setLinked(ctx, it) }, "Same settings for both zones")
         }
     }
 
-    SettingsGroup("Test controls") {
-        SettingsItem("Lights on", "Turns the LEDs on or off.") {
-            Switch(on, { v -> on = v; AmbientLights.power(v) }, "Ambient lights on")
-        }
-        Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Txt("Brightness", Sh.text(18.sp, FontWeight.SemiBold), Modifier.weight(1f))
-                Txt("${(bright * 100).toInt().coerceAtLeast(1)}%", Sh.text(16.sp, FontWeight.Medium, Sh.dim))
-            }
-            GradientSlider(bright, Brush.horizontalGradient(listOf(Color(0xFF2C2C2E), Color.White)), "Brightness") { v ->
-                bright = v; AmbientLights.brightness((v * 100).toInt())
-            }
-        }
-        Column(Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 6.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Txt("Colour", Sh.text(18.sp, FontWeight.SemiBold), Modifier.weight(1f))
-                Box(Modifier.size(28.dp).clip(RoundedCornerShape(14.dp)).background(hueColor(hue)))
-            }
-            GradientSlider(hue, Brush.horizontalGradient(RAINBOW), "Colour") { v ->
-                hue = v
-                val c = hueColor(v)
-                AmbientLights.color((c.red * 255).toInt(), (c.green * 255).toInt(), (c.blue * 255).toInt())
-            }
+    if (linked) {
+        ZoneCard("Both zones", zones.getValue(Zone.TRIMS), null)
+    } else {
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            for (z in Zone.entries) ZoneCard(z.label, zones.getValue(z), z, Modifier.weight(1f), compact = true)
         }
     }
 
-    SettingsGroup("Diagnostics") {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Txt("Command format: Both suits two-set kits (MHRS-QA). Try Standard or Alternate alone if nothing responds.", Sh.text(15.sp, color = Sh.dim), maxLines = 2)
-            Segmented(AmbientLights.Protocol.entries.map { it.label }, protocol.ordinal, { AmbientLights.setProtocol(ctx, AmbientLights.Protocol.entries[it]) }, Modifier.fillMaxWidth(), greyFirst = false)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PillButton("Search again", { AmbientLights.search(ctx, connectWhenFound = false) })
-                PillButton("Forget lights", { AmbientLights.forget(ctx) })
-            }
-            AddressEntry { AmbientLights.connectAddress(ctx, it) }
-            Gap(4.dp)
-            if (log.isEmpty()) Txt("Nothing yet.", Sh.text(13.sp, color = Sh.dim).copy(fontFamily = FontFamily.Monospace))
-            for (line in log.take(20)) Txt(line, Sh.text(13.sp, color = Sh.ink).copy(fontFamily = FontFamily.Monospace), maxLines = 3)
+    SettingsGroup("Setup") {
+        if (!btOn) SettingsItem("Bluetooth", "Bluetooth is off.", status = "Off" to Sh.orange) {
+            PillButton("Turn on", a.enableBluetooth, bg = Sh.blue, fg = Color.White)
+        }
+        if (!allowed) {
+            SettingsItem("Location permission", "Android needs it to wake the car's Bluetooth before connecting. SharkOS never reads where you are.",
+                status = "Needed" to Sh.orange) { PillButton("Allow", a.requestPermission, bg = Sh.blue, fg = Color.White) }
+            SettingsHint("If no prompt appears: adb shell pm grant com.sharkos.launcher android.permission.ACCESS_FINE_LOCATION")
+        }
+        SettingsItem("Connect automatically", "Connects when the car starts and stays connected.") {
+            Switch(auto, { auto = it; Lights.setAutoConnect(ctx, it); if (it) Lights.connect(ctx) }, "Connect automatically")
+        }
+        SettingsItem("Lights box", address?.let { "Bluetooth address $it" } ?: "Not set yet.") {
+            if (!editing) PillButton("Change", { editing = true })
+        }
+        if (editing) AddressEntry(address.orEmpty()) { raw ->
+            if (Lights.setAddress(ctx, raw)) { address = Lights.address(ctx); editing = false }
+        }
+        SettingsItem("Swap zones", "If the door trims answer to the pockets and footwells controls, and the other way round.") {
+            Switch(swapped, { swapped = it; Lights.setSwapped(ctx, it) }, "Swap zones")
+        }
+        SettingsItem("Disconnect", "Lets go of the lights so the phone app can connect. SharkOS reconnects at the next start-up.") {
+            PillButton("Disconnect", { Lights.disconnect(ctx) })
         }
     }
 }
 
-/** Type the box's Bluetooth address and connect to it directly, skipping the search. */
+/** On/off, brightness and colour for one zone ([zone] null: both). */
 @Composable
-private fun AddressEntry(onConnect: (String) -> Unit) {
-    var text by remember { mutableStateOf("") }
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+private fun ZoneCard(title: String, s: Lights.ZoneState, zone: Zone?, modifier: Modifier = Modifier, compact: Boolean = false) {
+    val ctx = LocalContext.current
+    Column(
+        modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Sh.card).padding(22.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(14.dp).clip(RoundedCornerShape(7.dp)).background(if (s.on) swatch(s.hue) else Sh.line))
+            Gap(12.dp)
+            Txt(title, Sh.text(20.sp, FontWeight.SemiBold), Modifier.weight(1f))
+            Switch(s.on, { Lights.setOn(ctx, zone, it) }, "$title on")
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row {
+                Txt("Brightness", Sh.text(15.sp, FontWeight.Medium, Sh.dim), Modifier.weight(1f))
+                Txt("${s.brightness}%", Sh.text(15.sp, FontWeight.Medium, Sh.dim))
+            }
+            GradientSlider(s.brightness / 100f, Brush.horizontalGradient(listOf(Color(0xFF2C2C2E), Color.White)), "$title brightness") {
+                Lights.setBrightness(ctx, zone, (it * 100).toInt())
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Txt("Colour", Sh.text(15.sp, FontWeight.Medium, Sh.dim))
+            GradientSlider(if (s.white) 0f else s.hue, Brush.horizontalGradient(RAINBOW), "$title colour", showKnob = !s.white) {
+                Lights.setHue(ctx, zone, it)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp)) {
+                for (h in PRESETS) {
+                    val on = if (h < 0f) s.white else !s.white && kotlin.math.abs(s.hue - h) < 0.01f
+                    Box(
+                        Modifier.size(if (compact) 34.dp else 40.dp).clip(RoundedCornerShape(20.dp)).background(swatch(h))
+                            .then(if (on) Modifier.border(3.dp, Color.White, RoundedCornerShape(20.dp)) else Modifier)
+                            .press({ Lights.setHue(ctx, zone, h) }, label = "$title ${presetName(h)}"),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private val PRESETS = listOf(Lights.WHITE, 0f, 0.07f, 0.14f, 0.33f, 0.5f, 0.62f, 0.75f, 0.88f)
+private fun presetName(h: Float) = when (h) { Lights.WHITE -> "white"; 0f -> "red"; 0.07f -> "orange"; 0.14f -> "yellow"; 0.33f -> "green"; 0.5f -> "cyan"; 0.62f -> "blue"; 0.75f -> "purple"; else -> "pink" }
+private fun swatch(h: Float): Color = if (h < 0f) Color.White else Color.hsv((h.coerceIn(0f, 1f) * 360f) % 360f, 1f, 1f)
+private val RAINBOW = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
+
+/** Type the box's Bluetooth address, AA:BB:CC:DD:EE:FF. */
+@Composable
+private fun AddressEntry(initial: String, onSave: (String) -> Unit) {
+    var text by remember { mutableStateOf(initial) }
+    Row(Modifier.padding(start = 22.dp, end = 22.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Box(
             Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(12.dp)).background(Sh.raised).padding(horizontal = 14.dp),
             contentAlignment = Alignment.CenterStart,
         ) {
-            if (text.isEmpty()) Txt("Box address, e.g. BE:58:12:34:56:78", Sh.text(15.sp, color = Sh.faint))
+            if (text.isEmpty()) Txt("e.g. BE:16:8B:53:40:A6", Sh.text(15.sp, color = Sh.faint))
             androidx.compose.foundation.text.BasicTextField(
                 text, { text = it.take(17) }, Modifier.fillMaxWidth(), singleLine = true,
                 textStyle = Sh.text(16.sp, color = Sh.ink).copy(fontFamily = FontFamily.Monospace),
@@ -193,17 +185,13 @@ private fun AddressEntry(onConnect: (String) -> Unit) {
                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters),
             )
         }
-        PillButton("Connect", { onConnect(text) })
+        PillButton("Save", { onSave(text) }, bg = Sh.blue, fg = Color.White)
     }
 }
 
-private val RAINBOW = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
-
-private fun hueColor(f: Float): Color = Color.hsv((f.coerceIn(0f, 1f) * 360f) % 360f, 1f, 1f)
-
 /** A track painted with [brush] and a white knob; drag or tap anywhere along it. */
 @Composable
-private fun GradientSlider(value: Float, brush: Brush, label: String, onChange: (Float) -> Unit) {
+private fun GradientSlider(value: Float, brush: Brush, label: String, showKnob: Boolean = true, onChange: (Float) -> Unit) {
     val change by rememberUpdatedState(onChange)
     Canvas(
         Modifier.fillMaxWidth().height(44.dp)
@@ -212,7 +200,8 @@ private fun GradientSlider(value: Float, brush: Brush, label: String, onChange: 
     ) {
         val h = 14.dp.toPx()
         val top = (size.height - h) / 2
-        drawRoundRect(brush, Offset(0f, top), androidx.compose.ui.geometry.Size(size.width, h), CornerRadius(h / 2))
+        drawRoundRect(brush, Offset(0f, top), Size(size.width, h), CornerRadius(h / 2))
+        if (!showKnob) return@Canvas
         val r = 15.dp.toPx()
         val x = (value.coerceIn(0f, 1f) * (size.width - 2 * r)) + r
         drawCircle(Color.Black.copy(alpha = 0.35f), r + 2.dp.toPx(), Offset(x, size.height / 2))
