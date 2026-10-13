@@ -41,7 +41,9 @@ import java.util.UUID
 @SuppressLint("MissingPermission")   // every call is behind hasPermission()
 object AmbientLights {
     enum class Link { IDLE, SEARCHING, CONNECTING, CONNECTED }
-    enum class Protocol(val label: String) { E2("Standard"), E1("Alternate") }
+    /** Command format. MHRS-QA / MELK-QA boxes drive two light sets ("Colorful" and "Symphony" in the
+     *  phone app), one per format, so [BOTH] sends each command in both. */
+    enum class Protocol(val label: String) { BOTH("Both"), E2("Standard"), E1("Alternate") }
 
     data class Found(val name: String, val address: String, val rssi: Int, val lights: Boolean)
 
@@ -62,14 +64,17 @@ object AmbientLights {
     private val _log = MutableStateFlow<List<String>>(emptyList())
     /** Newest first; for the diagnostics panel. */
     val log: StateFlow<List<String>> = _log.asStateFlow()
-    private val _protocol = MutableStateFlow(Protocol.E2)
+    private val _protocol = MutableStateFlow(Protocol.BOTH)
     val protocol: StateFlow<Protocol> = _protocol.asStateFlow()
 
     private val main = Handler(Looper.getMainLooper())
     private var app: Context? = null
     private var gatt: BluetoothGatt? = null
     private var writer: BluetoothGattCharacteristic? = null
-    private var pending: ByteArray? = null
+    /** The newest command, as one frame per format; older unsent commands are dropped. */
+    private var pending: ArrayDeque<ByteArray>? = null
+    private var rawSeen = 0
+    private var legacy = false
     private var writing = false
     private var scanning = false
     private val clock = SimpleDateFormat("HH:mm:ss", Locale.US)
@@ -79,7 +84,7 @@ object AmbientLights {
     fun init(ctx: Context) {
         if (app != null) return
         app = ctx.applicationContext
-        _protocol.value = prefs(ctx).getString("protocol", null)?.let { p -> Protocol.entries.firstOrNull { it.name == p } } ?: Protocol.E2
+        _protocol.value = prefs(ctx).getString("protocol", null)?.let { p -> Protocol.entries.firstOrNull { it.name == p } } ?: Protocol.BOTH
     }
 
     fun savedName(ctx: Context): String? = prefs(ctx).getString("name", null)
@@ -103,14 +108,34 @@ object AmbientLights {
     // ---- Finding and connecting ----
 
     private val scanCb = object : ScanCallback() {
-        override fun onScanResult(callbackType: Int, result: ScanResult) {
-            val name = result.scanRecord?.deviceName ?: runCatching { result.device.name }.getOrNull() ?: return
-            val f = Found(name, result.device.address, result.rssi, PREFIXES.any { name.startsWith(it, ignoreCase = true) })
-            val list = _found.value.filterNot { it.address == f.address } + f
-            _found.value = list.sortedWith(compareByDescending<Found> { it.lights }.thenByDescending { it.rssi }).take(16)
-        }
+        override fun onScanResult(callbackType: Int, result: ScanResult) =
+            seen(result.device, result.rssi, result.scanRecord?.deviceName)
 
-        override fun onScanFailed(errorCode: Int) { log("Search failed (error $errorCode)"); stopScan() }
+        override fun onBatchScanResults(results: MutableList<ScanResult>) { results.forEach { onScanResult(0, it) } }
+
+        override fun onScanFailed(errorCode: Int) {
+            log("Search failed (error $errorCode), trying the older search")
+            main.post { startLegacy() }
+        }
+    }
+
+    /** The pre-Android-5 search: some head units return nothing to the modern one (Sharkware does the same). */
+    private val legacyCb = BluetoothAdapter.LeScanCallback { device, rssi, _ -> main.post { seen(device, rssi, null) } }
+
+    private fun seen(device: BluetoothDevice, rssi: Int, advertisedName: String?) {
+        rawSeen++
+        val name = advertisedName ?: runCatching { device.name }.getOrNull() ?: return
+        val f = Found(name, device.address, rssi, PREFIXES.any { name.startsWith(it, ignoreCase = true) })
+        val list = _found.value.filterNot { it.address == f.address } + f
+        _found.value = list.sortedWith(compareByDescending<Found> { it.lights }.thenByDescending { it.rssi }).take(16)
+    }
+
+    private fun startLegacy() {
+        val c = app ?: return
+        if (!scanning || legacy) return
+        runCatching { adapter(c)?.bluetoothLeScanner?.stopScan(scanCb) }
+        legacy = runCatching { adapter(c)?.startLeScan(legacyCb) == true }.getOrDefault(false)
+        log(if (legacy) "Nothing yet: switched to the older search" else "The older search couldn't start either")
     }
 
     /** Look for nearby lights for [SCAN_MS]; with [connectWhenFound] connect to the first one. */
@@ -121,12 +146,26 @@ object AmbientLights {
         val scanner = adapter(ctx)?.bluetoothLeScanner ?: return log("No Bluetooth LE scanner on this unit")
         _found.value = emptyList()
         scanning = true
+        legacy = false
+        rawSeen = 0
         _link.value = Link.SEARCHING
-        log("Searching for lights…")
+        val a = adapter(ctx)
+        log("Searching… (Bluetooth ${if (bluetoothOn(ctx)) "on" else "off"}, location ${if (locationOn(ctx)) "on" else "OFF"}, " +
+            "permission ${if (hasPermission(ctx)) "yes" else "NO"}, extended ads ${runCatching { a?.isLeExtendedAdvertisingSupported }.getOrNull()})")
         val ok = runCatching {
-            scanner.startScan(null, ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), scanCb)
+            val settings = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .setReportDelay(0)
+                .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
+                .setNumOfMatches(ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT)
+                .apply { if (runCatching { a?.isLeExtendedAdvertisingSupported == true }.getOrDefault(false)) setLegacy(false) }
+                .build()
+            scanner.startScan(null, settings, scanCb)
         }
-        if (ok.isFailure) { log("Search refused: ${ok.exceptionOrNull()?.message}"); scanning = false; _link.value = Link.IDLE; return }
+        if (ok.isFailure) { log("Modern search refused: ${ok.exceptionOrNull()?.message}"); startLegacy() }
+        // Like Sharkware: if the modern search has heard nothing after 2.5 s, use the older one
+        main.postDelayed({ if (scanning && rawSeen == 0) startLegacy() }, 2500)
         val started = System.currentTimeMillis()
         fun check() {
             if (!scanning) return
@@ -134,8 +173,13 @@ object AmbientLights {
             when {
                 connectWhenFound && hit != null -> { stopScan(); log("Found ${hit.name}"); connect(ctx, hit.address, hit.name) }
                 System.currentTimeMillis() - started > SCAN_MS -> {
+                    val named = _found.value.size
                     stopScan()
-                    log(if (_found.value.any { it.lights }) "Search finished" else "No lights found: ${_found.value.size} other devices nearby")
+                    log(when {
+                        _found.value.any { it.lights } -> "Search finished"
+                        rawSeen == 0 -> "Heard nothing at all: the car returned no Bluetooth results${if (!locationOn(ctx)) " (location is off)" else ""}"
+                        else -> "No lights found: heard $rawSeen adverts, $named named devices"
+                    })
                 }
                 else -> main.postDelayed(::check, 500)
             }
@@ -146,6 +190,8 @@ object AmbientLights {
     fun stopScan() {
         val c = app ?: return
         if (scanning) runCatching { adapter(c)?.bluetoothLeScanner?.stopScan(scanCb) }
+        if (legacy) runCatching { adapter(c)?.stopLeScan(legacyCb) }
+        legacy = false
         scanning = false
         if (_link.value == Link.SEARCHING) _link.value = Link.IDLE
     }
@@ -174,6 +220,7 @@ object AmbientLights {
         _link.value = Link.CONNECTING
         log("Connecting to $name ($address)…")
         prefs(ctx).edit().putString("address", address).putString("name", name).apply()
+        if (name.contains("-QA", ignoreCase = true) && _protocol.value != Protocol.BOTH) setProtocol(ctx, Protocol.BOTH)
         gatt = runCatching { device.connectGatt(ctx.applicationContext, false, gattCb, BluetoothDevice.TRANSPORT_LE) }
             .onFailure { log("Connect refused: ${it.message}"); _link.value = Link.IDLE }.getOrNull()
         main.postDelayed({ if (_link.value == Link.CONNECTING) { log("No answer from the lights (is the phone app connected?)"); disconnect(quiet = true) } }, 15_000)
@@ -243,16 +290,20 @@ object AmbientLights {
         log("Using the ${p.label.lowercase()} command format")
     }
 
-    fun power(on: Boolean) = send(if (_protocol.value == Protocol.E2) e2(0x04, if (on) 1 else 0, 0) else e1(0x04, if (on) 1 else 0, 0))
+    fun power(on: Boolean) = command(0x04, if (on) 1 else 0, 0)
 
     /** 1–100. */
-    fun brightness(percent: Int) {
-        val v = percent.coerceIn(1, 100)
-        send(if (_protocol.value == Protocol.E2) e2(0x01, v) else e1(0x01, v))
-    }
+    fun brightness(percent: Int) = command(0x01, percent.coerceIn(1, 100))
 
-    fun color(r: Int, g: Int, b: Int) =
-        send(if (_protocol.value == Protocol.E2) e2(0x05, 3, r, g, b, 0x10) else e1(0x05, 3, r, g, b, 0x10))
+    fun color(r: Int, g: Int, b: Int) = command(0x05, 3, r, g, b, 0x10)
+
+    private fun command(cmd: Int, vararg p: Int) = send(
+        when (_protocol.value) {
+            Protocol.E2 -> listOf(e2(cmd, *p))
+            Protocol.E1 -> listOf(e1(cmd, *p))
+            Protocol.BOTH -> listOf(e2(cmd, *p), e1(cmd, *p))
+        },
+    )
 
     /** 8E, length, command, parameters, zone byte. Length counts command + parameters + zone. */
     private fun e2(cmd: Int, vararg p: Int): ByteArray =
@@ -266,9 +317,9 @@ object AmbientLights {
     }
 
     /** Only the newest command waits: dragging a slider sends a steady stream, never a backlog. */
-    private fun send(bytes: ByteArray) {
+    private fun send(frames: List<ByteArray>) {
         val c = app ?: return
-        pending = bytes
+        pending = ArrayDeque(frames)
         if (_link.value != Link.CONNECTED) { connectSaved(c); return }
         flush()
         bumpIdle()
@@ -278,8 +329,9 @@ object AmbientLights {
         val g = gatt ?: return
         val ch = writer ?: return
         if (writing) return
-        val bytes = pending ?: return
-        pending = null
+        val queue = pending ?: return
+        val bytes = queue.removeFirstOrNull() ?: run { pending = null; return }
+        if (queue.isEmpty()) pending = null
         writing = true
         ch.writeType = if (ch.properties and BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0)
             BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE else BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT

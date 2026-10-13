@@ -153,7 +153,7 @@ fun AmbientPage(a: LightsActions) {
 
     SettingsGroup("Diagnostics") {
         Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Txt("Command format: try Alternate if the lights connect but don't respond.", Sh.text(15.sp, color = Sh.dim))
+            Txt("Command format: Both suits two-set kits (MHRS-QA). Try Standard or Alternate alone if nothing responds.", Sh.text(15.sp, color = Sh.dim), maxLines = 2)
             Segmented(AmbientLights.Protocol.entries.map { it.label }, protocol.ordinal, { AmbientLights.setProtocol(ctx, AmbientLights.Protocol.entries[it]) }, Modifier.fillMaxWidth(), greyFirst = false)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PillButton("Search again", { AmbientLights.search(ctx, connectWhenFound = false) })
