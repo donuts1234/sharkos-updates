@@ -11,6 +11,7 @@ import org.robolectric.RobolectricTestRunner
 
 /** The CarPlay service's NowPlayingInfo parcel, written exactly as the head unit writes it. */
 @RunWith(RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(sdk = [30])
 class CarPlayLinkTest {
     @Test fun readsNowPlayingFromTheServiceParcel() {
         val p = Parcel.obtain()

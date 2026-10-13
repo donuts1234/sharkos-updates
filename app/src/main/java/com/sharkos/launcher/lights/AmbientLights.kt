@@ -101,6 +101,19 @@ object AmbientLights {
     private fun adapter(ctx: Context): BluetoothAdapter? =
         runCatching { ctx.getSystemService(BluetoothManager::class.java)?.adapter }.getOrNull()
 
+    /** What Android's app-ops say about location for SharkOS (a permission can be granted yet the op denied). */
+    private fun locationOp(ctx: Context): String = runCatching {
+        val ops = ctx.getSystemService(android.app.AppOpsManager::class.java)
+        fun op(name: String) = when (ops.unsafeCheckOpNoThrow(name, android.os.Process.myUid(), ctx.packageName)) {
+            android.app.AppOpsManager.MODE_ALLOWED -> "allow"
+            android.app.AppOpsManager.MODE_IGNORED -> "IGNORED"
+            android.app.AppOpsManager.MODE_ERRORED -> "DENIED"
+            android.app.AppOpsManager.MODE_FOREGROUND -> "foreground"
+            else -> "default"
+        }
+        "fine ${op(android.app.AppOpsManager.OPSTR_FINE_LOCATION)}/coarse ${op(android.app.AppOpsManager.OPSTR_COARSE_LOCATION)}"
+    }.getOrDefault("?")
+
     fun bluetoothPresent(ctx: Context) = adapter(ctx) != null
     fun bluetoothOn(ctx: Context) = runCatching { adapter(ctx)?.isEnabled == true }.getOrDefault(false)
     fun locationOn(ctx: Context) = runCatching { ctx.getSystemService(LocationManager::class.java)?.isLocationEnabled == true }.getOrDefault(false)
@@ -151,7 +164,7 @@ object AmbientLights {
         _link.value = Link.SEARCHING
         val a = adapter(ctx)
         log("Searching… (Bluetooth ${if (bluetoothOn(ctx)) "on" else "off"}, location ${if (locationOn(ctx)) "on" else "OFF"}, " +
-            "permission ${if (hasPermission(ctx)) "yes" else "NO"}, extended ads ${runCatching { a?.isLeExtendedAdvertisingSupported }.getOrNull()})")
+            "permission ${if (hasPermission(ctx)) "yes" else "NO"}, app-op ${locationOp(ctx)}, target ${ctx.applicationInfo.targetSdkVersion})")
         val ok = runCatching {
             val settings = ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)

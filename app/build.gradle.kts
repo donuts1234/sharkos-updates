@@ -19,10 +19,12 @@ android {
 
     defaultConfig {
         applicationId = "com.sharkos.launcher"
-        minSdk = 29          // the Shark 6 head unit is Android 11 (API 30)
-        targetSdk = 32       // kept <= 32 as Shark Hub does, so the head unit treats us as a known target
-        versionCode = 11
-        versionName = "0.1.10"
+        minSdk = 28          // the Shark 6 head unit is Android 11 (API 30); 28 only so targetSdk 28 is valid
+        // 28, as Sharkware's Bluetooth helper uses: the Shark 6 returns no Bluetooth search results to
+        // apps targeting Android 10+ (Sharkware's own app, targeting 35, gave up and ships that helper)
+        targetSdk = 28
+        versionCode = 12
+        versionName = "0.1.11"
         // Where the car looks for updates (see README → Updates). Set once in gradle.properties.
         val updateUrl = (findProperty("sharkos.updateUrl") as String?)
             ?: "https://raw.githubusercontent.com/GITHUB_USER/sharkos-updates/main/latest.json"
