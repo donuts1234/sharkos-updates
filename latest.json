@@ -1,6 +1,6 @@
 {
-  "versionCode": 5,
-  "versionName": "0.1.4",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.4.apk",
-  "notes": "HVAC Bar: six layouts to pick from in Settings (one cabin temperature keeps both sides in sync). Battery, range and fuel now read without extra permissions. Clearer Allow buttons."
+  "versionCode": 6,
+  "versionName": "0.1.5",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.5.apk",
+  "notes": "Now Playing shows CarPlay music (first try) with live elapsed time, prefers whatever is actually playing, and shows Paused. New Settings \u2192 Media diagnostics."
 }
