@@ -1,6 +1,6 @@
 {
-  "versionCode": 12,
-  "versionName": "0.1.11",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.11.apk",
-  "notes": "Ambient lighting: built the way Sharkware's Bluetooth helper is, so the car should return Bluetooth search results to SharkOS."
+  "versionCode": 13,
+  "versionName": "0.1.12",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.12.apk",
+  "notes": "Ambient lighting: a third way of searching, and connecting straight to the lights' address."
 }
