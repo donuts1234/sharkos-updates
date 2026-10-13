@@ -70,9 +70,13 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
 
     var mediaAccess by remember { mutableStateOf(NowPlaying.hasAccess(ctx)) }
     var isHome by remember { mutableStateOf(isDefaultHome(ctx)) }
+    val prefs = remember { com.sharkos.launcher.data.Prefs(ctx) }
+    var autoLaunch by remember { mutableStateOf(prefs.autoLaunch) }
+    var canOverlay by remember { mutableStateOf(com.sharkos.launcher.AutoLaunch.canLaunchFromBackground(ctx)) }
     LifecycleResumeEffect(Unit) {
         mediaAccess = NowPlaying.hasAccess(ctx)
         isHome = isDefaultHome(ctx)
+        canOverlay = com.sharkos.launcher.AutoLaunch.canLaunchFromBackground(ctx)
         if (mediaAccess) NowPlaying.attach(ctx)
         scope.launch { apps.refresh() }
         onPauseOrDispose { }
@@ -188,11 +192,20 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                             onBack = { onScreen(Screen.HOME) },
                         )
                         Screen.SETTINGS -> SettingsScreen(
-                            SettingsInfo(BuildConfig.VERSION_NAME, isHome, mediaAccess, link, car.backendName, zeroed >= 0 && inclino.calibrated),
+                            SettingsInfo(BuildConfig.VERSION_NAME, isHome, mediaAccess, link, car.backendName, zeroed >= 0 && inclino.calibrated, autoLaunch, canOverlay),
                             SettingsActions(
                                 chooseHome = { openSettings(ctx, Settings.ACTION_HOME_SETTINGS) },
                                 grantMedia = { openSettings(ctx, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS) },
                                 zeroInclino = { if (inclino.calibrate()) zeroed++ else notice = "Zero needs the motion sensor: open Off-road first" },
+                                setAutoLaunch = { on -> prefs.autoLaunch = on; autoLaunch = on },
+                                allowOverlay = {
+                                    runCatching {
+                                        ctx.startActivity(
+                                            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}"))
+                                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                                        )
+                                    }.onFailure { openSettings(ctx, Settings.ACTION_MANAGE_OVERLAY_PERMISSION) }
+                                },
                                 back = { onScreen(Screen.HOME) },
                             ),
                         )

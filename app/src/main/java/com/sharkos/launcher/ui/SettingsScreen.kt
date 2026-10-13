@@ -30,6 +30,8 @@ class SettingsInfo(
     val link: CarLink,
     val backend: String,
     val inclinoZeroed: Boolean,
+    val autoLaunch: Boolean = true,
+    val canLaunchFromBackground: Boolean = false,
 )
 
 class SettingsActions(
@@ -37,6 +39,8 @@ class SettingsActions(
     val grantMedia: () -> Unit,
     val zeroInclino: () -> Unit,
     val back: () -> Unit,
+    val setAutoLaunch: (Boolean) -> Unit = {},
+    val allowOverlay: () -> Unit = {},
 )
 
 @Composable
@@ -63,6 +67,18 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
                     status = if (s.isDefaultHome) "On" to Sh.green else null,
                 ) { if (!s.isDefaultHome) PillButton("Choose", a.chooseHome, bg = Sh.blue, fg = Color.White) }
                 Hint("If the car doesn't offer a choice: adb shell cmd package set-home-activity com.sharkos.launcher/.MainActivity")
+                Item(
+                    "Open SharkOS when the car starts",
+                    "Brings SharkOS up over BYD's home screen a few seconds after start-up. Works even if the car won't let SharkOS be the Home app.",
+                ) { Switch(s.autoLaunch, a.setAutoLaunch, "Open SharkOS when the car starts") }
+                if (s.autoLaunch) {
+                    Item(
+                        "Display over other apps",
+                        "Android only lets an app open itself at start-up with this permission.",
+                        status = if (s.canLaunchFromBackground) "Allowed" to Sh.green else "Needed" to Sh.orange,
+                    ) { if (!s.canLaunchFromBackground) PillButton("Allow", a.allowOverlay, bg = Sh.blue, fg = Color.White) }
+                    if (!s.canLaunchFromBackground) Hint("If that page won't open: adb shell appops set com.sharkos.launcher SYSTEM_ALERT_WINDOW allow")
+                }
             }
             Group("Now playing") {
                 Item(

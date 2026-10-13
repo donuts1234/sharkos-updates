@@ -20,13 +20,18 @@ the motion sensor all stop when SharkOS isn't on screen.
 2. Find the car's IP address (Settings → Wi-Fi → the connected network), then on your computer:
    ```
    adb connect <car-ip>:5555
-   adb install -r SharkOS-0.1.1.apk
+   adb install -r SharkOS-0.1.2.apk
    ```
 3. Open SharkOS from BYD's app list. Allow the one car-data permission it asks for.
 4. **Make it the Home screen:** SharkOS → Settings → Use SharkOS as the Home screen → Choose. If the car
    doesn't offer a choice:
    ```
    adb shell cmd package set-home-activity com.sharkos.launcher/.MainActivity
+   ```
+   **Or let it open itself at start-up** (works even when the car won't accept a new Home app): SharkOS →
+   Settings → Open SharkOS when the car starts (on by default) → Display over other apps → Allow, or:
+   ```
+   adb shell appops set com.sharkos.launcher SYSTEM_ALERT_WINDOW allow
    ```
 5. **Now Playing:** SharkOS → Settings → Media access → Allow. If that settings page doesn't open on the car:
    ```

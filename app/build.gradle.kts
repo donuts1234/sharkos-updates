@@ -21,8 +21,8 @@ android {
         applicationId = "com.sharkos.launcher"
         minSdk = 29          // the Shark 6 head unit is Android 11 (API 30)
         targetSdk = 32       // kept <= 32 as Shark Hub does, so the head unit treats us as a known target
-        versionCode = 2
-        versionName = "0.1.1"
+        versionCode = 3
+        versionName = "0.1.2"
     }
 
     signingConfigs {

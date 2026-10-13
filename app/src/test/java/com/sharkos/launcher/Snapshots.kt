@@ -122,7 +122,7 @@ class Snapshots {
     @Test fun settings() = paparazzi.snapshot {
         Frame(Screen.SETTINGS) {
             SettingsScreen(
-                SettingsInfo("0.1.0", false, false, CarLink.CONNECTED, "bydauto (BydHvac.apk)", false),
+                SettingsInfo("0.1.2", false, false, CarLink.CONNECTED, "bydauto (BydHvac.apk)", false, autoLaunch = true, canLaunchFromBackground = false),
                 SettingsActions({}, {}, {}, {}),
             )
         }

@@ -63,6 +63,16 @@ class LaunchTest {
         assertEquals(before + 1, app.apps.dock.value.size)
         app.apps.unpin("com.example.maps")
         assertEquals(before, app.apps.dock.value.size)
+
+        // Start-up: the boot broadcast schedules the one-shot job that brings SharkOS to the front
+        BootReceiver().onReceive(app, android.content.Intent(android.content.Intent.ACTION_BOOT_COMPLETED))
+        val js = app.getSystemService(android.app.job.JobScheduler::class.java)
+        assertEquals(1, js.allPendingJobs.size)
+        // and with the switch off, nothing is scheduled
+        js.cancelAll()
+        com.sharkos.launcher.data.Prefs(app).autoLaunch = false
+        BootReceiver().onReceive(app, android.content.Intent(android.content.Intent.ACTION_BOOT_COMPLETED))
+        assertEquals(0, js.allPendingJobs.size)
         assertEquals(1, app.car.climate.value.driverSeat.heat)
         assertEquals(23f, app.car.climate.value.driverTemp)   // warmed once on the Climate page
         assertEquals(24f, app.car.climate.value.passengerTemp) // zones were linked at 23; the bar splits them and warms the passenger

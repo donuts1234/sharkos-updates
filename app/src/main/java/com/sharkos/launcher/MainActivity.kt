@@ -19,6 +19,10 @@ class MainActivity : ComponentActivity() {
 
     private var screen by mutableStateOf(Screen.HOME)
 
+    companion object {
+        const val EXTRA_AUTO_LAUNCH = "sharkos.auto_launch"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -31,7 +35,7 @@ class MainActivity : ComponentActivity() {
     /** Pressing Home while SharkOS is already in front goes back to its Home screen. */
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.hasCategory(Intent.CATEGORY_HOME)) screen = Screen.HOME
+        if (intent.hasCategory(Intent.CATEGORY_HOME) || intent.getBooleanExtra(EXTRA_AUTO_LAUNCH, false)) screen = Screen.HOME
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

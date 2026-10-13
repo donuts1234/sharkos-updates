@@ -19,6 +19,11 @@ class Prefs(context: Context) {
     fun setInclinoMount(rotation: Int, v: FloatArray) =
         sp.edit().putString("inclino_mount_$rotation", v.joinToString(",")).apply()
 
+    /** Open SharkOS automatically when the car starts. On by default. */
+    var autoLaunch: Boolean
+        get() = sp.getBoolean("auto_launch", true)
+        set(v) = sp.edit().putBoolean("auto_launch", v).apply()
+
     var askedCarPermission: Boolean
         get() = sp.getBoolean("asked_car_perm", false)
         set(v) = sp.edit().putBoolean("asked_car_perm", v).apply()
