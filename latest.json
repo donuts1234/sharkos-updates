@@ -1,6 +1,6 @@
 {
-  "versionCode": 10,
-  "versionName": "0.1.9",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.9.apk",
-  "notes": "New Settings pages, backgrounds and rounded corners, HVAC Bar tinted to match, album art fills the music card, temperature on the left or right, fan slider, new app row with Back, and experimental ambient lighting."
+  "versionCode": 11,
+  "versionName": "0.1.10",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.10.apk",
+  "notes": "Ambient lighting: a second way of searching for the lights, clearer diagnostics, and both command formats for two-set kits (MHRS-QA)."
 }
