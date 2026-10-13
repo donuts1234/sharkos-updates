@@ -1,6 +1,6 @@
 {
-  "versionCode": 11,
-  "versionName": "0.1.10",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.10.apk",
-  "notes": "Ambient lighting: a second way of searching for the lights, clearer diagnostics, and both command formats for two-set kits (MHRS-QA)."
+  "versionCode": 12,
+  "versionName": "0.1.11",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.11.apk",
+  "notes": "Ambient lighting: built the way Sharkware's Bluetooth helper is, so the car should return Bluetooth search results to SharkOS."
 }
