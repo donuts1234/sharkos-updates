@@ -67,6 +67,8 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     val track by NowPlaying.track.collectAsStateWithLifecycle()
     val allApps by apps.all.collectAsStateWithLifecycle()
     val dock by apps.dock.collectAsStateWithLifecycle()
+    val updater = app.updater
+    val update by updater.state.collectAsStateWithLifecycle()
 
     var mediaAccess by remember { mutableStateOf(NowPlaying.hasAccess(ctx)) }
     var isHome by remember { mutableStateOf(isDefaultHome(ctx)) }
@@ -79,6 +81,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
         canOverlay = com.sharkos.launcher.AutoLaunch.canLaunchFromBackground(ctx)
         if (mediaAccess) NowPlaying.attach(ctx)
         scope.launch { apps.refresh() }
+        scope.launch { updater.checkDaily() }
         onPauseOrDispose { }
     }
 
@@ -106,6 +109,16 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                 delay(3500)
                 notice = null
             }
+        }
+    }
+
+    // The daily check found something: say so once, pointing at Settings.
+    LaunchedEffect(update) {
+        val u = update
+        if (u is com.sharkos.launcher.update.Updater.State.Available && screen != Screen.SETTINGS) {
+            notice = "SharkOS ${u.r.versionName} is available: Settings → Updates"
+            delay(5000)
+            notice = null
         }
     }
 
@@ -192,12 +205,16 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                             onBack = { onScreen(Screen.HOME) },
                         )
                         Screen.SETTINGS -> SettingsScreen(
-                            SettingsInfo(BuildConfig.VERSION_NAME, isHome, mediaAccess, link, car.backendName, zeroed >= 0 && inclino.calibrated, autoLaunch, canOverlay),
+                            SettingsInfo(BuildConfig.VERSION_NAME, isHome, mediaAccess, link, car.backendName, zeroed >= 0 && inclino.calibrated, autoLaunch, canOverlay,
+                                update, updater.configured, updater.canInstall()),
                             SettingsActions(
                                 chooseHome = { openSettings(ctx, Settings.ACTION_HOME_SETTINGS) },
                                 grantMedia = { openSettings(ctx, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS) },
                                 zeroInclino = { if (inclino.calibrate()) zeroed++ else notice = "Zero needs the motion sensor: open Off-road first" },
                                 setAutoLaunch = { on -> prefs.autoLaunch = on; autoLaunch = on },
+                                checkUpdate = { scope.launch { updater.check() } },
+                                installUpdate = { r -> scope.launch { updater.downloadAndInstall(r) } },
+                                allowInstalls = { runCatching { ctx.startActivity(updater.allowInstallsIntent()) } },
                                 allowOverlay = {
                                     runCatching {
                                         ctx.startActivity(

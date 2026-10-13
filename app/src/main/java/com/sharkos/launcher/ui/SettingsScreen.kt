@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sharkos.launcher.car.CarLink
+import com.sharkos.launcher.update.Updater
 
 class SettingsInfo(
     val version: String,
@@ -32,6 +33,9 @@ class SettingsInfo(
     val inclinoZeroed: Boolean,
     val autoLaunch: Boolean = true,
     val canLaunchFromBackground: Boolean = false,
+    val update: Updater.State = Updater.State.Idle,
+    val updatesConfigured: Boolean = true,
+    val canInstall: Boolean = true,
 )
 
 class SettingsActions(
@@ -41,6 +45,9 @@ class SettingsActions(
     val back: () -> Unit,
     val setAutoLaunch: (Boolean) -> Unit = {},
     val allowOverlay: () -> Unit = {},
+    val checkUpdate: () -> Unit = {},
+    val installUpdate: (Updater.Release) -> Unit = {},
+    val allowInstalls: () -> Unit = {},
 )
 
 @Composable
@@ -66,7 +73,7 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
                     if (s.isDefaultHome) "SharkOS opens when you press Home." else "Choose SharkOS as the Home app so the Home button comes here.",
                     status = if (s.isDefaultHome) "On" to Sh.green else null,
                 ) { if (!s.isDefaultHome) PillButton("Choose", a.chooseHome, bg = Sh.blue, fg = Color.White) }
-                Hint("If the car doesn't offer a choice: adb shell cmd package set-home-activity com.sharkos.launcher/.MainActivity")
+                if (!s.isDefaultHome) Hint("If the car doesn't offer a choice: adb shell cmd package set-home-activity com.sharkos.launcher/.MainActivity")
                 Item(
                     "Open SharkOS when the car starts",
                     "Brings SharkOS up over BYD's home screen a few seconds after start-up. Works even if the car won't let SharkOS be the Home app.",
@@ -106,6 +113,7 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
                     PillButton(if (s.inclinoZeroed) "Re-zero" else "Zero now", a.zeroInclino)
                 }
             }
+            Group("Updates") { Updates(s, a) }
             Group("About") {
                 Item("SharkOS ${s.version}", "A light launcher for the BYD Shark 6.")
                 Item(
@@ -114,6 +122,36 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
                         "Figtree typeface by Erik Kennedy (SIL Open Font Licence).",
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun Updates(s: SettingsInfo, a: SettingsActions) {
+    if (!s.updatesConfigured) {
+        Item("Over-the-air updates", "The update address hasn't been set in this build yet.")
+        return
+    }
+    when (val u = s.update) {
+        is Updater.State.Available -> Item(
+            "SharkOS ${u.r.versionName} is available",
+            u.r.notes.ifBlank { "A newer version is ready to install." },
+            status = "New" to Sh.blue,
+        ) { PillButton("Update", { a.installUpdate(u.r) }, bg = Sh.blue, fg = Color.White) }
+        is Updater.State.Downloading -> Item("Downloading update", "${u.pct}%") {}
+        Updater.State.Installing -> Item("Installing", "Confirm on screen if Android asks. SharkOS reopens by itself.") {}
+        Updater.State.Checking -> Item("Checking for updates…", "SharkOS ${s.version}") {}
+        Updater.State.UpToDate -> Item("SharkOS is up to date", "Version ${s.version}", status = "Latest" to Sh.green) {
+            PillButton("Check again", a.checkUpdate)
+        }
+        is Updater.State.Failed -> Item("Update", u.message, status = "Problem" to Sh.orange) { PillButton("Try again", a.checkUpdate) }
+        Updater.State.Idle -> Item("Over-the-air updates", "Version ${s.version}. SharkOS also checks once a day by itself.") {
+            PillButton("Check now", a.checkUpdate)
+        }
+    }
+    if (!s.canInstall) {
+        Item("Allow updates to install", "Android asks once before an app may install its own updates.", status = "Needed" to Sh.orange) {
+            PillButton("Allow", a.allowInstalls, bg = Sh.blue, fg = Color.White)
         }
     }
 }

@@ -20,7 +20,7 @@ the motion sensor all stop when SharkOS isn't on screen.
 2. Find the car's IP address (Settings → Wi-Fi → the connected network), then on your computer:
    ```
    adb connect <car-ip>:5555
-   adb install -r SharkOS-0.1.2.apk
+   adb install -r SharkOS-0.1.3.apk
    ```
 3. Open SharkOS from BYD's app list. Allow the one car-data permission it asks for.
 4. **Make it the Home screen:** SharkOS → Settings → Use SharkOS as the Home screen → Choose. If the car
@@ -39,7 +39,27 @@ the motion sensor all stop when SharkOS isn't on screen.
    ```
 6. On level ground, open Off-road and tap **Zero on level ground**.
 
-Updates install the same way (`adb install -r`), and **must be signed with the same key** (`sharkos-release.jks`).
+## Updates (over the air)
+
+From 0.1.3 on, SharkOS updates itself: it checks
+`https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/latest.json` once a day (and from
+Settings → Updates on demand), downloads the APK, checks it's SharkOS signed with the SharkOS key, and
+hands it to Android's installer (one tap to confirm on Android 11). It reopens itself afterwards.
+
+**One-time setup:** create a **public** GitHub repo named `sharkos-updates` under `donuts1234`, with
+"Add a README" ticked so it has a `main` branch. It only ever holds `latest.json` and release APKs; the
+source stays private.
+
+**Publishing an update:** bump `versionCode` and `versionName` in `app/build.gradle.kts`, then
+`tools/release.sh "what changed"`. It builds, uploads the APK as a GitHub release, then updates
+`latest.json`. By hand instead: create a release `vX.Y.Z` with the APK attached, then edit
+`latest.json` in the repo:
+```json
+{ "versionCode": 5, "versionName": "0.1.4",
+  "apkUrl": "https://github.com/donuts1234/sharkos-updates/releases/download/v0.1.4/SharkOS-0.1.4.apk",
+  "notes": "What changed" }
+```
+Every update **must be signed with the same key** (`sharkos-release.jks`), or Android refuses it.
 
 ## What's verified, and what still needs the car
 

@@ -12,3 +12,4 @@ app/build/
 keystore.properties
 *.jks
 *.keystore
+dist/

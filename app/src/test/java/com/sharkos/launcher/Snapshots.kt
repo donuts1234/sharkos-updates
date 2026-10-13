@@ -115,6 +115,17 @@ class Snapshots {
         Frame(Screen.APPS) { AppsScreen(list, listOf("music", "phone", "360view"), {}, {}, {}, picking = true) }
     }
 
+    @Test fun settingsUpdateAvailable() = paparazzi.snapshot {
+        Frame(Screen.SETTINGS) {
+            val r = com.sharkos.launcher.update.Updater.Release(5, "0.1.4", "https://example.invalid/a.apk", "CarPlay in Now Playing, and fixes.")
+            SettingsScreen(
+                SettingsInfo("0.1.3", true, true, CarLink.CONNECTED, "bydauto (BydHvac.apk)", true, autoLaunch = true, canLaunchFromBackground = true,
+                    update = com.sharkos.launcher.update.Updater.State.Available(r)),
+                SettingsActions({}, {}, {}, {}),
+            )
+        }
+    }
+
     @Test fun offroad() = paparazzi.snapshot {
         Frame(Screen.OFFROAD) { OffroadScreen(Attitude(12.6f, -23.4f), calibrated = true, onZero = {}, onBack = {}) }
     }
