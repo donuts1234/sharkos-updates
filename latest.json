@@ -1,6 +1,6 @@
 {
-  "versionCode": 15,
-  "versionName": "0.1.14",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.14.apk",
-  "notes": "Ambient lighting: recognises the lights by their Bluetooth service, even when they don't advertise a name."
+  "versionCode": 16,
+  "versionName": "0.1.15",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.15.apk",
+  "notes": "Ambient lighting works through the new SharkOS Lights helper app."
 }
