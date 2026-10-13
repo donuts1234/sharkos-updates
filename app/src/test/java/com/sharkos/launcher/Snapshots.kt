@@ -64,7 +64,7 @@ class Snapshots {
     )
     // The out-of-the-box bar: three BYD apps and two empty + spots
     private val dock = listOf(DockApp("music", "Music"), DockApp("phone", "Phone"), DockApp("avm", "360 View"))
-    private val bar = BarActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+    private val bar = BarActions({}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
     private val home = HomeActions({}, {}, {}, {}, {}, {}, {})
     private val track = Track("Sample Song Title", "Artist Name", "Bluetooth audio", null, true, 102_000, 238_000, 0)
     // 9:41 on Tuesday 13 October 2026 (local), fixed so the clock doesn't change between runs
@@ -79,6 +79,18 @@ class Snapshots {
 
     @Test fun homeCapsuleBar() = paparazzi.snapshot {
         Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.CAPSULE) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+    }
+
+    @Test fun homeOriginalBar() = paparazzi.snapshot {
+        Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.ORIGINAL) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+    }
+
+    @Test fun homeSliderBar() = paparazzi.snapshot {
+        Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.SLIDER) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+    }
+
+    @Test fun homePresetsBar() = paparazzi.snapshot {
+        Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.PRESETS, c = climate.copy(frontDefrost = true)) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
     }
 
     @Test fun homeMirroredBar() = paparazzi.snapshot {

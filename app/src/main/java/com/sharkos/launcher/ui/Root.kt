@@ -74,7 +74,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     var isHome by remember { mutableStateOf(isDefaultHome(ctx)) }
     val prefs = remember { com.sharkos.launcher.data.Prefs(ctx) }
     var autoLaunch by remember { mutableStateOf(prefs.autoLaunch) }
-    var barStyle by remember { mutableStateOf(BarStyle.entries.getOrElse(prefs.barStyle) { BarStyle.BALANCED }) }
+    var barStyle by remember { mutableStateOf(BarStyle.entries.firstOrNull { it.name == prefs.barStyle } ?: BarStyle.BALANCED) }
     var canOverlay by remember { mutableStateOf(com.sharkos.launcher.AutoLaunch.canLaunchFromBackground(ctx)) }
     var carData by remember { mutableStateOf(carDataAllowed(ctx)) }
     var canInstall by remember { mutableStateOf(app.updater.canInstall()) }
@@ -142,6 +142,9 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     val bar = remember(car, apps) {
         BarActions(
             nudgeCabin = car::nudgeCabin,
+            setCabin = car::setCabinTemp,
+            nudgeTemp = car::nudgeTemp,
+            preset = car::applyPreset,
             nudgeFan = car::nudgeFan,
             cycleHeat = car::cycleSeatHeat,
             cycleVent = car::cycleSeatVent,
@@ -245,7 +248,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 installUpdate = { r -> scope.launch { updater.downloadAndInstall(r) } },
                                 allowInstalls = { if (!openSettings(ctx, updater.allowInstallsIntent())) notice = HIDDEN_PAGE },
                                 allowCarData = { askCarData.launch(CAR_DATA) },
-                                setBarStyle = { st -> prefs.barStyle = st.ordinal; barStyle = st },
+                                setBarStyle = { st -> prefs.barStyle = st.name; barStyle = st },
                                 allowOverlay = {
                                     val page = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}"))
                                     if (!openSettings(ctx, page) && !openSettings(ctx, Settings.ACTION_MANAGE_OVERLAY_PERMISSION)) notice = HIDDEN_PAGE

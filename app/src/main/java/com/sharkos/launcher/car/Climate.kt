@@ -45,5 +45,18 @@ data class ClimateState(
     }
 }
 
+/** One-tap climate scenes for the Presets HVAC Bar. */
+enum class Preset(val label: String) {
+    COOL("Cool"), COMFORT("Comfort"), WARM("Warm"), DEMIST("Demist");
+
+    /** Whether the cabin is currently set the way this preset leaves it (lights its button). */
+    fun matches(c: ClimateState): Boolean = c.power && when (this) {
+        COOL -> !c.auto && c.ac && c.driverTemp <= 18f
+        COMFORT -> c.auto && !c.frontDefrost
+        WARM -> !c.auto && c.driverTemp >= 26f && !c.frontDefrost
+        DEMIST -> c.frontDefrost
+    }
+}
+
 /** Outcome of one command sent to the car. */
 data class CommandResult(val label: String, val result: Result<Unit>)
