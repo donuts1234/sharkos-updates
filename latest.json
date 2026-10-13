@@ -1,6 +1,6 @@
 {
-  "versionCode": 14,
-  "versionName": "0.1.13",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.13.apk",
-  "notes": "Ambient lighting: also searches specifically for your MHRS-QA21P box."
+  "versionCode": 15,
+  "versionName": "0.1.14",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.14.apk",
+  "notes": "Ambient lighting: recognises the lights by their Bluetooth service, even when they don't advertise a name."
 }
