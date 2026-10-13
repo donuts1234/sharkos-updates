@@ -1,6 +1,6 @@
 {
-  "versionCode": 7,
-  "versionName": "0.1.6",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.6.apk",
-  "notes": "Looks harder for CarPlay music (searches all of BYD's apps, plus the cluster feed). Media diagnostics now show why if it still can't."
+  "versionCode": 8,
+  "versionName": "0.1.7",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.7.apk",
+  "notes": "CarPlay now playing on Home: song, artist, artwork and live elapsed time, with play/pause/skip. Media diagnostics now wrap."
 }
