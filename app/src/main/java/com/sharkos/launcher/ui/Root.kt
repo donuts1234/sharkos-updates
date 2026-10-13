@@ -172,7 +172,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
         )
     }
 
-    CompositionLocalProvider(LocalIcons provides remember(apps) { apps.iconSource() }) {
+    CompositionLocalProvider(LocalIcons provides remember(apps) { apps.iconSource() }, LocalWallpaper provides wallpaper) {
         // Rounded outer corners: the screen's black shows in them
         Column(Modifier.fillMaxSize().background(Color.Black).clip(RoundedCornerShape(corners.radius.dp)).wallpaper(wallpaper)) {
             Box(Modifier.weight(1f).fillMaxWidth()) {

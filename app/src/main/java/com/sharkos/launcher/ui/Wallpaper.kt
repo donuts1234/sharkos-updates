@@ -1,5 +1,6 @@
 package com.sharkos.launcher.ui
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
@@ -18,14 +19,31 @@ import kotlin.math.sin
  * and drawn once per screen size (drawWithCache) then reused, so they cost nothing while driving.
  * Kept dark at the top and calm behind text; the colour sits low and to the sides.
  */
-enum class Wallpaper(val label: String) {
-    BLACK("Black"),
-    GRAPHITE("Graphite"),
-    MIDNIGHT("Midnight"),
-    CONTOUR("Contour"),
-    AURORA("Aurora"),
-    OCEAN("Ocean"),
-    SUNSET("Sunset"),
+enum class Wallpaper(val label: String, internal val barTint: List<Color>) {
+    BLACK("Black", emptyList()),
+    GRAPHITE("Graphite", listOf(Color(0xFF4A4E5C), Color(0xFF2A2C33))),
+    MIDNIGHT("Midnight", listOf(Color(0xFF1A4FB0), Color(0xFF3A2A8C))),
+    CONTOUR("Contour", listOf(Color(0xFF3A3A40), Color(0xFF3A3A40))),
+    AURORA("Aurora", listOf(Color(0xFF16A889), Color(0xFF2AD4C8), Color(0xFF7B4DFF))),
+    OCEAN("Ocean", listOf(Color(0xFF0A4BB5), Color(0xFF0A84FF), Color(0xFF1C64D8))),
+    SUNSET("Sunset", listOf(Color(0xFF8E3BD9), Color(0xFFE0457B), Color(0xFFFF7A3D))),
+}
+
+/** The background's colours, for the HVAC Bar to pick up a hint of. Provided once in Root. */
+val LocalWallpaper = staticCompositionLocalOf { Wallpaper.BLACK }
+
+/**
+ * The HVAC Bar's own background: its usual near-black with a faint wash of the background's colours
+ * across it and a soft line of them along its top edge. Black keeps the plain bar.
+ */
+fun Modifier.barTint(w: Wallpaper): Modifier = if (w.barTint.isEmpty()) this else drawWithCache {
+    val wash = Brush.horizontalGradient(w.barTint.map { it.copy(alpha = 0.16f) })
+    val edge = Brush.horizontalGradient(w.barTint.map { it.copy(alpha = 0.55f) })
+    val line = 1.dp.toPx()
+    onDrawBehind {
+        drawRect(wash)
+        drawRect(edge, size = Size(size.width, line))
+    }
 }
 
 /** How round the app's outer corners are. */

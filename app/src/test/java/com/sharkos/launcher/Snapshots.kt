@@ -84,7 +84,9 @@ class Snapshots {
                 .clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp)).wallpaper(wallpaper),
         ) {
             Box(Modifier.weight(1f).fillMaxWidth()) { content() }
-            BottomBar(c, dock, screen, bar, style = style)
+            androidx.compose.runtime.CompositionLocalProvider(com.sharkos.launcher.ui.LocalWallpaper provides wallpaper) {
+                BottomBar(c, dock, screen, bar, style = style)
+            }
         }
 
     @Test fun homeCapsuleBar() = paparazzi.snapshot {

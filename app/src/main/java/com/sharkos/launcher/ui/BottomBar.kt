@@ -98,7 +98,7 @@ fun BottomBar(
     style: BarStyle = BarStyle.BALANCED,
 ) {
     Row(
-        modifier.fillMaxWidth().height(88.dp).background(Sh.bar).padding(horizontal = 16.dp),
+        modifier.fillMaxWidth().height(88.dp).background(Sh.bar).barTint(LocalWallpaper.current).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SeatButton(ShIcons.flame, climate.passengerSeat.heat, Sh.orange, "Passenger seat heat") { a.cycleHeat(Zone.PASSENGER) }
