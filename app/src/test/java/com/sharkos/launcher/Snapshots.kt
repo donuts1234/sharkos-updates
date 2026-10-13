@@ -68,7 +68,7 @@ class Snapshots {
     )
     // The out-of-the-box bar: three BYD apps and two empty + spots
     private val dock = listOf(DockApp("music", "Music"), DockApp("phone", "Phone"), DockApp("avm", "360 View"))
-    private val bar = BarActions({}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+    private val bar = BarActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
     private val home = HomeActions({}, {}, {}, {}, {}, {}, {})
     private val track = Track("Sample Song Title", "Artist Name", "Bluetooth audio", null, true, 102_000, 238_000, 0)
     // 9:41 on Tuesday 13 October 2026 (local), fixed so the clock doesn't change between runs
@@ -78,6 +78,8 @@ class Snapshots {
     private fun Frame(
         screen: Screen, c: ClimateState = climate, style: com.sharkos.launcher.ui.BarStyle = com.sharkos.launcher.ui.BarStyle.BALANCED,
         side: com.sharkos.launcher.ui.TempSide = com.sharkos.launcher.ui.TempSide.RIGHT,
+        lights: com.sharkos.launcher.ui.BarLights? = com.sharkos.launcher.ui.BarLights(true, true, 100, 0.62f),
+        showLights: Boolean = false,
         wallpaper: com.sharkos.launcher.ui.Wallpaper = com.sharkos.launcher.ui.Wallpaper.BLACK, content: @Composable () -> Unit,
     ) =
         Column(
@@ -86,25 +88,16 @@ class Snapshots {
         ) {
             Box(Modifier.weight(1f).fillMaxWidth()) { content() }
             androidx.compose.runtime.CompositionLocalProvider(com.sharkos.launcher.ui.LocalWallpaper provides wallpaper) {
-                BottomBar(c, dock, screen, bar, style = style, tempSide = side)
+                BottomBar(c, dock, screen, bar, style = style, tempSide = side, lights = lights, showLights = showLights)
             }
         }
 
-    @Test fun homeCapsuleBar() = paparazzi.snapshot {
-        Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.CAPSULE) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
-    }
 
-    @Test fun homeOriginalBar() = paparazzi.snapshot {
-        Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.ORIGINAL) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
-    }
 
     @Test fun homeSliderBar() = paparazzi.snapshot {
         Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.SLIDER) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
     }
 
-    @Test fun homePresetsBar() = paparazzi.snapshot {
-        Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.PRESETS, c = climate.copy(frontDefrost = true)) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
-    }
 
     @Test fun homeMirroredBar() = paparazzi.snapshot {
         Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.MIRRORED) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
@@ -206,6 +199,10 @@ class Snapshots {
     @Test fun homeAlbumArtCool() = paparazzi.snapshot {
         val t = Track("Blue Water", "Sample Artist", "Spotify", cover(0xFF2AD4C8.toInt(), 0xFF0A2A6B.toInt()), false, 95_000, 201_000, 0)
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, t, true, Attitude(2.4f, -1.2f), home) }
+    }
+
+    @Test fun homeLightsBar() = paparazzi.snapshot {
+        Frame(Screen.HOME, showLights = true, wallpaper = com.sharkos.launcher.ui.Wallpaper.OCEAN) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
     }
 
     @Test fun homeSliderLeft() = paparazzi.snapshot {

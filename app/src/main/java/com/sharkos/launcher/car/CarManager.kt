@@ -113,16 +113,6 @@ class CarManager(private val appContext: Context) {
 
     fun nudgeCabin(delta: Int) = setCabinTemp(_climate.value.driverTemp + delta)
 
-    /** Apply a one-tap climate scene: a handful of the ordinary commands, power first if it's off. */
-    fun applyPreset(p: Preset) {
-        if (!_climate.value.power) setClimatePower(true)
-        when (p) {
-            Preset.COOL -> { setFrontDefrost(false); setAcOn(true); setRecirculation(true); setCabinTemp(18f); setFanSpeed(5) }
-            Preset.COMFORT -> { setFrontDefrost(false); setCabinTemp(22f); setAuto(true) }
-            Preset.WARM -> { setFrontDefrost(false); setAcOn(false); setRecirculation(false); setCabinTemp(26f); setFanSpeed(4) }
-            Preset.DEMIST -> { setRecirculation(false); setAcOn(true); setFrontDefrost(true); setFanSpeed(6) }
-        }
-    }
 
     /** Fan arrows on the bar: 1..7 (off is the climate power switch, not the fan). */
     fun nudgeFan(delta: Int) = setFanSpeed((_climate.value.fan + delta).coerceIn(1, ClimateState.MAX_FAN))

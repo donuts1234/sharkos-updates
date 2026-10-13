@@ -129,37 +129,74 @@ object Lights {
 
     // ---- Controls: zone null = both ----
 
-    fun setOn(ctx: Context, zone: Zone?, on: Boolean) =
-        update(ctx, zone, { it.copy(on = on) }) { power(on) }
+    /**
+     * The box has one power switch for both light sets, so a single zone is turned "off" by setting it
+     * to black and "on" by putting its colour and brightness back. Only with every zone off does the
+     * box itself power down (and it powers up again, restoring each zone, when one comes back on).
+     */
+    fun setOn(ctx: Context, zone: Zone?, on: Boolean) {
+        init(ctx)
+        val before = _zones.value
+        val targets = zone?.let { listOf(it) } ?: Zone.entries
+        val after = store(ctx, targets) { it.copy(on = on) }
+        val frames = mutableListOf<ByteArray>()
+        val wasPowered = before.values.any { it.on }
+        val nowPowered = after.values.any { it.on }
+        when {
+            !nowPowered -> frames += power(ctx, false)
+            !wasPowered -> { frames += power(ctx, true); for (z in Zone.entries) frames += look(ctx, z, after.getValue(z)) }
+            else -> for (z in targets) frames += look(ctx, z, after.getValue(z))
+        }
+        send(ctx, frames, replaceable = false)
+    }
 
     fun setBrightness(ctx: Context, zone: Zone?, percent: Int) {
+        init(ctx)
         val v = percent.coerceIn(1, 100)
-        update(ctx, zone, { it.copy(brightness = v) }) { bright(v) }
+        val targets = zone?.let { listOf(it) } ?: Zone.entries
+        val after = store(ctx, targets) { it.copy(brightness = v) }
+        // A zone that's off stays dark: the new brightness is used when it comes back on
+        send(ctx, targets.filter { after.getValue(it).on }.map { z -> Builder(format(ctx, z)).apply { bright(v) }.bytes!! }.distinct())
     }
 
     /** A colour on the wheel (0–1), or [WHITE]. */
     fun setHue(ctx: Context, zone: Zone?, hue: Float) {
-        val c = if (hue < 0f) android.graphics.Color.WHITE
-        else android.graphics.Color.HSVToColor(floatArrayOf((hue.coerceIn(0f, 1f) * 360f) % 360f, 1f, 1f))
-        update(ctx, zone, { it.copy(hue = hue) }) { color(android.graphics.Color.red(c), android.graphics.Color.green(c), android.graphics.Color.blue(c)) }
-    }
-
-    private fun update(ctx: Context, zone: Zone?, change: (ZoneState) -> ZoneState, frame: Builder.() -> Unit) {
         init(ctx)
         val targets = zone?.let { listOf(it) } ?: Zone.entries
+        val after = store(ctx, targets) { it.copy(hue = hue) }
+        send(ctx, targets.filter { after.getValue(it).on }.map { z -> colorFrame(ctx, z, hue) }.distinct())
+    }
+
+    /** Save the change for [targets]; returns every zone's new state. */
+    private fun store(ctx: Context, targets: List<Zone>, change: (ZoneState) -> ZoneState): Map<Zone, ZoneState> {
         val next = _zones.value.toMutableMap()
         val e = prefs(ctx).edit()
         for (z in targets) {
             val s = change(next.getValue(z))
             next[z] = s
-            e.putBoolean("${z.name}_on", s.on).putInt("${z.name}_bright", s.brightness).putFloat("${z.name}_hue", s.hue)
+            runCatching { e.putBoolean("${z.name}_on", s.on).putInt("${z.name}_bright", s.brightness).putFloat("${z.name}_hue", s.hue) }
         }
-        e.apply()
+        runCatching { e.apply() }
         _zones.value = next
-        val swap = swapped(ctx)
-        val frames = targets.map { z -> Format.of(z.symphonyByDefault != swap) }.distinct().map { f -> Builder(f).apply(frame).bytes!! }
-        send(ctx, frames)
+        return next
     }
+
+    private fun format(ctx: Context, z: Zone) = Format.of(z.symphonyByDefault != swapped(ctx))
+
+    /** A zone as it should look: its brightness and colour when on, black when off. */
+    private fun look(ctx: Context, z: Zone, s: ZoneState): List<ByteArray> =
+        if (s.on) listOf(Builder(format(ctx, z)).apply { bright(s.brightness) }.bytes!!, colorFrame(ctx, z, s.hue))
+        else listOf(Builder(format(ctx, z)).apply { color(0, 0, 0) }.bytes!!)
+
+    private fun colorFrame(ctx: Context, z: Zone, hue: Float): ByteArray {
+        val c = if (hue < 0f) android.graphics.Color.WHITE
+        else android.graphics.Color.HSVToColor(floatArrayOf((hue.coerceIn(0f, 1f) * 360f) % 360f, 1f, 1f))
+        return Builder(format(ctx, z)).apply { color(android.graphics.Color.red(c), android.graphics.Color.green(c), android.graphics.Color.blue(c)) }.bytes!!
+    }
+
+    /** The box's own power switch, in both formats so both light sets hear it. */
+    private fun power(ctx: Context, on: Boolean): List<ByteArray> =
+        Format.entries.map { f -> Builder(f).apply { power(on) }.bytes!! }
 
     // Sliders fire dozens of changes a second: pass on at most one every SEND_GAP_MS, always the newest
     private val main = android.os.Handler(android.os.Looper.getMainLooper())
@@ -167,7 +204,10 @@ object Lights {
     private var lastSend = 0L
     private const val SEND_GAP_MS = 70L
 
-    private fun send(ctx: Context, frames: List<ByteArray>) {
+    /** [replaceable]: a slider value, which the next one may overtake; switches always go through. */
+    private fun send(ctx: Context, frames: List<ByteArray>, replaceable: Boolean = true) {
+        if (frames.isEmpty()) return
+        if (!replaceable) { sendNow(ctx.applicationContext, frames, replaceable = false); return }
         val wasPending = pendingFrames != null
         pendingFrames = frames
         if (wasPending) return
@@ -180,11 +220,11 @@ object Lights {
         }, wait)
     }
 
-    private fun sendNow(ctx: Context, frames: List<ByteArray>) {
+    private fun sendNow(ctx: Context, frames: List<ByteArray>, replaceable: Boolean = true) {
         val addr = address(ctx) ?: run { Log.w(TAG, "no lights address set"); return }
         val hex = frames.joinToString(",") { f -> f.joinToString("") { "%02X".format(it) } }
         if (_link.value == Link.OFF) service(ctx, LightsService.ACTION_CONNECT) { putExtra(LightsService.EXTRA_ADDRESS, addr) }
-        service(ctx, LightsService.ACTION_SEND) { putExtra(LightsService.EXTRA_FRAMES, hex) }
+        service(ctx, LightsService.ACTION_SEND) { putExtra(LightsService.EXTRA_FRAMES, hex).putExtra(LightsService.EXTRA_REPLACEABLE, replaceable) }
     }
 
     private fun service(ctx: Context, action: String, extras: Intent.() -> Unit = {}) {

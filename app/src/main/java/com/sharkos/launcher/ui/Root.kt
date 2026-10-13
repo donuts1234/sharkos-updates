@@ -170,13 +170,21 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     BackHandler(screen != Screen.HOME) { onScreen(Screen.HOME) }
 
     val screenState = androidx.compose.runtime.rememberUpdatedState(screen)
+    // Ambient lighting on the bar: both zones as one; the bar shows the door trims' colour
+    val lightZones by com.sharkos.launcher.lights.Lights.zones.collectAsStateWithLifecycle()
+    val lightLink by com.sharkos.launcher.lights.Lights.link.collectAsStateWithLifecycle()
+    val barLights = remember(lightZones, lightLink) {
+        com.sharkos.launcher.lights.Lights.address(ctx)?.let {
+            val z = lightZones.values
+            val first = lightZones.getValue(com.sharkos.launcher.lights.Lights.Zone.TRIMS)
+            BarLights(lightLink == com.sharkos.launcher.lights.Lights.Link.CONNECTED, z.any { it.on }, first.brightness, first.hue)
+        }
+    }
     val dockApps = dock.mapNotNull { pkg -> apps.find(pkg)?.let { DockApp(it.pkg, it.label) } }
     val bar = remember(car, apps) {
         BarActions(
             nudgeCabin = car::nudgeCabin,
             setCabin = car::setCabinTemp,
-            nudgeTemp = car::nudgeTemp,
-            preset = car::applyPreset,
             nudgeFan = car::nudgeFan,
             cycleHeat = car::cycleSeatHeat,
             cycleVent = car::cycleSeatVent,
@@ -188,6 +196,9 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
             addApp = { picking = true; onScreen(Screen.APPS) },
             removeApp = { d -> apps.unpin(d.pkg); notice = "Removed ${d.label} from the bar" },
             setFan = car::setFanSpeed,
+            lightsOn = { com.sharkos.launcher.lights.Lights.setOn(ctx, null, it) },
+            lightsBrightness = { com.sharkos.launcher.lights.Lights.setBrightness(ctx, null, it) },
+            lightsHue = { com.sharkos.launcher.lights.Lights.setHue(ctx, null, it) },
             back = { if (screenState.value != Screen.HOME) onScreen(Screen.HOME) },
         )
     }
@@ -309,7 +320,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                 }
                 NoticePill(notice, Modifier.align(Alignment.TopCenter).padding(top = 16.dp))
             }
-            BottomBar(climate, dockApps, screen, bar, style = barStyle, tempSide = tempSide)
+            BottomBar(climate, dockApps, screen, bar, style = barStyle, tempSide = tempSide, lights = barLights)
         }
     }
 }

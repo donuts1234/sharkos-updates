@@ -330,7 +330,9 @@ private fun Choice(title: String, blurb: String, on: Boolean, onPick: () -> Unit
         preview()
     }
 
-private val NoBar = BarActions({}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+private val PreviewLights = BarLights(connected = true, on = true, brightness = 100, hue = 0.62f)
+
+private val NoBar = BarActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
 /** The real bar, drawn at the width of the screen and shrunk to fit; touches go to [Use], not the bar. */
 @Composable
@@ -339,7 +341,7 @@ private fun BarPreview(style: BarStyle, side: TempSide, s: SettingsInfo) = BoxWi
     val d = LocalDensity.current
     Box(Modifier.fillMaxWidth().height(88.dp * scale)) {
         CompositionLocalProvider(LocalDensity provides Density(d.density * scale, d.fontScale)) {
-            BottomBar(s.climate, s.dock, Screen.HOME, NoBar, style = style, tempSide = side)
+            BottomBar(s.climate, s.dock, Screen.HOME, NoBar, style = style, tempSide = side, lights = PreviewLights)
         }
         Box(Modifier.matchParentSize().pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } })
     }

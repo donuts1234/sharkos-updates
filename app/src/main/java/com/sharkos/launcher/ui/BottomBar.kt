@@ -1,6 +1,16 @@
 package com.sharkos.launcher.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.border
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.input.pointer.PointerEventPass
+import kotlinx.coroutines.delay
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +37,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sharkos.launcher.car.ClimateState
-import com.sharkos.launcher.car.Preset
 import com.sharkos.launcher.car.Zone
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -51,17 +60,18 @@ import kotlin.math.roundToInt
 data class DockApp(val pkg: String, val label: String)
 
 /**
- * The HVAC Bar's three layouts, picked in Settings. All share one cabin temperature (both zones
- * together, so the bar can never leave them out of sync) and a fan speed with its own arrows.
+ * The HVAC Bar's layouts, picked in Settings. All share one cabin temperature (both zones together, so
+ * the bar can never leave them out of sync) and a fan speed. A saved choice of a layout since removed
+ * (Original, Capsule, Presets) falls back to Balanced.
  */
 enum class BarStyle(val label: String, val blurb: String) {
-    ORIGINAL("Original", "Separate passenger and driver temperatures; the fan button opens the Climate page."),
-    BALANCED("Balanced", "Fan by the passenger, temperature by the driver, A/C beside the apps."),
-    CAPSULE("Capsule", "Fan, A/C and temperature together in one pill on the driver's side."),
-    MIRRORED("Mirrored", "Fan with level bars on the left, temperature on the right, Home centred."),
+    BALANCED("Balanced", "Fan arrows, A/C beside the apps, cabin temperature arrows."),
+    MIRRORED("Mirrored", "Fan with level bars, Home and Back in the middle of the apps."),
     SLIDER("Slider", "Drag along the strips to set the fan and cabin temperature in one swipe."),
-    PRESETS("Presets", "One-tap Cool, Comfort, Warm and Demist scenes beside the temperature."),
 }
+
+/** The ambient lighting as the bar shows it: one set of controls for both zones. Null: no lights set up. */
+data class BarLights(val connected: Boolean, val on: Boolean, val brightness: Int, val hue: Float)
 
 /** Which side of the bar the cabin temperature sits on; the fan takes the other side. */
 enum class TempSide(val label: String) { LEFT("Left"), RIGHT("Right") }
@@ -71,9 +81,6 @@ class BarActions(
     val nudgeCabin: (Int) -> Unit,
     /** Set the cabin temperature outright (the slider). */
     val setCabin: (Float) -> Unit,
-    /** One zone only: the Original layout's separate temperatures. */
-    val nudgeTemp: (Zone, Int) -> Unit,
-    val preset: (Preset) -> Unit,
     val nudgeFan: (Int) -> Unit,
     val cycleHeat: (Zone) -> Unit,
     val cycleVent: (Zone) -> Unit,
@@ -90,6 +97,11 @@ class BarActions(
     val setFan: (Int) -> Unit = {},
     /** The bar's back button: one step back inside SharkOS. */
     val back: () -> Unit = {},
+    /** Ambient lighting, both zones together. */
+    val lightsOn: (Boolean) -> Unit = {},
+    val lightsBrightness: (Int) -> Unit = {},
+    /** 0–1 around the colour wheel, or below 0 for white. */
+    val lightsHue: (Float) -> Unit = {},
 )
 
 /**
@@ -105,72 +117,140 @@ fun BottomBar(
     modifier: Modifier = Modifier,
     style: BarStyle = BarStyle.BALANCED,
     tempSide: TempSide = TempSide.RIGHT,
+    lights: BarLights? = null,
+    /** Start on the lighting controls (screenshots). */
+    showLights: Boolean = false,
 ) {
     val swap = tempSide == TempSide.LEFT
+    var lightsMode by remember { mutableStateOf(showLights) }
+    if (lights == null) lightsMode = false
+    // Back to climate after 10 s untouched; every touch on the bar restarts the count
+    var touches by remember { mutableIntStateOf(0) }
+    LaunchedEffect(lightsMode, touches) { if (lightsMode && !showLights) { delay(10_000); lightsMode = false } }
+    val openLights: (() -> Unit)? = lights?.let { { lightsMode = true } }
     Row(
-        modifier.fillMaxWidth().height(88.dp).background(Sh.bar).barTint(LocalWallpaper.current).padding(horizontal = 16.dp),
+        modifier.fillMaxWidth().height(88.dp).background(Sh.bar).barTint(LocalWallpaper.current)
+            .pointerInput(Unit) { awaitPointerEventScope { while (true) { awaitPointerEvent(PointerEventPass.Initial); touches++ } } }
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SeatButton(ShIcons.flame, climate.passengerSeat.heat, Sh.orange, "Passenger seat heat") { a.cycleHeat(Zone.PASSENGER) }
         Gap(8.dp)
         SeatButton(ShIcons.vent, climate.passengerSeat.vent, Sh.cyan, "Passenger seat cooling") { a.cycleVent(Zone.PASSENGER) }
-        Gap(12.dp)
 
-        // Each layout as written has the temperature on the right; [swap] mirrors the climate parts.
-        // Seats stay put: passenger left, driver right.
-        when (style) {
-            BarStyle.ORIGINAL -> {
-                ZoneTemp(climate, Zone.PASSENGER, a)
-                Centre {
-                    if (swap) { FanButton(climate, screen == Screen.CLIMATE, a.climate); AcButton(climate, a); Divider(); Dock(dock, screen, a) }
-                    else { Dock(dock, screen, a); Divider(); AcButton(climate, a); FanButton(climate, screen == Screen.CLIMATE, a.climate) }
-                }
-                ZoneTemp(climate, Zone.DRIVER, a)
-            }
-            BarStyle.SLIDER -> {
-                if (swap) TempSlider(climate, a) else FanSlider(climate, a)
-                Centre { Dock(dock, screen, a) }
-                if (swap) FanSlider(climate, a) else TempSlider(climate, a)
-            }
-            BarStyle.PRESETS -> {
-                val presets: @Composable () -> Unit = { Capsule { for (p in Preset.entries) PresetChip(p, p.matches(climate)) { a.preset(p) } } }
-                if (swap) { CabinArrows(climate, a); Gap(8.dp); presets(); Centre { Dock(dock, screen, a) } }
-                else { Centre { Dock(dock, screen, a) }; presets(); Gap(8.dp); CabinArrows(climate, a) }
-            }
-            BarStyle.BALANCED -> {
-                if (swap) CabinArrows(climate, a) else FanArrows(climate, a)
-                Centre {
-                    if (swap) { AcButton(climate, a); Divider(); Dock(dock, screen, a) }
-                    else { Dock(dock, screen, a); Divider(); AcButton(climate, a) }
-                }
-                if (swap) FanArrows(climate, a) else CabinArrows(climate, a)
-            }
-            BarStyle.CAPSULE -> {
-                val capsule: @Composable () -> Unit = {
-                    Capsule {
-                        if (swap) CabinArrows(climate, a, compact = true) else FanArrows(climate, a, compact = true)
-                        CapsuleDivider()
-                        AcButton(climate, a, size = 48.dp, round = true)
-                        CapsuleDivider()
-                        if (swap) FanArrows(climate, a, compact = true) else CabinArrows(climate, a, compact = true)
-                    }
-                }
-                if (swap) { capsule(); Centre { Dock(dock, screen, a) } }
-                else { Centre { Dock(dock, screen, a) }; capsule() }
-            }
-            BarStyle.MIRRORED -> {
-                val fan: @Composable () -> Unit = { Capsule { FanArrows(climate, a, bars = true) } }
-                val cabin: @Composable () -> Unit = { Capsule { CabinArrows(climate, a, caption = "Cabin · synced") } }
-                if (swap) cabin() else fan()
-                Centre { Dock(dock, screen, a, homeInMiddle = true); AcButton(climate, a) }
-                if (swap) fan() else cabin()
+        // Between the seats: the climate layout, or (sliding across) the lighting controls
+        AnimatedContent(
+            lightsMode,
+            Modifier.weight(1f),
+            transitionSpec = {
+                val dir = if (targetState) 1 else -1
+                (slideInHorizontally(tween(320)) { it * dir } + fadeIn(tween(200))) togetherWith
+                    (slideOutHorizontally(tween(320)) { -it * dir } + fadeOut(tween(160)))
+            },
+            label = "bar",
+        ) { showingLights ->
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                if (showingLights && lights != null) LightsStrip(lights, a) { lightsMode = false }
+                else ClimateLayout(style, swap, climate, dock, screen, a, lights, openLights)
             }
         }
-
-        Gap(12.dp)
         SeatButton(ShIcons.vent, climate.driverSeat.vent, Sh.cyan, "Driver seat cooling") { a.cycleVent(Zone.DRIVER) }
         Gap(8.dp)
         SeatButton(ShIcons.flame, climate.driverSeat.heat, Sh.orange, "Driver seat heat") { a.cycleHeat(Zone.DRIVER) }
+    }
+}
+
+/** Each layout as written has the temperature on the right; [swap] mirrors the climate parts. */
+@Composable
+private fun RowScope.ClimateLayout(
+    style: BarStyle, swap: Boolean, climate: ClimateState, dock: List<DockApp>, screen: Screen, a: BarActions,
+    lights: BarLights?, openLights: (() -> Unit)?,
+) {
+    Gap(12.dp)
+    when (style) {
+        BarStyle.SLIDER -> {
+            if (swap) TempSlider(climate, a) else FanSlider(climate, a)
+            Centre { Dock(dock, screen, a, lights = lights, openLights = openLights) }
+            if (swap) FanSlider(climate, a) else TempSlider(climate, a)
+        }
+        BarStyle.BALANCED -> {
+            if (swap) CabinArrows(climate, a) else FanArrows(climate, a)
+            Centre {
+                if (swap) { AcButton(climate, a); Divider(); Dock(dock, screen, a, lights = lights, openLights = openLights) }
+                else { Dock(dock, screen, a, lights = lights, openLights = openLights); Divider(); AcButton(climate, a) }
+            }
+            if (swap) FanArrows(climate, a) else CabinArrows(climate, a)
+        }
+        BarStyle.MIRRORED -> {
+            val fan: @Composable () -> Unit = { Capsule { FanArrows(climate, a, bars = true) } }
+            val cabin: @Composable () -> Unit = { Capsule { CabinArrows(climate, a, caption = "Cabin · synced") } }
+            if (swap) cabin() else fan()
+            Centre { Dock(dock, screen, a, homeInMiddle = true, lights = lights, openLights = openLights); AcButton(climate, a) }
+            if (swap) fan() else cabin()
+        }
+    }
+    Gap(12.dp)
+}
+
+/**
+ * The lighting controls, in place of the climate ones: back to climate, on/off, brightness, colour
+ * and a few quick colours. One set for both zones (per-zone control lives in Settings).
+ */
+@Composable
+private fun RowScope.LightsStrip(l: BarLights, a: BarActions, close: () -> Unit) {
+    Gap(12.dp)
+    Box(Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).press(close, label = "Back to climate"), contentAlignment = Alignment.Center) {
+        Glyph(ShIcons.chevronLeft, Sh.dim, 26.dp)
+    }
+    Gap(8.dp)
+    val tint = if (l.on) lightColor(l.hue) else Sh.dim
+    Box(
+        Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(if (l.on) tint.copy(alpha = 0.22f) else Sh.raised)
+            .press({ a.lightsOn(!l.on) }, label = if (l.on) "Ambient lights off" else "Ambient lights on"),
+        contentAlignment = Alignment.Center,
+    ) { Glyph(ShIcons.bulb, tint, 26.dp) }
+    Gap(20.dp)
+    Glyph(ShIcons.sun, Sh.dim, 20.dp)
+    Gap(10.dp)
+    StripSlider(l.brightness / 100f, Brush.horizontalGradient(listOf(Color(0xFF3A3A3C), Color.White)), "Ambient brightness", Modifier.weight(0.8f)) {
+        a.lightsBrightness((it * 100).toInt().coerceIn(1, 100))
+    }
+    Gap(24.dp)
+    StripSlider(if (l.hue < 0f) -1f else l.hue, Brush.horizontalGradient(RAINBOW), "Ambient colour", Modifier.weight(1f)) { a.lightsHue(it) }
+    Gap(18.dp)
+    for (h in listOf(-1f, 0.08f, 0.62f, 0f, 0.8f)) {
+        val on = if (h < 0f) l.hue < 0f else l.hue >= 0f && kotlin.math.abs(l.hue - h) < 0.01f
+        Box(
+            Modifier.padding(horizontal = 4.dp).size(36.dp).clip(RoundedCornerShape(18.dp)).background(lightColor(h))
+                .then(if (on) Modifier.border(3.dp, Color.White, RoundedCornerShape(18.dp)) else Modifier)
+                .press({ a.lightsHue(h) }, label = "Ambient colour preset"),
+        )
+    }
+    if (!l.connected) { Gap(12.dp); Txt("Connecting…", Sh.text(13.sp, FontWeight.Medium, Sh.orange)) }
+    Gap(12.dp)
+}
+
+private val RAINBOW = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
+
+/** A light setting's colour: around the wheel, or white below 0. */
+fun lightColor(h: Float): Color = if (h < 0f) Color.White else Color.hsv((h.coerceIn(0f, 1f) * 360f) % 360f, 1f, 1f)
+
+/** A bar-height strip slider; a value below 0 hides the knob (white chosen on the colour strip). */
+@Composable
+private fun StripSlider(value: Float, brush: Brush, label: String, modifier: Modifier, onChange: (Float) -> Unit) {
+    val change by rememberUpdatedState(onChange)
+    Canvas(
+        modifier.height(56.dp).semantics { contentDescription = label }
+            .pointerInput(Unit) { detectTapGestures { change((it.x / size.width).coerceIn(0f, 1f)) } }
+            .pointerInput(Unit) { detectHorizontalDragGestures { c, _ -> change((c.position.x / size.width).coerceIn(0f, 1f)) } },
+    ) {
+        val h = 14.dp.toPx()
+        val r = 15.dp.toPx()
+        drawRoundRect(brush, Offset(r - h / 2, (size.height - h) / 2), Size(size.width - 2 * r + h, h), CornerRadius(h / 2))
+        if (value < 0f) return@Canvas
+        val x = r + value.coerceIn(0f, 1f) * (size.width - 2 * r)
+        drawCircle(Color.Black.copy(alpha = 0.35f), r + 2.dp.toPx(), Offset(x, size.height / 2))
+        drawCircle(Color.White, r, Offset(x, size.height / 2))
     }
 }
 
@@ -194,15 +274,13 @@ private fun Capsule(content: @Composable RowScope.() -> Unit) = Row(
 @Composable
 private fun Divider() = Box(Modifier.width(1.dp).height(36.dp).background(Sh.line))
 
-@Composable
-private fun CapsuleDivider() = Box(Modifier.padding(horizontal = 4.dp).width(1.dp).height(32.dp).background(Sh.line))
 
 /**
  * All apps on the left, then the three app spots (empty ones are + spots), then Home and Back on the
  * right, by the driver. [homeInMiddle] (Mirrored) puts Home and Back in the middle of the spots.
  */
 @Composable
-private fun Dock(dock: List<DockApp>, screen: Screen, a: BarActions, homeInMiddle: Boolean = false) {
+private fun Dock(dock: List<DockApp>, screen: Screen, a: BarActions, homeInMiddle: Boolean = false, lights: BarLights? = null, openLights: (() -> Unit)? = null) {
     val slots: List<@Composable () -> Unit> = dock.take(DOCK_SLOTS).map { app ->
         @Composable {
             Box(
@@ -216,6 +294,9 @@ private fun Dock(dock: List<DockApp>, screen: Screen, a: BarActions, homeInMiddl
     val homeBack: @Composable () -> Unit = {
         BarIcon(ShIcons.home, "Home", false, onClick = a.home)
         BarIcon(ShIcons.backArrow, "Back", false, onClick = a.back)
+        // Ambient lighting: the bulb glows in the lights' colour while they're on
+        if (lights != null && openLights != null) BarIcon(ShIcons.bulb, "Ambient lighting", false, onClick = openLights,
+            tint = if (lights.on) lightColor(lights.hue) else Sh.dim)
     }
     BarIcon(ShIcons.grid, "All apps", screen == Screen.APPS, onClick = a.apps)
     if (homeInMiddle) {
@@ -334,43 +415,15 @@ private fun SeatButton(icon: ImageVector, level: Int, color: Color, label: Strin
 }
 
 @Composable
-private fun BarIcon(icon: ImageVector, label: String, active: Boolean, onClick: () -> Unit, onColor: Color = Sh.ink) {
+private fun BarIcon(icon: ImageVector, label: String, active: Boolean, onClick: () -> Unit, onColor: Color = Sh.ink, tint: Color? = null) {
     val bg by animateColorAsState(if (active) Sh.raised else Color.Transparent, tween(180), label = "bar")
     Box(
         Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(bg).press(onClick, label = label),
         contentAlignment = Alignment.Center,
-    ) { Glyph(icon, if (active) onColor else Sh.dim, 26.dp) }
+    ) { Glyph(icon, tint ?: if (active) onColor else Sh.dim, 26.dp) }
 }
 
-/** Original layout: ‹ 22° › for one zone. */
-@Composable
-private fun ZoneTemp(c: ClimateState, zone: Zone, a: BarActions) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Arrow(ShIcons.chevronLeft, Sh.cyan, "${zone.label} cooler", 44.dp) { a.nudgeTemp(zone, -1) }
-        Column(Modifier.width(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Txt(if (c.power) "${c.temp(zone).toInt()}°" else "Off", Sh.text(28.sp, FontWeight.SemiBold, if (c.power) Sh.ink else Sh.faint, (-0.5).sp))
-            Txt(zone.label, Sh.text(11.sp, FontWeight.Medium, Sh.dim))
-        }
-        Arrow(ShIcons.chevronRight, Sh.orange, "${zone.label} warmer", 44.dp) { a.nudgeTemp(zone, 1) }
-    }
-}
 
-/** Original layout: opens the Climate page and shows the fan speed (or AUTO). */
-@Composable
-private fun FanButton(c: ClimateState, active: Boolean, onClick: () -> Unit) {
-    val bg by animateColorAsState(if (active) Sh.raised else Color.Transparent, tween(180), label = "fanbg")
-    Column(
-        Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(bg).press(onClick, label = "Climate"),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Glyph(ShIcons.fan, if (c.power) Sh.ink else Sh.dim, 22.dp)
-        Txt(
-            when { !c.power -> "OFF"; c.auto -> "AUTO"; else -> "${c.fan}" },
-            Sh.text(11.sp, FontWeight.Bold, if (c.power) Sh.ink else Sh.faint, 0.3.sp).copy(textAlign = TextAlign.Center),
-        )
-    }
-}
 
 /**
  * Slider layout: a blue-to-orange strip; drag or tap anywhere on it to set the cabin temperature.
@@ -416,8 +469,8 @@ private fun TempSlider(c: ClimateState, a: BarActions) {
                 val left = thumbR
                 val width = size.width - thumbR * 2
                 drawRoundRect(
-                    Brush.horizontalGradient(listOf(Sh.cyan, Color(0xFF8E8EFF), Sh.orange), startX = left, endX = left + width),
-                    Offset(left, y - trackH / 2), Size(width, trackH), CornerRadius(trackH / 2),
+                    Brush.horizontalGradient(listOf(Sh.cyan, Color(0xFF8E8EFF), Sh.orange), startX = left - trackH / 2, endX = left + width + trackH / 2),
+                    Offset(left - trackH / 2, y - trackH / 2), Size(width + trackH, trackH), CornerRadius(trackH / 2),
                     alpha = if (c.power) 1f else 0.35f,
                 )
                 val f = ((shown - min) / (max - min)).coerceIn(0f, 1f)
@@ -435,7 +488,7 @@ private fun TempSlider(c: ClimateState, a: BarActions) {
 }
 
 /** Slider tracks: two must fit beside the apps and seats, so a little shorter than one alone would be. */
-private val SLIDER_W = 230.dp
+private val SLIDER_W = 192.dp
 private val SLIDER_THUMB_TRAVEL = SLIDER_W - 44.dp
 
 /**
@@ -482,8 +535,9 @@ private fun FanSlider(c: ClimateState, a: BarActions) {
                 val left = thumbR
                 val width = size.width - thumbR * 2
                 drawRoundRect(
-                    Brush.horizontalGradient(listOf(Color(0xFF3A3A3C), Color(0xFF3B6FD8), Sh.blue), startX = left, endX = left + width),
-                    Offset(left, y - trackH / 2), Size(width, trackH), CornerRadius(trackH / 2),
+                    // The strip runs half its height past the first and last speed, so the end dots sit inside it
+                    Brush.horizontalGradient(listOf(Color(0xFF3A3A3C), Color(0xFF3B6FD8), Sh.blue), startX = left - trackH / 2, endX = left + width + trackH / 2),
+                    Offset(left - trackH / 2, y - trackH / 2), Size(width + trackH, trackH), CornerRadius(trackH / 2),
                     alpha = if (c.power) 1f else 0.35f,
                 )
                 // a tick for each speed
@@ -499,18 +553,3 @@ private fun FanSlider(c: ClimateState, a: BarActions) {
     }
 }
 
-/** Presets layout: one scene button; lit while the cabin is set that way. */
-@Composable
-private fun PresetChip(p: Preset, active: Boolean, onClick: () -> Unit) {
-    val bg by animateColorAsState(if (active) (if (p == Preset.DEMIST || p == Preset.WARM) Sh.orange else Sh.blue) else Color.Transparent, tween(180), label = "preset")
-    val fg = if (active) (if (p == Preset.DEMIST || p == Preset.WARM) Color(0xFF2B1700) else Color.White) else Sh.ink
-    Column(
-        Modifier.size(66.dp, 56.dp).clip(RoundedCornerShape(28.dp)).background(bg).press(onClick, label = "${p.label} preset"),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Glyph(when (p) { Preset.COOL -> ShIcons.snow; Preset.COMFORT -> ShIcons.fan; Preset.WARM -> ShIcons.flame; Preset.DEMIST -> ShIcons.demistFront }, fg, 20.dp)
-        Gap(2.dp)
-        Txt(p.label, Sh.text(11.sp, FontWeight.SemiBold, fg))
-    }
-}

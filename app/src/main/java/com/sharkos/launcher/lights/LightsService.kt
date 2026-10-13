@@ -39,7 +39,8 @@ class LightsService : Service() {
     private var ready = false
     private var attempt = 0
     private var generation = 0
-    private val queue = ArrayDeque<ByteArray>()
+    /** Frames waiting to be written; a slider's frames (replaceable) give way to newer ones. */
+    private val queue = ArrayDeque<Pair<ByteArray, Boolean>>()
     private var writing = false
     private var state = "IDLE"
 
@@ -63,7 +64,9 @@ class LightsService : Service() {
             }
             ACTION_SEND -> {
                 val frames = intent.getStringExtra(EXTRA_FRAMES).orEmpty().split(',').filter { it.isNotBlank() }.map(::unhex)
-                queue.clear(); queue.addAll(frames)
+                val replaceable = intent.getBooleanExtra(EXTRA_REPLACEABLE, true)
+                if (replaceable) queue.removeAll { it.second }
+                queue.addAll(frames.map { it to replaceable })
                 if (ready) flush() else if (target != null && state == "IDLE") restart("send")
             }
             ACTION_RELEASE -> { log("Disconnected by the driver"); target = null; teardown(); setState("IDLE"); stopSelf() }
@@ -168,7 +171,7 @@ class LightsService : Service() {
         val g = gatt ?: return
         val ch = writer ?: return
         if (!ready || writing) return
-        val frame = queue.removeFirstOrNull() ?: return
+        val frame = queue.removeFirstOrNull()?.first ?: return
         writing = true
         ch.writeType = if (ch.properties and BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE != 0)
             BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE else BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
@@ -214,6 +217,7 @@ class LightsService : Service() {
         private const val NOTIFICATION_ID = 41
         const val EXTRA_ADDRESS = "address"
         const val EXTRA_FRAMES = "frames"
+        const val EXTRA_REPLACEABLE = "replaceable"
         private const val CHANNEL = "lights"
         private val SERVICE = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb")
         private val WRITE = UUID.fromString("0000fff3-0000-1000-8000-00805f9b34fb")
