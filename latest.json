@@ -1,6 +1,6 @@
 {
-  "versionCode": 17,
-  "versionName": "0.1.16",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.16.apk",
-  "notes": "Ambient lighting is official: two zones (door trims, pockets and footwells), connects at start-up and stays connected. The separate helper app is no longer needed."
+  "versionCode": 18,
+  "versionName": "0.1.17",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.17.apk",
+  "notes": "Ambient lighting on the HVAC Bar: tap the bulb to slide to the lighting controls. Each zone now switches off on its own. Three HVAC Bar layouts: Balanced, Mirrored and Slider."
 }
