@@ -90,15 +90,7 @@ class CarBackend private constructor(val name: String, targets: Map<String, Any>
     companion object {
         private const val TAG = "SharkOS/Car"
 
-        /**
-         * BYD apps that bundle the bydauto client library. Each carries the devices its app needs, so a
-         * device missing from the climate app (multimedia, say) is looked for in the others in turn.
-         */
-        private val BYD_CLIENT_PACKAGES = listOf("com.byd.hvac", "com.byd.autoservice", "com.byd.localmusic", "com.byd.mycar", "com.byd.carsettings")
-
-        /** Why each device that failed to open failed, per package tried; shown in Media diagnostics. */
-        @Volatile var openErrors: Map<String, String> = emptyMap()
-            private set
+        private val BYD_CLIENT_PACKAGES = listOf("com.byd.hvac", "com.byd.autoservice")
 
         /** Only what SharkOS reads or sets: fewer devices, fewer binder connections held open. */
         private val BYD_DEVICES = linkedMapOf(
@@ -107,10 +99,6 @@ class CarBackend private constructor(val name: String, targets: Map<String, Any>
             "statistic" to "android.hardware.bydauto.statistic.BYDAutoStatisticDevice",
             "speed" to "android.hardware.bydauto.speed.BYDAutoSpeedDevice",
             "tyre" to "android.hardware.bydauto.tyre.BYDAutoTyreDevice",
-            // What's playing, from any source including CarPlay (BYD's own widget and cluster read it)
-            "multimedia" to "android.hardware.bydauto.multimedia.BYDAutoMultimediaDevice",
-            // The cluster's music feed: a second place the head unit puts the current song
-            "instrument" to "android.hardware.bydauto.instrument.BYDAutoInstrumentDevice",
         )
 
         /**
@@ -119,28 +107,18 @@ class CarBackend private constructor(val name: String, targets: Map<String, Any>
          * main thread.
          */
         fun discover(ctx: Context): CarBackend? = runCatching {
-            val apks = BYD_CLIENT_PACKAGES.mapNotNull { pkg ->
-                runCatching { pkg to ctx.packageManager.getApplicationInfo(pkg, 0).sourceDir }.getOrNull()
-            }
-            if (apks.isEmpty()) return null
-            val loaders = apks.map { (pkg, apk) -> pkg to PathClassLoader(apk, ctx.classLoader) }
+            val apk = BYD_CLIENT_PACKAGES.firstNotNullOfOrNull { pkg ->
+                runCatching { ctx.packageManager.getApplicationInfo(pkg, 0).sourceDir }.getOrNull()
+            } ?: return null
+            val loader = PathClassLoader(apk, ctx.classLoader)
             val devices = LinkedHashMap<String, Any>()
-            val errors = LinkedHashMap<String, String>()
             for ((key, cls) in BYD_DEVICES) {
-                val tried = mutableListOf<String>()
-                for ((pkg, loader) in loaders) {
-                    val r = runCatching { instantiate(loader.loadClass(cls), ctx) }
-                    val dev = r.getOrNull()
-                    if (dev != null) { devices[key] = dev; break }
-                    val e = r.exceptionOrNull()
-                    val cause = (e as? java.lang.reflect.InvocationTargetException)?.targetException ?: e
-                    tried += "${pkg.removePrefix("com.byd.")}: ${cause?.javaClass?.simpleName ?: "null"}${cause?.message?.let { ": " + it.take(80) } ?: ""}"
-                }
-                if (key !in devices) { errors[key] = tried.joinToString(" | "); Log.w(TAG, "device $key: $tried") }
+                runCatching { instantiate(loader.loadClass(cls), ctx) }
+                    .onFailure { Log.w(TAG, "device $key: ${it.javaClass.simpleName}: ${it.message}") }
+                    .getOrNull()?.let { devices[key] = it }
             }
-            openErrors = errors
             if (devices.isEmpty()) null
-            else CarBackend("bydauto (${File(apks.first().second).name})", devices).also { Log.w(TAG, "connected: ${devices.keys}") }
+            else CarBackend("bydauto (${File(apk).name})", devices).also { Log.w(TAG, "connected: ${devices.keys}") }
         }.getOrNull()
 
         private fun instantiate(c: Class<*>, ctx: Context): Any? {

@@ -102,7 +102,7 @@ class Snapshots {
     }
 
     @Test fun homeCarPlaySong() = paparazzi.snapshot {
-        val t = Track("My Universe", "Coldplay", "CarPlay", null, true, 61_000, 227_000, 0, fromCar = true)
+        val t = Track("My Universe", "Coldplay", "CarPlay", null, true, 61_000, 227_000, 0, carPlay = true)
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, t, true, Attitude(2.4f, -1.2f), home) }
     }
 

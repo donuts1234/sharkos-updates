@@ -18,13 +18,6 @@
     <uses-permission android:name="android.permission.BYDAUTO_SPEED_GET" />
     <uses-permission android:name="android.permission.BYDAUTO_TYRE_COMMON" />
     <uses-permission android:name="android.permission.BYDAUTO_TYRE_GET" />
-    <!-- What's playing (any source, CarPlay included). Not listed in the Shark 6's permission dump, so
-         possibly unguarded; declared in case a firmware checks. -->
-    <uses-permission android:name="android.permission.BYDAUTO_MULTIMEDIA_COMMON" />
-    <uses-permission android:name="android.permission.BYDAUTO_MULTIMEDIA_GET" />
-    <!-- The instrument cluster's music feed (normal permissions on the Shark 6) -->
-    <uses-permission android:name="android.permission.BYDAUTO_INSTRUMENT_COMMON" />
-    <uses-permission android:name="android.permission.BYDAUTO_INSTRUMENT_GET" />
 
     <!-- A launcher has to see every installed app (targetSdk >= 30 hides them otherwise), and the
          car backend has to find BYD's client APK. -->
@@ -37,7 +30,7 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!-- Over-the-air updates: internet only to fetch latest.json and the APK; install via Android's installer. -->
-    <!-- Desay CarPlay service: now playing. Granted only if the unit allows it; harmless otherwise. -->
+    <!-- Desay CarPlay service (now playing). Granted only if the unit allows it; harmless otherwise. -->
     <uses-permission android:name="car.permission.CARPLAY_APP" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />

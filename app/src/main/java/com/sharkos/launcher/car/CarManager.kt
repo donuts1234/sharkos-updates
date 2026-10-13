@@ -274,86 +274,6 @@ class CarManager(private val appContext: Context) {
     private fun onOff(on: Boolean) = if (on) "on" else "off"
     private fun levelLabel(level: Int) = if (level == 0) "off" else "$level"
 
-    // ---- Media (what the head unit says is playing, CarPlay included) ----
-
-    private val _media = MutableStateFlow<CarMedia?>(null)
-    val media: StateFlow<CarMedia?> = _media.asStateFlow()
-
-    private val _mediaProbe = MutableStateFlow<List<String>>(emptyList())
-    /** Raw readings from every place a song might be, for Settings → Media diagnostics. */
-    val mediaProbe: StateFlow<List<String>> = _mediaProbe.asStateFlow()
-
-    /** Read BYD's multimedia device. Blocking; runs with the telemetry poll. */
-    private fun refreshMedia() {
-        val b = backend ?: return
-        probeMediaSources(b)
-        fun int(m: String): Int? {
-            val c = Call(m, device = "multimedia")
-            return if (b.has(c)) runCatching { b.invoke(c) as? Int }.getOrNull() else null
-        }
-        val source = int("getMediaType")
-        val state = int("getPlayState")
-        val progress = int("getPlayProgress")
-        val info = Call("getPlayMediaInfo", device = "multimedia").takeIf { b.has(it) }?.let { runCatching { b.invoke(it) }.getOrNull() }
-        if (source == null && state == null && info == null) return     // no multimedia device on this unit
-        _media.value = CarMedia.fromFields(source, state, progress, describe(info), android.os.SystemClock.elapsedRealtime())
-    }
-
-    /** Readings from the cluster feed and Desay, plus why any device failed to open. Diagnostics only. */
-    private fun probeMediaSources(b: CarBackend) {
-        val lines = mutableListOf<String>()
-        for ((dev, why) in CarBackend.openErrors.filterKeys { it == "multimedia" || it == "instrument" }) lines += "Can't open $dev: $why"
-        fun read(m: String, vararg args: Any?): String? {
-            val c = Call(m, *args, device = "instrument")
-            return if (b.has(c)) runCatching { b.invoke(c)?.toString() }.getOrElse { "error ${it.javaClass.simpleName}" } else null
-        }
-        if ("instrument" in b.deviceKeys) {
-            listOfNotNull(
-                read("getLastMediaPackage")?.let { "lastMediaPackage=$it" },
-                read("getMusicInfoResult")?.let { "musicInfoResult=$it" },
-                read("getMusicChangeSource")?.let { "musicChangeSource=$it" },
-                read("getMusicProgress", 0)?.let { "musicProgress(0)=$it" },
-                read("getMusicProgress", 1)?.let { "musicProgress(1)=$it" },
-                read("getMusicControlStatus", 1)?.let { "musicControlStatus(1)=$it" },
-            ).let { if (it.isNotEmpty()) lines += "Cluster: " + it.joinToString(" · ") }
-        }
-        if (ts.found.isNotEmpty()) lines += "Desay services: " + ts.found.joinToString(", ")
-        _mediaProbe.value = lines
-    }
-
-    /** Every no-argument getter and public field of [o], as text: MediaInfo's shape isn't known yet. */
-    private fun describe(o: Any?): Map<String, String> {
-        if (o == null) return emptyMap()
-        val out = LinkedHashMap<String, String>()
-        runCatching {
-            for (m in o.javaClass.methods) {
-                if (m.parameterTypes.isNotEmpty() || m.declaringClass == Any::class.java) continue
-                val n = m.name
-                if (!(n.startsWith("get") || n.startsWith("is")) || n == "getClass") continue
-                val v = runCatching { m.invoke(o) }.getOrNull() ?: continue
-                if (v is ByteArray || v is android.graphics.Bitmap) { out[n.removePrefix("get")] = "<${v.javaClass.simpleName}>"; continue }
-                out[n.removePrefix("get").removePrefix("is")] = v.toString().take(120)
-            }
-            for (f in o.javaClass.fields) {
-                if (java.lang.reflect.Modifier.isStatic(f.modifiers)) continue
-                val v = runCatching { f.get(o) }.getOrNull() ?: continue
-                out.putIfAbsent(f.name, v.toString().take(120))
-            }
-        }
-        return out
-    }
-
-    /**
-     * Play/pause/skip for whatever the car is playing. A media-button key goes to the head unit's
-     * media-button session (BYD's MediaCenter), which hands it to the current source, CarPlay included.
-     */
-    fun mediaKey(keyCode: Int) {
-        val am = appContext.getSystemService(android.media.AudioManager::class.java) ?: return
-        val now = android.os.SystemClock.uptimeMillis()
-        am.dispatchMediaKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, keyCode, 0))
-        am.dispatchMediaKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, keyCode, 0))
-    }
-
     // ---- Telemetry ----
 
     /** One snapshot of what the car reports; each field is best-effort. Blocking. */
@@ -395,7 +315,6 @@ class CarManager(private val appContext: Context) {
     fun telemetry(periodMs: Long = 2000): Flow<Telemetry> = flow {
         while (true) {
             refreshClimate()
-            runCatching { refreshMedia() }
             emit(readTelemetry())
             delay(periodMs)
         }

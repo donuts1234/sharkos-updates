@@ -26,8 +26,8 @@ data class Track(
     val durationMs: Long,
     /** When [positionMs] was sampled (elapsedRealtime), to advance the bar between updates. */
     val sampledAt: Long,
-    /** From the head unit's own media channel (CarPlay etc.), not an Android media session. */
-    val fromCar: Boolean = false,
+    /** From the head unit's CarPlay service, not an Android media session: controls go there. */
+    val carPlay: Boolean = false,
     /** False when the source gives no position at all: hide the time rather than show 0:00. */
     val knowsPosition: Boolean = true,
 ) {

@@ -61,14 +61,14 @@ object CarPlayLink {
     private val _song = MutableStateFlow<CarPlaySong?>(null)
     val song: StateFlow<CarPlaySong?> = _song.asStateFlow()
 
-    private val _status = MutableStateFlow("CarPlay link: not started")
-    val status: StateFlow<String> = _status.asStateFlow()
+    private val _linked = MutableStateFlow(false)
+    /** True once SharkOS is registered with the CarPlay service, for Settings → Now playing. */
+    val linked: StateFlow<Boolean> = _linked.asStateFlow()
 
     private val main = Handler(Looper.getMainLooper())
     private var app: Context? = null
     private var service: IBinder? = null
     private var bound = false
-    private var updates = 0
 
     internal val callback = object : Binder() {
         init { attachInterface(null, CALLBACK) }
@@ -80,9 +80,8 @@ object CarPlayLink {
                 if (code == 2) return true                         // playback list: not used
                 if (data.readInt() == 0) return true               // null info
                 val info = readInfo(data)
-                updates++
                 publish(info, artworkOnly = code == CB_ARTWORK)
-            }.onFailure { Log.w(TAG, "callback $code: ${it.message}"); _status.value = "CarPlay link: bad update (${it.javaClass.simpleName})" }
+            }.onFailure { Log.w(TAG, "callback $code: ${it.message}") }
             return true
         }
     }
@@ -121,7 +120,6 @@ object CarPlayLink {
             )
         }
         _song.value = next
-        _status.value = "CarPlay link: connected · $updates updates · status ${next.status}"
     }
 
     /** Artwork as a small bitmap: Home shows it at about 120 px, no need to hold a full-size JPEG. */
@@ -138,12 +136,13 @@ object CarPlayLink {
     }.getOrNull()
 
     private val conn = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, binder: IBinder?) { if (binder != null) attach(binder, "bound") }
-        override fun onServiceDisconnected(name: ComponentName?) {
-            service = null
-            _status.value = "CarPlay link: service stopped, waiting"
+        override fun onServiceConnected(name: ComponentName?, binder: IBinder?) { if (binder != null) attach(binder) }
+        override fun onServiceDisconnected(name: ComponentName?) { service = null; _linked.value = false }
+        override fun onBindingDied(name: ComponentName?) {
+            runCatching { app?.unbindService(this) }
+            bound = false; service = null; _linked.value = false
+            main.postDelayed({ app?.let(::start) }, 5000)
         }
-        override fun onBindingDied(name: ComponentName?) { bound = false; retry() }
     }
 
     /** Start listening. Cheap, idempotent, and silent on a unit without the CarPlay service. */
@@ -154,32 +153,15 @@ object CarPlayLink {
         val i = Intent().setComponent(ComponentName.unflattenFromString(COMPONENT))
         val ok = runCatching { c.bindService(i, conn, Context.BIND_AUTO_CREATE) }
         bound = ok.getOrDefault(false)
-        if (bound) { _status.value = "CarPlay link: binding…"; return }
-        // Not bindable from here: try the service's binder registered by name.
-        val b = runCatching {
-            Class.forName("android.os.ServiceManager").getMethod("getService", String::class.java).invoke(null, "carplay_service") as? IBinder
-        }.getOrNull()
-        if (b != null) attach(b, "by name")
-        else _status.value = "CarPlay link: can't bind (" + (ok.exceptionOrNull()?.let { "${it.javaClass.simpleName}: ${it.message}" } ?: "no service") + ")"
+        if (!bound) Log.w(TAG, "can't bind: ${ok.exceptionOrNull()?.message ?: "no CarPlay service"}")
     }
 
-    private fun attach(binder: IBinder, how: String) {
+    private fun attach(binder: IBinder) {
         service = binder
-        runCatching { binder.linkToDeath({ service = null; _status.value = "CarPlay link: service died"; retry() }, 0) }
-        val desc = runCatching { binder.interfaceDescriptor }.getOrNull()
-        val ok = runCatching {
-            transact(binder, TX_REGISTER_NOW_PLAYING) { it.writeStrongBinder(callback) }
-        }
-        _status.value = when {
-            ok.isFailure -> "CarPlay link: register failed (${ok.exceptionOrNull()?.javaClass?.simpleName}: ${ok.exceptionOrNull()?.message})"
-            desc != null && desc != SERVICE -> "CarPlay link: $how, unexpected interface $desc"
-            else -> "CarPlay link: $how, listening (no song yet)"
-        }
-        Log.w(TAG, _status.value)
-    }
-
-    private fun retry() {
-        main.postDelayed({ app?.let { if (service == null) { bound = false; start(it) } } }, 5000)
+        // If CarPlay's process restarts, Android reconnects the binding and this runs again.
+        val ok = runCatching { transact(binder, TX_REGISTER_NOW_PLAYING) { it.writeStrongBinder(callback) } }
+        _linked.value = ok.isSuccess
+        if (ok.isFailure) Log.w(TAG, "register failed: ${ok.exceptionOrNull()?.message}")
     }
 
     private fun transact(b: IBinder, code: Int, write: (Parcel) -> Unit) {
@@ -204,6 +186,6 @@ object CarPlayLink {
         val b = service
         if (b != null) runCatching { transact(b, TX_UNREGISTER_NOW_PLAYING) { it.writeStrongBinder(callback) } }
         if (bound) runCatching { app?.unbindService(conn) }
-        bound = false; service = null
+        bound = false; service = null; _linked.value = false
     }
 }

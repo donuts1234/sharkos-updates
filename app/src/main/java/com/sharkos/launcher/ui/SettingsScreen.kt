@@ -36,7 +36,7 @@ class SettingsInfo(
     val update: Updater.State = Updater.State.Idle,
     val carDataAllowed: Boolean = true,
     val barStyle: BarStyle = BarStyle.BALANCED,
-    val mediaDebug: List<String> = emptyList(),
+    val carPlayLinked: Boolean = false,
     val updatesConfigured: Boolean = true,
     val canInstall: Boolean = true,
 )
@@ -106,6 +106,11 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
                     status = if (s.mediaAccess) "Allowed" to Sh.green else "Off" to Sh.faint,
                 ) { if (!s.mediaAccess) PillButton("Allow", a.grantMedia, bg = Sh.blue, fg = Color.White) }
                 if (!s.mediaAccess) Hint("If the settings page won't open: adb shell cmd notification allow_listener com.sharkos.launcher/com.sharkos.launcher.media.MediaListener")
+                Item(
+                    "CarPlay music",
+                    "Song, artwork and time come straight from the car's CarPlay service.",
+                    status = if (s.carPlayLinked) "Connected" to Sh.green else "Not found" to Sh.faint,
+                )
             }
             Group("Car") {
                 Item(
@@ -132,13 +137,6 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
                 }
             }
             Group("Updates") { Updates(s, a) }
-            if (s.mediaDebug.isNotEmpty()) Group("Media diagnostics") {
-                Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Txt("What the car and Android each report as playing. Handy for a photo when something looks wrong.", Sh.text(14.sp, color = Sh.dim), maxLines = 2)
-                    Gap(6.dp)
-                    for (line in s.mediaDebug) Txt(line, Sh.text(13.sp, color = Sh.ink).copy(fontFamily = FontFamily.Monospace), maxLines = 6)
-                }
-            }
             Group("About") {
                 Item("SharkOS ${s.version}", "A light launcher for the BYD Shark 6.")
                 Item(
