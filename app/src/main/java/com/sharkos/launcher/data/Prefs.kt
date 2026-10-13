@@ -30,6 +30,11 @@ class Prefs(context: Context) {
         set(v) = sp.edit().putString("bar_style_name", v).apply()
 
     /** Background and corner style, by enum name. */
+    /** Which side the HVAC Bar's temperature sits on, by TempSide name. */
+    var tempSide: String?
+        get() = sp.getString("temp_side", null)
+        set(v) = sp.edit().putString("temp_side", v).apply()
+
     var wallpaper: String?
         get() = sp.getString("wallpaper", null)
         set(v) = sp.edit().putString("wallpaper", v).apply()

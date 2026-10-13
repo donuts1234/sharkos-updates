@@ -87,6 +87,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     var autoLaunch by remember { mutableStateOf(prefs.autoLaunch) }
     var wallpaper by remember { mutableStateOf(Wallpaper.entries.firstOrNull { it.name == prefs.wallpaper } ?: Wallpaper.BLACK) }
     var corners by remember { mutableStateOf(Corners.entries.firstOrNull { it.name == prefs.corners } ?: Corners.LIGHT) }
+    var tempSide by remember { mutableStateOf(TempSide.entries.firstOrNull { it.name == prefs.tempSide } ?: TempSide.RIGHT) }
     var barStyle by remember { mutableStateOf(BarStyle.entries.firstOrNull { it.name == prefs.barStyle } ?: BarStyle.BALANCED) }
     var canOverlay by remember { mutableStateOf(com.sharkos.launcher.AutoLaunch.canLaunchFromBackground(ctx)) }
     var carData by remember { mutableStateOf(carDataAllowed(ctx)) }
@@ -182,6 +183,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
             launch = apps::launch,
             addApp = { picking = true; onScreen(Screen.APPS) },
             removeApp = { d -> apps.unpin(d.pkg); notice = "Removed ${d.label} from the bar" },
+            setFan = car::setFanSpeed,
         )
     }
 
@@ -265,6 +267,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 canInstall = canInstall,
                                 carDataAllowed = carData || hasCarData,
                                 barStyle = barStyle,
+                                tempSide = tempSide,
                                 carPlayLinked = carPlayLinked,
                                 wallpaper = wallpaper,
                                 corners = corners,
@@ -281,6 +284,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 allowInstalls = { if (!openSettings(ctx, updater.allowInstallsIntent())) notice = HIDDEN_PAGE },
                                 allowCarData = { askCarData.launch(CAR_DATA) },
                                 setBarStyle = { st -> prefs.barStyle = st.name; barStyle = st },
+                                setTempSide = { sd -> prefs.tempSide = sd.name; tempSide = sd },
                                 setWallpaper = { w -> prefs.wallpaper = w.name; wallpaper = w },
                                 setCorners = { c -> prefs.corners = c.name; corners = c },
                                 allowOverlay = {
@@ -300,7 +304,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                 }
                 NoticePill(notice, Modifier.align(Alignment.TopCenter).padding(top = 16.dp))
             }
-            BottomBar(climate, dockApps, screen, bar, style = barStyle)
+            BottomBar(climate, dockApps, screen, bar, style = barStyle, tempSide = tempSide)
         }
     }
 }

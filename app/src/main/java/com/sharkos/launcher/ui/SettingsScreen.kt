@@ -66,6 +66,7 @@ class SettingsInfo(
     val canInstall: Boolean = true,
     val wallpaper: Wallpaper = Wallpaper.BLACK,
     val corners: Corners = Corners.LIGHT,
+    val tempSide: TempSide = TempSide.RIGHT,
 )
 
 class SettingsActions(
@@ -81,6 +82,7 @@ class SettingsActions(
     val installUpdate: (Updater.Release) -> Unit = {},
     val allowInstalls: () -> Unit = {},
     val setWallpaper: (Wallpaper) -> Unit = {},
+    val setTempSide: (TempSide) -> Unit = {},
     val setCorners: (Corners) -> Unit = {},
     val reconnectCar: () -> Unit = {},
     val resetBar: () -> Unit = {},
@@ -289,42 +291,55 @@ private fun AppearancePage(s: SettingsInfo, a: SettingsActions) {
     }
 }
 
-/** Each layout drawn small, exactly as it will look on the bar; tap one to use it. */
+/** Which side the temperature goes, shown both ways; then each layout drawn small. Tap to use. */
 @Composable
 private fun HvacPage(s: SettingsInfo, a: SettingsActions) {
     Txt("Pick the bar along the bottom of every screen. One cabin temperature keeps both sides in sync.", Sh.text(16.sp, color = Sh.dim), maxLines = 2)
+    SectionLabel("Temperature side", Modifier.padding(start = 18.dp))
+    for (side in listOf(TempSide.RIGHT, TempSide.LEFT)) {
+        Choice(
+            title = "Temperature on the ${side.label.lowercase()}",
+            blurb = if (side == TempSide.RIGHT) "Fan on the left, temperature by the driver." else "Temperature on the left, fan by the driver.",
+            on = side == s.tempSide,
+            onPick = { a.setTempSide(side) },
+        ) { BarPreview(s.barStyle, side, s) }
+    }
+    SectionLabel("Layout", Modifier.padding(start = 18.dp, top = 8.dp))
     for (style in BarStyle.entries) {
-        val on = style == s.barStyle
-        Column(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Sh.card)
-                .then(if (on) Modifier.border(2.dp, Sh.blue, RoundedCornerShape(22.dp)) else Modifier)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Txt(style.label, Sh.text(18.sp, FontWeight.SemiBold))
-                    Txt(style.blurb, Sh.text(14.sp, color = Sh.dim), maxLines = 2)
-                }
-                Gap(16.dp)
-                if (on) Txt("In use", Sh.text(15.sp, FontWeight.SemiBold, Sh.blue))
-                else PillButton("Use", { a.setBarStyle(style) })
-            }
-            BarPreview(style, s)
-        }
+        Choice(style.label, style.blurb, style == s.barStyle, { a.setBarStyle(style) }) { BarPreview(style, s.tempSide, s) }
     }
 }
+
+@Composable
+private fun Choice(title: String, blurb: String, on: Boolean, onPick: () -> Unit, preview: @Composable () -> Unit) =
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Sh.card)
+            .then(if (on) Modifier.border(2.dp, Sh.blue, RoundedCornerShape(22.dp)) else Modifier)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Txt(title, Sh.text(18.sp, FontWeight.SemiBold))
+                Txt(blurb, Sh.text(14.sp, color = Sh.dim), maxLines = 2)
+            }
+            Gap(16.dp)
+            if (on) Txt("In use", Sh.text(15.sp, FontWeight.SemiBold, Sh.blue))
+            else PillButton("Use", onPick)
+        }
+        preview()
+    }
 
 private val NoBar = BarActions({}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
 /** The real bar, drawn at the width of the screen and shrunk to fit; touches go to [Use], not the bar. */
 @Composable
-private fun BarPreview(style: BarStyle, s: SettingsInfo) = BoxWithConstraints(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))) {
+private fun BarPreview(style: BarStyle, side: TempSide, s: SettingsInfo) = BoxWithConstraints(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))) {
     val scale = maxWidth / 1280.dp
     val d = LocalDensity.current
     Box(Modifier.fillMaxWidth().height(88.dp * scale)) {
         CompositionLocalProvider(LocalDensity provides Density(d.density * scale, d.fontScale)) {
-            BottomBar(s.climate, s.dock, Screen.HOME, NoBar, style = style)
+            BottomBar(s.climate, s.dock, Screen.HOME, NoBar, style = style, tempSide = side)
         }
         Box(Modifier.matchParentSize().pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } })
     }

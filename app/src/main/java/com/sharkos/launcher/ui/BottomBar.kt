@@ -34,6 +34,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -58,9 +59,12 @@ enum class BarStyle(val label: String, val blurb: String) {
     BALANCED("Balanced", "Fan by the passenger, temperature by the driver, A/C beside the apps."),
     CAPSULE("Capsule", "Fan, A/C and temperature together in one pill on the driver's side."),
     MIRRORED("Mirrored", "Fan with level bars on the left, temperature on the right, Home centred."),
-    SLIDER("Slider", "Drag along the strip to set the cabin temperature in one swipe."),
+    SLIDER("Slider", "Drag along the strips to set the fan and cabin temperature in one swipe."),
     PRESETS("Presets", "One-tap Cool, Comfort, Warm and Demist scenes beside the temperature."),
 }
+
+/** Which side of the bar the cabin temperature sits on; the fan takes the other side. */
+enum class TempSide(val label: String) { LEFT("Left"), RIGHT("Right") }
 
 /** What the HVAC Bar can do; wired to the car and the launcher in [Root]. */
 class BarActions(
@@ -82,6 +86,8 @@ class BarActions(
     val addApp: () -> Unit,
     /** Hold a pinned app: take it off the bar. */
     val removeApp: (DockApp) -> Unit,
+    /** Set the fan speed outright (the fan slider). */
+    val setFan: (Int) -> Unit = {},
 )
 
 /**
@@ -96,7 +102,9 @@ fun BottomBar(
     a: BarActions,
     modifier: Modifier = Modifier,
     style: BarStyle = BarStyle.BALANCED,
+    tempSide: TempSide = TempSide.RIGHT,
 ) {
+    val swap = tempSide == TempSide.LEFT
     Row(
         modifier.fillMaxWidth().height(88.dp).background(Sh.bar).barTint(LocalWallpaper.current).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -106,42 +114,54 @@ fun BottomBar(
         SeatButton(ShIcons.vent, climate.passengerSeat.vent, Sh.cyan, "Passenger seat cooling") { a.cycleVent(Zone.PASSENGER) }
         Gap(12.dp)
 
+        // Each layout as written has the temperature on the right; [swap] mirrors the climate parts.
+        // Seats stay put: passenger left, driver right.
         when (style) {
             BarStyle.ORIGINAL -> {
                 ZoneTemp(climate, Zone.PASSENGER, a)
-                Centre { Dock(dock, screen, a); Divider(); AcButton(climate, a); FanButton(climate, screen == Screen.CLIMATE, a.climate) }
+                Centre {
+                    if (swap) { FanButton(climate, screen == Screen.CLIMATE, a.climate); AcButton(climate, a); Divider(); Dock(dock, screen, a) }
+                    else { Dock(dock, screen, a); Divider(); AcButton(climate, a); FanButton(climate, screen == Screen.CLIMATE, a.climate) }
+                }
                 ZoneTemp(climate, Zone.DRIVER, a)
             }
             BarStyle.SLIDER -> {
-                FanArrows(climate, a)
+                if (swap) TempSlider(climate, a) else FanSlider(climate, a)
                 Centre { Dock(dock, screen, a) }
-                TempSlider(climate, a)
+                if (swap) FanSlider(climate, a) else TempSlider(climate, a)
             }
             BarStyle.PRESETS -> {
-                Centre { Dock(dock, screen, a) }
-                Capsule { for (p in Preset.entries) PresetChip(p, p.matches(climate)) { a.preset(p) } }
-                Gap(8.dp)
-                CabinArrows(climate, a)
+                val presets: @Composable () -> Unit = { Capsule { for (p in Preset.entries) PresetChip(p, p.matches(climate)) { a.preset(p) } } }
+                if (swap) { CabinArrows(climate, a); Gap(8.dp); presets(); Centre { Dock(dock, screen, a) } }
+                else { Centre { Dock(dock, screen, a) }; presets(); Gap(8.dp); CabinArrows(climate, a) }
             }
             BarStyle.BALANCED -> {
-                FanArrows(climate, a)
-                Centre { Dock(dock, screen, a); Divider(); AcButton(climate, a) }
-                CabinArrows(climate, a)
+                if (swap) CabinArrows(climate, a) else FanArrows(climate, a)
+                Centre {
+                    if (swap) { AcButton(climate, a); Divider(); Dock(dock, screen, a) }
+                    else { Dock(dock, screen, a); Divider(); AcButton(climate, a) }
+                }
+                if (swap) FanArrows(climate, a) else CabinArrows(climate, a)
             }
             BarStyle.CAPSULE -> {
-                Centre { Dock(dock, screen, a) }
-                Capsule {
-                    FanArrows(climate, a, compact = true)
-                    CapsuleDivider()
-                    AcButton(climate, a, size = 48.dp, round = true)
-                    CapsuleDivider()
-                    CabinArrows(climate, a, compact = true)
+                val capsule: @Composable () -> Unit = {
+                    Capsule {
+                        if (swap) CabinArrows(climate, a, compact = true) else FanArrows(climate, a, compact = true)
+                        CapsuleDivider()
+                        AcButton(climate, a, size = 48.dp, round = true)
+                        CapsuleDivider()
+                        if (swap) FanArrows(climate, a, compact = true) else CabinArrows(climate, a, compact = true)
+                    }
                 }
+                if (swap) { capsule(); Centre { Dock(dock, screen, a) } }
+                else { Centre { Dock(dock, screen, a) }; capsule() }
             }
             BarStyle.MIRRORED -> {
-                Capsule { FanArrows(climate, a, bars = true) }
+                val fan: @Composable () -> Unit = { Capsule { FanArrows(climate, a, bars = true) } }
+                val cabin: @Composable () -> Unit = { Capsule { CabinArrows(climate, a, caption = "Cabin · synced") } }
+                if (swap) cabin() else fan()
                 Centre { Dock(dock, screen, a, homeInMiddle = true); AcButton(climate, a) }
-                Capsule { CabinArrows(climate, a, caption = "Cabin · synced") }
+                if (swap) fan() else cabin()
             }
         }
 
@@ -363,7 +383,7 @@ private fun TempSlider(c: ClimateState, a: BarActions) {
         }
         Gap(6.dp)
         Box(
-            Modifier.size(240.dp, 60.dp)
+            Modifier.size(SLIDER_W, 60.dp)
                 .semantics { contentDescription = "Cabin temperature slider" }
                 .pointerInput(Unit) {
                     fun at(x: Float) = (min + (x / size.width).coerceIn(0f, 1f) * (max - min)).roundToInt().toFloat()
@@ -398,8 +418,73 @@ private fun TempSlider(c: ClimateState, a: BarActions) {
             // the number rides inside the thumb
             val f = ((shown - min) / (max - min)).coerceIn(0f, 1f)
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
-                Box(Modifier.padding(start = (f * (240 - 44)).dp).size(44.dp), contentAlignment = Alignment.Center) {
+                Box(Modifier.padding(start = SLIDER_THUMB_TRAVEL * f).size(44.dp), contentAlignment = Alignment.Center) {
                     Txt("${shown.roundToInt()}", Sh.text(17.sp, FontWeight.Bold, Color.Black))
+                }
+            }
+        }
+    }
+}
+
+/** Slider tracks: two must fit beside the apps and seats, so a little shorter than one alone would be. */
+private val SLIDER_W = 196.dp
+private val SLIDER_THUMB_TRAVEL = SLIDER_W - 44.dp
+
+/**
+ * Slider layout's fan: a grey-to-blue strip from 1 to 7, the same size and feel as the temperature
+ * slider. The readout shows the speed (or Auto) and opens the Climate page.
+ */
+@Composable
+private fun FanSlider(c: ClimateState, a: BarActions) {
+    val max = ClimateState.MAX_FAN
+    var dragging by remember { mutableStateOf(false) }
+    var dragFan by remember { mutableIntStateOf(c.fan) }
+    val shown = if (dragging) dragFan else c.fan
+    val setFan by rememberUpdatedState(a.setFan)
+    fun at(x: Float, w: Float) = (1 + (x / w).coerceIn(0f, 1f) * (max - 1)).roundToInt().coerceIn(1, max)
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.width(56.dp).press(a.climate, label = "Climate"), horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                Glyph(ShIcons.fan, if (c.power) Sh.ink else Sh.faint, 16.dp)
+                Txt(if (c.power) "$shown" else "–", Sh.text(24.sp, FontWeight.SemiBold, if (c.power) Sh.ink else Sh.faint))
+            }
+            Txt(if (c.auto && c.power) "Auto" else "Fan", Sh.text(11.sp, FontWeight.Medium, Sh.dim))
+        }
+        Gap(6.dp)
+        Box(
+            Modifier.size(SLIDER_W, 60.dp)
+                .semantics { contentDescription = "Fan speed slider" }
+                .pointerInput(Unit) { detectTapGestures { setFan(at(it.x, size.width.toFloat())) } }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = { dragging = true; dragFan = at(it.x, size.width.toFloat()) },
+                        onDragEnd = { dragging = false; setFan(dragFan) },
+                        onDragCancel = { dragging = false },
+                    ) { change, _ ->
+                        val f = at(change.position.x, size.width.toFloat())
+                        if (f != dragFan) { dragFan = f; setFan(f) }
+                    }
+                },
+        ) {
+            val f = (shown - 1).toFloat() / (max - 1)
+            Canvas(Modifier.fillMaxSize()) {
+                val trackH = 14.dp.toPx()
+                val y = size.height / 2
+                val thumbR = 22.dp.toPx()
+                val left = thumbR
+                val width = size.width - thumbR * 2
+                drawRoundRect(
+                    Brush.horizontalGradient(listOf(Color(0xFF3A3A3C), Color(0xFF3B6FD8), Sh.blue), startX = left, endX = left + width),
+                    Offset(left, y - trackH / 2), Size(width, trackH), CornerRadius(trackH / 2),
+                    alpha = if (c.power) 1f else 0.35f,
+                )
+                // a tick for each speed
+                for (n in 0 until max) drawCircle(Color.White.copy(alpha = 0.35f), 2.dp.toPx(), Offset(left + width * n / (max - 1), y))
+                drawCircle(Color.White, thumbR, Offset(left + f.coerceIn(0f, 1f) * width, y))
+            }
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+                Box(Modifier.padding(start = SLIDER_THUMB_TRAVEL * f.coerceIn(0f, 1f)).size(44.dp), contentAlignment = Alignment.Center) {
+                    Txt("$shown", Sh.text(17.sp, FontWeight.Bold, Color.Black))
                 }
             }
         }

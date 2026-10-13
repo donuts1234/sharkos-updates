@@ -77,6 +77,7 @@ class Snapshots {
     @Composable
     private fun Frame(
         screen: Screen, c: ClimateState = climate, style: com.sharkos.launcher.ui.BarStyle = com.sharkos.launcher.ui.BarStyle.BALANCED,
+        side: com.sharkos.launcher.ui.TempSide = com.sharkos.launcher.ui.TempSide.RIGHT,
         wallpaper: com.sharkos.launcher.ui.Wallpaper = com.sharkos.launcher.ui.Wallpaper.BLACK, content: @Composable () -> Unit,
     ) =
         Column(
@@ -85,7 +86,7 @@ class Snapshots {
         ) {
             Box(Modifier.weight(1f).fillMaxWidth()) { content() }
             androidx.compose.runtime.CompositionLocalProvider(com.sharkos.launcher.ui.LocalWallpaper provides wallpaper) {
-                BottomBar(c, dock, screen, bar, style = style)
+                BottomBar(c, dock, screen, bar, style = style, tempSide = side)
             }
         }
 
@@ -205,6 +206,20 @@ class Snapshots {
     @Test fun homeAlbumArtCool() = paparazzi.snapshot {
         val t = Track("Blue Water", "Sample Artist", "Spotify", cover(0xFF2AD4C8.toInt(), 0xFF0A2A6B.toInt()), false, 95_000, 201_000, 0)
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, t, true, Attitude(2.4f, -1.2f), home) }
+    }
+
+    @Test fun homeSliderLeft() = paparazzi.snapshot {
+        Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.SLIDER, side = com.sharkos.launcher.ui.TempSide.LEFT) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+    }
+
+    @Test fun settingsHvacSides() = paparazzi.snapshot {
+        Frame(Screen.SETTINGS, style = com.sharkos.launcher.ui.BarStyle.SLIDER) {
+            SettingsScreen(
+                SettingsInfo("0.1.9", true, true, CarLink.CONNECTED, "bydauto (BydHvac.apk)", true, barStyle = com.sharkos.launcher.ui.BarStyle.SLIDER, climate = climate, dock = dock),
+                SettingsActions({}, {}, {}, {}),
+                start = SettingsPage.HVAC,
+            )
+        }
     }
 
     @Test fun homeOcean() = paparazzi.snapshot {
