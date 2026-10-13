@@ -198,8 +198,8 @@ private fun Divider() = Box(Modifier.width(1.dp).height(36.dp).background(Sh.lin
 private fun CapsuleDivider() = Box(Modifier.padding(horizontal = 4.dp).width(1.dp).height(32.dp).background(Sh.line))
 
 /**
- * All apps on the left, then the three app spots (empty ones are + spots), then Home and Back on the
- * right, by the driver. [homeInMiddle] (Mirrored) puts Home and Back in the middle of the spots.
+ * All apps on the left, then the three app spots (empty ones are + spots), then Back and Home on the
+ * right, by the driver. [homeInMiddle] (Mirrored) puts Back and Home in the middle of the spots.
  */
 @Composable
 private fun Dock(dock: List<DockApp>, screen: Screen, a: BarActions, homeInMiddle: Boolean = false) {
@@ -212,9 +212,10 @@ private fun Dock(dock: List<DockApp>, screen: Screen, a: BarActions, homeInMiddl
             ) { AppIcon(app.pkg, app.label, 46.dp) }
         }
     } + List((DOCK_SLOTS - dock.size).coerceAtLeast(0)) { @Composable { AddSlot(a.addApp) } }
+    // Back then Home, both plain icons (no tile), so they read as navigation rather than app spots
     val homeBack: @Composable () -> Unit = {
-        BarIcon(ShIcons.home, "Home", screen == Screen.HOME, onClick = a.home)
         BarIcon(ShIcons.backArrow, "Back", false, onClick = a.back)
+        BarIcon(ShIcons.home, "Home", false, onClick = a.home)
     }
     BarIcon(ShIcons.grid, "All apps", screen == Screen.APPS, onClick = a.apps)
     if (homeInMiddle) {
