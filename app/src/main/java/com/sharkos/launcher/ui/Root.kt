@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -84,6 +85,8 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     var isHome by remember { mutableStateOf(isDefaultHome(ctx)) }
     val prefs = remember { com.sharkos.launcher.data.Prefs(ctx) }
     var autoLaunch by remember { mutableStateOf(prefs.autoLaunch) }
+    var wallpaper by remember { mutableStateOf(Wallpaper.entries.firstOrNull { it.name == prefs.wallpaper } ?: Wallpaper.BLACK) }
+    var corners by remember { mutableStateOf(Corners.entries.firstOrNull { it.name == prefs.corners } ?: Corners.LIGHT) }
     var barStyle by remember { mutableStateOf(BarStyle.entries.firstOrNull { it.name == prefs.barStyle } ?: BarStyle.BALANCED) }
     var canOverlay by remember { mutableStateOf(com.sharkos.launcher.AutoLaunch.canLaunchFromBackground(ctx)) }
     var carData by remember { mutableStateOf(carDataAllowed(ctx)) }
@@ -170,7 +173,8 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     }
 
     CompositionLocalProvider(LocalIcons provides remember(apps) { apps.iconSource() }) {
-        Column(Modifier.fillMaxSize().background(Sh.bg)) {
+        // Rounded outer corners: the screen's black shows in them
+        Column(Modifier.fillMaxSize().background(Color.Black).clip(RoundedCornerShape(corners.radius.dp)).wallpaper(wallpaper)) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AnimatedContent(screen, transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(120)) }, label = "screen") { s ->
                     when (s) {
@@ -249,6 +253,8 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 carDataAllowed = carData || hasCarData,
                                 barStyle = barStyle,
                                 carPlayLinked = carPlayLinked,
+                                wallpaper = wallpaper,
+                                corners = corners,
                                 climate = climate,
                                 dock = dockApps,
                             ),
@@ -262,6 +268,8 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 allowInstalls = { if (!openSettings(ctx, updater.allowInstallsIntent())) notice = HIDDEN_PAGE },
                                 allowCarData = { askCarData.launch(CAR_DATA) },
                                 setBarStyle = { st -> prefs.barStyle = st.name; barStyle = st },
+                                setWallpaper = { w -> prefs.wallpaper = w.name; wallpaper = w },
+                                setCorners = { c -> prefs.corners = c.name; corners = c },
                                 allowOverlay = {
                                     val page = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}"))
                                     if (!openSettings(ctx, page) && !openSettings(ctx, Settings.ACTION_MANAGE_OVERLAY_PERMISSION)) notice = HIDDEN_PAGE

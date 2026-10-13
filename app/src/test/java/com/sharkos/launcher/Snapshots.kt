@@ -24,6 +24,9 @@ import com.sharkos.launcher.ui.AppsScreen
 import com.sharkos.launcher.ui.BarActions
 import com.sharkos.launcher.ui.BottomBar
 import com.sharkos.launcher.ui.SettingsPage
+import com.sharkos.launcher.ui.wallpaper
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
 import com.sharkos.launcher.ui.ClimateActions
 import com.sharkos.launcher.ui.ClimateScreen
 import com.sharkos.launcher.ui.DockApp
@@ -72,8 +75,14 @@ class Snapshots {
     private val now = java.util.Calendar.getInstance().apply { set(2026, 9, 13, 9, 41, 0) }.timeInMillis
 
     @Composable
-    private fun Frame(screen: Screen, c: ClimateState = climate, style: com.sharkos.launcher.ui.BarStyle = com.sharkos.launcher.ui.BarStyle.BALANCED, content: @Composable () -> Unit) =
-        Column(Modifier.fillMaxSize().background(Sh.bg)) {
+    private fun Frame(
+        screen: Screen, c: ClimateState = climate, style: com.sharkos.launcher.ui.BarStyle = com.sharkos.launcher.ui.BarStyle.BALANCED,
+        wallpaper: com.sharkos.launcher.ui.Wallpaper = com.sharkos.launcher.ui.Wallpaper.BLACK, content: @Composable () -> Unit,
+    ) =
+        Column(
+            Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp)).wallpaper(wallpaper),
+        ) {
             Box(Modifier.weight(1f).fillMaxWidth()) { content() }
             BottomBar(c, dock, screen, bar, style = style)
         }
@@ -162,6 +171,29 @@ class Snapshots {
                 start = page,
             )
         }
+    }
+
+    @Test fun settingsAppearance() = paparazzi.snapshot {
+        Frame(Screen.SETTINGS, wallpaper = com.sharkos.launcher.ui.Wallpaper.AURORA) {
+            SettingsScreen(
+                SettingsInfo("0.1.9", true, true, CarLink.CONNECTED, "bydauto (BydHvac.apk)", true, wallpaper = com.sharkos.launcher.ui.Wallpaper.AURORA),
+                SettingsActions({}, {}, {}, {}),
+                start = SettingsPage.APPEARANCE,
+            )
+        }
+    }
+
+    @Test fun homeOcean() = paparazzi.snapshot {
+        Frame(Screen.HOME, wallpaper = com.sharkos.launcher.ui.Wallpaper.OCEAN) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+    }
+    @Test fun homeSunset() = paparazzi.snapshot {
+        Frame(Screen.HOME, wallpaper = com.sharkos.launcher.ui.Wallpaper.SUNSET) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+    }
+    @Test fun homeMidnight() = paparazzi.snapshot {
+        Frame(Screen.HOME, wallpaper = com.sharkos.launcher.ui.Wallpaper.MIDNIGHT) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+    }
+    @Test fun homeContour() = paparazzi.snapshot {
+        Frame(Screen.HOME, wallpaper = com.sharkos.launcher.ui.Wallpaper.CONTOUR) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
     }
 
     @Test fun settingsHvac() = settingsPage(SettingsPage.HVAC)

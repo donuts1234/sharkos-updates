@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -63,6 +64,8 @@ class SettingsInfo(
     val dock: List<DockApp> = emptyList(),
     val updatesConfigured: Boolean = true,
     val canInstall: Boolean = true,
+    val wallpaper: Wallpaper = Wallpaper.BLACK,
+    val corners: Corners = Corners.LIGHT,
 )
 
 class SettingsActions(
@@ -77,6 +80,8 @@ class SettingsActions(
     val setBarStyle: (BarStyle) -> Unit = {},
     val installUpdate: (Updater.Release) -> Unit = {},
     val allowInstalls: () -> Unit = {},
+    val setWallpaper: (Wallpaper) -> Unit = {},
+    val setCorners: (Corners) -> Unit = {},
     val reconnectCar: () -> Unit = {},
     val resetBar: () -> Unit = {},
     val restart: () -> Unit = {},
@@ -89,6 +94,7 @@ class SettingsActions(
  */
 enum class SettingsPage(val label: String, val icon: ImageVector, val tint: Color) {
     GENERAL("General", ShIcons.gear, Color(0xFF8E8E93)),
+    APPEARANCE("Appearance", ShIcons.brush, Color(0xFFBF5AF2)),
     HVAC("HVAC Bar", ShIcons.fan, Sh.blue),
     MEDIA("Now playing", ShIcons.music, Color(0xFFFF375F)),
     VEHICLE("Vehicle", ShIcons.car, Sh.green),
@@ -187,6 +193,7 @@ private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions)
                 if (!s.canLaunchFromBackground) Hint("If that page won't open: adb shell appops set com.sharkos.launcher SYSTEM_ALERT_WINDOW allow")
             }
         }
+        SettingsPage.APPEARANCE -> AppearancePage(s, a)
         SettingsPage.HVAC -> HvacPage(s, a)
         SettingsPage.MEDIA -> Group("Sources") {
             Item(
@@ -242,6 +249,39 @@ private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions)
                 Item("AndroidX and Jetpack Compose", "Google. Apache licence 2.0.")
                 Item("Kotlin", "JetBrains. Apache licence 2.0.")
             }
+        }
+    }
+}
+
+@Composable
+private fun AppearancePage(s: SettingsInfo, a: SettingsActions) {
+    Group("Background") {
+        // Thumbnails are the real backgrounds, drawn small
+        val rows = Wallpaper.entries.chunked(4)
+        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            for (row in rows) Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                for (w in row) {
+                    val on = w == s.wallpaper
+                    Column(Modifier.weight(1f).press({ a.setWallpaper(w) }, label = "${w.label} background"), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(
+                            Modifier.fillMaxWidth().aspectRatio(16f / 9f)
+                                .then(if (on) Modifier.border(3.dp, Sh.blue, RoundedCornerShape(14.dp)) else Modifier.border(1.dp, Sh.line, RoundedCornerShape(14.dp)))
+                                .padding(if (on) 5.dp else 1.dp)
+                                .clip(RoundedCornerShape(if (on) 10.dp else 13.dp))
+                                .wallpaper(w),
+                        )
+                        Gap(8.dp)
+                        Txt(w.label, Sh.text(15.sp, if (on) FontWeight.SemiBold else FontWeight.Medium, if (on) Sh.blue else Sh.ink))
+                    }
+                }
+                repeat(4 - row.size) { Box(Modifier.weight(1f)) }
+            }
+        }
+    }
+    Group("Corners") {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Txt("Rounds the outside edge of SharkOS, like a phone screen.", Sh.text(15.sp, color = Sh.dim))
+            Segmented(Corners.entries.map { it.label }, s.corners.ordinal, { a.setCorners(Corners.entries[it]) }, Modifier.fillMaxWidth(), greyFirst = false)
         }
     }
 }

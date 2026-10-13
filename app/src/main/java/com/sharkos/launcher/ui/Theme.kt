@@ -15,7 +15,7 @@ import com.sharkos.launcher.R
  */
 object Sh {
     val bg = Color(0xFF000000)
-    val card = Color(0xFF1C1C1E)
+    val card = Color(0xE01C1C1E)     // a touch see-through, so the background shows faintly
     val raised = Color(0xFF2C2C2E)
     val line = Color(0xFF3A3A3C)
     val ink = Color(0xFFF5F5F7)
@@ -26,7 +26,7 @@ object Sh {
     val cyan = Color(0xFF64D2FF)
     val green = Color(0xFF30D158)
     val red = Color(0xFFFF453A)
-    val bar = Color(0xFF111113)
+    val bar = Color(0xEB111113)
 
     val font = FontFamily(
         Font(R.font.figtree_regular, FontWeight.Normal),

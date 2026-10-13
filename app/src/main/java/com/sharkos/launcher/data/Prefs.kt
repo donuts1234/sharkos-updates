@@ -29,6 +29,15 @@ class Prefs(context: Context) {
         get() = sp.getString("bar_style_name", null)
         set(v) = sp.edit().putString("bar_style_name", v).apply()
 
+    /** Background and corner style, by enum name. */
+    var wallpaper: String?
+        get() = sp.getString("wallpaper", null)
+        set(v) = sp.edit().putString("wallpaper", v).apply()
+
+    var corners: String?
+        get() = sp.getString("corners", null)
+        set(v) = sp.edit().putString("corners", v).apply()
+
     var askedCarPermission: Boolean
         get() = sp.getBoolean("asked_car_perm", false)
         set(v) = sp.edit().putBoolean("asked_car_perm", v).apply()
