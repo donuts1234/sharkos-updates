@@ -1,6 +1,6 @@
 {
-  "versionCode": 16,
-  "versionName": "0.1.15",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.15.apk",
-  "notes": "Ambient lighting works through the new SharkOS Lights helper app."
+  "versionCode": 17,
+  "versionName": "0.1.16",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.16.apk",
+  "notes": "Ambient lighting is official: two zones (door trims, pockets and footwells), connects at start-up and stays connected. The separate helper app is no longer needed."
 }
