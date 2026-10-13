@@ -1,6 +1,11 @@
 package com.sharkos.launcher.ui
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -105,7 +110,55 @@ private fun Chip(content: @Composable () -> Unit) = Row(
 // ---- Now playing ----
 
 @Composable
-private fun NowPlayingCard(track: Track?, access: Boolean, a: HomeActions, modifier: Modifier) = Panel(modifier) {
+private fun NowPlayingCard(track: Track?, access: Boolean, a: HomeActions, modifier: Modifier) {
+    val art = track?.art
+    if (track != null && art != null) ArtCard(track, art, a, modifier) else PlainCard(track, access, a, modifier)
+}
+
+/**
+ * With album art: the cover fills the card, a wash of its own darkest tone keeps the text readable,
+ * and the progress bar and buttons take the cover's colour.
+ */
+@Composable
+private fun ArtCard(track: Track, art: android.graphics.Bitmap, a: HomeActions, modifier: Modifier) {
+    val colors = remember(art) { artColors(art) }
+    val accent by animateColorAsState(colors.accent, tween(500), label = "accent")
+    val onAccent by animateColorAsState(colors.onAccent, tween(500), label = "onAccent")
+    val shade by animateColorAsState(colors.shade, tween(500), label = "shade")
+    val image = remember(art) { art.asImageBitmap() }
+    Box(modifier.clip(RoundedCornerShape(28.dp)).background(shade)) {
+        Image(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    0f to Color.Black.copy(alpha = 0.45f),
+                    0.22f to Color.Transparent,
+                    0.42f to shade.copy(alpha = 0.25f),
+                    0.68f to shade.copy(alpha = 0.88f),
+                    1f to shade,
+                ),
+            ),
+        )
+        Column(Modifier.fillMaxSize().padding(24.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                SectionLabel("Now playing", Modifier.weight(1f), color = Color.White.copy(alpha = 0.8f))
+                Txt(if (track.playing) track.source else "${track.source} · Paused", Sh.text(14.sp, FontWeight.Medium, Color.White.copy(alpha = 0.8f)))
+            }
+            Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.Bottom) {
+                Txt(track.title.ifBlank { "Unknown track" }, Sh.text(28.sp, FontWeight.Bold, Color.White, spacing = (-0.4).sp), maxLines = 2)
+                Gap(4.dp)
+                Txt(track.artist, Sh.text(19.sp, FontWeight.Medium, Color.White.copy(alpha = 0.75f)))
+                Gap(18.dp)
+                Progress(track, accent, Color.White.copy(alpha = 0.7f), Color.White.copy(alpha = 0.22f))
+            }
+            Gap(12.dp)
+            Controls(track, a, accent, onAccent, sideTint = accent)
+        }
+    }
+}
+
+@Composable
+private fun PlainCard(track: Track?, access: Boolean, a: HomeActions, modifier: Modifier) = Panel(modifier) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         SectionLabel("Now playing", Modifier.weight(1f))
         track?.let { Txt(if (it.playing) it.source else "${it.source} · Paused", Sh.text(14.sp, color = Sh.dim)) }
@@ -131,43 +184,47 @@ private fun NowPlayingCard(track: Track?, access: Boolean, a: HomeActions, modif
         return@Panel
     }
     Row(horizontalArrangement = Arrangement.spacedBy(22.dp), verticalAlignment = Alignment.CenterVertically) {
-        val art = track.art
         Box(Modifier.size(150.dp).clip(RoundedCornerShape(20.dp)).background(Sh.raised), contentAlignment = Alignment.Center) {
-            if (art != null) Image(art.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            else Glyph(ShIcons.music, Sh.faint, 52.dp)
+            Glyph(ShIcons.music, Sh.faint, 52.dp)
         }
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Txt(track.title.ifBlank { "Unknown track" }, Sh.text(28.sp, FontWeight.Bold, spacing = (-0.4).sp), maxLines = 2)
             Txt(track.artist, Sh.text(19.sp, color = Sh.dim))
         }
     }
-    Column(Modifier.weight(1f), verticalArrangement = Arrangement.Bottom) {
-        val pos = track.positionMs.coerceAtLeast(0)
-        if (track.durationMs > 0) {
-            // Full bar with elapsed and remaining time
-            val p = pos.coerceAtMost(track.durationMs)
-            Meter(p.toFloat() / track.durationMs, Sh.ink, height = 5.dp)
-            Gap(8.dp)
-            Row(Modifier.fillMaxWidth()) {
-                Txt(clock(p), Sh.text(13.sp, color = Sh.dim), Modifier.weight(1f))
-                Txt("−" + clock(track.durationMs - p), Sh.text(13.sp, color = Sh.dim))
-            }
-        } else if (track.knowsPosition) {
-            // The source gives no length: still show the elapsed time ticking
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f).height(5.dp).clip(RoundedCornerShape(3.dp)).background(Sh.line))
-                Gap(12.dp)
-                Txt(clock(pos), Sh.text(13.sp, color = Sh.dim))
-            }
+    Column(Modifier.weight(1f), verticalArrangement = Arrangement.Bottom) { Progress(track, Sh.ink, Sh.dim, Sh.line) }
+    Controls(track, a, Sh.ink, Color.Black, sideTint = Sh.ink)
+}
+
+/** The time bar: elapsed and remaining with a length, elapsed alone without one. */
+@Composable
+private fun Progress(track: Track, fill: Color, text: Color, empty: Color) {
+    val pos = track.positionMs.coerceAtLeast(0)
+    if (track.durationMs > 0) {
+        val p = pos.coerceAtMost(track.durationMs)
+        Meter(p.toFloat() / track.durationMs, fill, height = 5.dp, track = empty)
+        Gap(8.dp)
+        Row(Modifier.fillMaxWidth()) {
+            Txt(clock(p), Sh.text(13.sp, FontWeight.Medium, text), Modifier.weight(1f))
+            Txt("−" + clock(track.durationMs - p), Sh.text(13.sp, FontWeight.Medium, text))
+        }
+    } else if (track.knowsPosition) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f).height(5.dp).clip(RoundedCornerShape(3.dp)).background(empty))
+            Gap(12.dp)
+            Txt(clock(pos), Sh.text(13.sp, FontWeight.Medium, text))
         }
     }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
-        RoundButton(ShIcons.previous, "Previous track", a.previous, size = 60.dp, iconSize = 28.dp, bg = Color.Transparent)
-        RoundButton(if (track.playing) ShIcons.pause else ShIcons.play, if (track.playing) "Pause" else "Play", a.playPause,
-            size = 72.dp, iconSize = 30.dp, bg = Sh.ink, tint = Color.Black)
-        RoundButton(ShIcons.next, "Next track", a.next, size = 60.dp, iconSize = 28.dp, bg = Color.Transparent)
-    }
 }
+
+@Composable
+private fun Controls(track: Track, a: HomeActions, play: Color, onPlay: Color, sideTint: Color) =
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(40.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically) {
+        RoundButton(ShIcons.previous, "Previous track", a.previous, size = 60.dp, iconSize = 28.dp, bg = Color.Transparent, tint = sideTint)
+        RoundButton(if (track.playing) ShIcons.pause else ShIcons.play, if (track.playing) "Pause" else "Play", a.playPause,
+            size = 72.dp, iconSize = 30.dp, bg = play, tint = onPlay)
+        RoundButton(ShIcons.next, "Next track", a.next, size = 60.dp, iconSize = 28.dp, bg = Color.Transparent, tint = sideTint)
+    }
 
 private fun clock(ms: Long): String {
     val s = (ms / 1000).toInt()

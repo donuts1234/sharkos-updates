@@ -162,8 +162,8 @@ fun Switch(on: Boolean, onChange: (Boolean) -> Unit, label: String) {
 
 /** A thin progress bar. */
 @Composable
-fun Meter(fraction: Float, color: Color, modifier: Modifier = Modifier, height: Dp = 5.dp) =
-    Box(modifier.fillMaxWidth().height(height).clip(RoundedCornerShape(height / 2)).background(Sh.line)) {
+fun Meter(fraction: Float, color: Color, modifier: Modifier = Modifier, height: Dp = 5.dp, track: Color = Sh.line) =
+    Box(modifier.fillMaxWidth().height(height).clip(RoundedCornerShape(height / 2)).background(track)) {
         Box(Modifier.fillMaxWidth(fraction.coerceIn(0f, 1f)).height(height).clip(RoundedCornerShape(height / 2)).background(color))
     }
 

@@ -185,6 +185,28 @@ class Snapshots {
         }
     }
 
+    /** A stand-in cover: a sunset-orange gradient with a dark band, drawn in code. */
+    private fun cover(top: Int, bottom: Int): android.graphics.Bitmap {
+        val b = android.graphics.Bitmap.createBitmap(400, 400, android.graphics.Bitmap.Config.ARGB_8888)
+        val c = android.graphics.Canvas(b)
+        val p = android.graphics.Paint()
+        p.shader = android.graphics.LinearGradient(0f, 0f, 400f, 400f, top, bottom, android.graphics.Shader.TileMode.CLAMP)
+        c.drawRect(0f, 0f, 400f, 400f, p)
+        p.shader = null; p.color = 0x55000000
+        c.drawCircle(280f, 150f, 90f, p)
+        return b
+    }
+
+    @Test fun homeAlbumArtWarm() = paparazzi.snapshot {
+        val t = Track("Golden Hour", "Sample Artist", "CarPlay", cover(0xFFFF8A3D.toInt(), 0xFF7A1F5C.toInt()), true, 61_000, 227_000, 0, carPlay = true)
+        Frame(Screen.HOME, wallpaper = com.sharkos.launcher.ui.Wallpaper.SUNSET) { HomeScreen(now, telemetry, CarLink.CONNECTED, t, true, Attitude(2.4f, -1.2f), home) }
+    }
+
+    @Test fun homeAlbumArtCool() = paparazzi.snapshot {
+        val t = Track("Blue Water", "Sample Artist", "Spotify", cover(0xFF2AD4C8.toInt(), 0xFF0A2A6B.toInt()), false, 95_000, 201_000, 0)
+        Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, t, true, Attitude(2.4f, -1.2f), home) }
+    }
+
     @Test fun homeOcean() = paparazzi.snapshot {
         Frame(Screen.HOME, wallpaper = com.sharkos.launcher.ui.Wallpaper.OCEAN) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
     }

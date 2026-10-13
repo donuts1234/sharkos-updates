@@ -122,7 +122,7 @@ object CarPlayLink {
         _song.value = next
     }
 
-    /** Artwork as a small bitmap: Home shows it at about 120 px, no need to hold a full-size JPEG. */
+    /** Artwork at about card size (the cover fills the Now Playing card), not a full-size JPEG. */
     private fun decodeArt(data: ByteArray?, path: String?): Bitmap? = runCatching {
         val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         val fromData = data != null && data.isNotEmpty()
@@ -130,7 +130,7 @@ object CarPlayLink {
         else if (!path.isNullOrBlank()) BitmapFactory.decodeFile(path, opts) else return null
         if (opts.outWidth <= 0) return null
         var sample = 1
-        while (opts.outWidth / (sample * 2) >= 240) sample *= 2
+        while (opts.outWidth / (sample * 2) >= 560) sample *= 2
         val real = BitmapFactory.Options().apply { inSampleSize = sample }
         if (fromData) BitmapFactory.decodeByteArray(data, 0, data!!.size, real) else BitmapFactory.decodeFile(path, real)
     }.getOrNull()
