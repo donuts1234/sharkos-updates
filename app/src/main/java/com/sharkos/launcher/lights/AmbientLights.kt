@@ -51,7 +51,7 @@ object AmbientLights {
     private val WRITE = UUID.fromString("0000fff3-0000-1000-8000-00805f9b34fb")
     private val PREFIXES = listOf("MELK", "MHRS", "HRS-MBLEM", "ELK-")
     private const val ZONES_ALL = 0x70
-    private const val SCAN_MS = 12_000L
+    private const val SCAN_MS = 16_000L
     private const val IDLE_MS = 120_000L
     private const val SEND_GAP_MS = 90L
 
@@ -143,6 +143,32 @@ object AmbientLights {
         _found.value = list.sortedWith(compareByDescending<Found> { it.lights }.thenByDescending { it.rssi }).take(16)
     }
 
+    /** The third way: Bluetooth "discovery", which the head unit's own Settings search uses. */
+    private var discovering = false
+    private val discoveryRx = object : android.content.BroadcastReceiver() {
+        override fun onReceive(c: Context, i: android.content.Intent) {
+            if (i.action != BluetoothDevice.ACTION_FOUND) return
+            val d: BluetoothDevice = i.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE) ?: return
+            seen(d, i.getShortExtra(BluetoothDevice.EXTRA_RSSI, Short.MIN_VALUE).toInt(), i.getStringExtra(BluetoothDevice.EXTRA_NAME))
+        }
+    }
+
+    private fun startDiscovery() {
+        val c = app ?: return
+        if (!scanning || discovering) return
+        runCatching { c.registerReceiver(discoveryRx, android.content.IntentFilter(BluetoothDevice.ACTION_FOUND)) }
+        discovering = runCatching { adapter(c)?.startDiscovery() == true }.getOrDefault(false)
+        log(if (discovering) "Still nothing: trying Bluetooth discovery as well" else "Bluetooth discovery couldn't start")
+    }
+
+    private fun stopDiscovery() {
+        val c = app ?: return
+        if (!discovering) return
+        runCatching { adapter(c)?.cancelDiscovery() }
+        runCatching { c.unregisterReceiver(discoveryRx) }
+        discovering = false
+    }
+
     private fun startLegacy() {
         val c = app ?: return
         if (!scanning || legacy) return
@@ -179,6 +205,7 @@ object AmbientLights {
         if (ok.isFailure) { log("Modern search refused: ${ok.exceptionOrNull()?.message}"); startLegacy() }
         // Like Sharkware: if the modern search has heard nothing after 2.5 s, use the older one
         main.postDelayed({ if (scanning && rawSeen == 0) startLegacy() }, 2500)
+        main.postDelayed({ if (scanning && rawSeen == 0) startDiscovery() }, 5500)
         val started = System.currentTimeMillis()
         fun check() {
             if (!scanning) return
@@ -204,6 +231,7 @@ object AmbientLights {
         val c = app ?: return
         if (scanning) runCatching { adapter(c)?.bluetoothLeScanner?.stopScan(scanCb) }
         if (legacy) runCatching { adapter(c)?.stopLeScan(legacyCb) }
+        stopDiscovery()
         legacy = false
         scanning = false
         if (_link.value == Link.SEARCHING) _link.value = Link.IDLE
@@ -232,11 +260,31 @@ object AmbientLights {
         val device: BluetoothDevice = runCatching { adapter(ctx)!!.getRemoteDevice(address) }.getOrNull() ?: return log("Bad address $address")
         _link.value = Link.CONNECTING
         log("Connecting to $name ($address)…")
+        prime(ctx)
         prefs(ctx).edit().putString("address", address).putString("name", name).apply()
         if (name.contains("-QA", ignoreCase = true) && _protocol.value != Protocol.BOTH) setProtocol(ctx, Protocol.BOTH)
         gatt = runCatching { device.connectGatt(ctx.applicationContext, false, gattCb, BluetoothDevice.TRANSPORT_LE) }
             .onFailure { log("Connect refused: ${it.message}"); _link.value = Link.IDLE }.getOrNull()
         main.postDelayed({ if (_link.value == Link.CONNECTING) { log("No answer from the lights (is the phone app connected?)"); disconnect(quiet = true) } }, 15_000)
+    }
+
+    /** Sharkware's trick: a search running in the background lets the car connect to a box it hasn't "seen" yet. */
+    private val primeCb = object : ScanCallback() {}
+    private var priming = false
+
+    private fun prime(ctx: Context) {
+        if (priming) return
+        priming = runCatching {
+            adapter(ctx)?.bluetoothLeScanner?.startScan(null, ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), primeCb)
+            true
+        }.getOrDefault(false)
+        main.postDelayed({ unprime() }, 20_000)
+    }
+
+    private fun unprime() {
+        if (!priming) return
+        runCatching { app?.let { adapter(it)?.bluetoothLeScanner?.stopScan(primeCb) } }
+        priming = false
     }
 
     private val gattCb = object : BluetoothGattCallback() {
@@ -262,6 +310,7 @@ object AmbientLights {
                     return@post
                 }
                 writer = ch
+                unprime()
                 _link.value = Link.CONNECTED
                 _connectedName.value = app?.let { savedName(it) } ?: g.device.address
                 log("Ready: ${_connectedName.value}")
@@ -283,6 +332,14 @@ object AmbientLights {
         gatt = null; writer = null; writing = false; pending = null
         _link.value = Link.IDLE
         _connectedName.value = null
+    }
+
+    /** Connect straight to a box address typed in Diagnostics (AA:BB:CC:DD:EE:FF). */
+    fun connectAddress(ctx: Context, raw: String) {
+        init(ctx)
+        val addr = raw.trim().uppercase().replace('-', ':')
+        if (!BluetoothAdapter.checkBluetoothAddress(addr)) return log("\"$raw\" isn't a Bluetooth address (like BE:58:12:34:56:78)")
+        connect(ctx, addr, "Lights ($addr)")
     }
 
     fun forget(ctx: Context) {

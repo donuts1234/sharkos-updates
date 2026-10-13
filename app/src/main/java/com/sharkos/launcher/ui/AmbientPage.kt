@@ -159,10 +159,32 @@ fun AmbientPage(a: LightsActions) {
                 PillButton("Search again", { AmbientLights.search(ctx, connectWhenFound = false) })
                 PillButton("Forget lights", { AmbientLights.forget(ctx) })
             }
+            AddressEntry { AmbientLights.connectAddress(ctx, it) }
             Gap(4.dp)
             if (log.isEmpty()) Txt("Nothing yet.", Sh.text(13.sp, color = Sh.dim).copy(fontFamily = FontFamily.Monospace))
             for (line in log.take(20)) Txt(line, Sh.text(13.sp, color = Sh.ink).copy(fontFamily = FontFamily.Monospace), maxLines = 3)
         }
+    }
+}
+
+/** Type the box's Bluetooth address and connect to it directly, skipping the search. */
+@Composable
+private fun AddressEntry(onConnect: (String) -> Unit) {
+    var text by remember { mutableStateOf("") }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Box(
+            Modifier.weight(1f).height(44.dp).clip(RoundedCornerShape(12.dp)).background(Sh.raised).padding(horizontal = 14.dp),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            if (text.isEmpty()) Txt("Box address, e.g. BE:58:12:34:56:78", Sh.text(15.sp, color = Sh.faint))
+            androidx.compose.foundation.text.BasicTextField(
+                text, { text = it.take(17) }, Modifier.fillMaxWidth(), singleLine = true,
+                textStyle = Sh.text(16.sp, color = Sh.ink).copy(fontFamily = FontFamily.Monospace),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(Sh.blue),
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters),
+            )
+        }
+        PillButton("Connect", { onConnect(text) })
     }
 }
 
