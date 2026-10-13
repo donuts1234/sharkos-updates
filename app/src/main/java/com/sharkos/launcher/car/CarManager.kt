@@ -53,7 +53,10 @@ class CarManager(private val appContext: Context) {
     val climate: StateFlow<ClimateState> = _climate.asStateFlow()
     val commandResults: SharedFlow<CommandResult> = _results.asSharedFlow()
 
-    init { connect() }
+    /** Desay's car service: battery / range / fuel without BYD's "dangerous" statistics permission. */
+    private val ts = TsCarAdapter(appContext)
+
+    init { connect(); ts.connect() }
 
     private fun connect() {
         io.launch {
@@ -245,11 +248,15 @@ class CarManager(private val appContext: Context) {
 
     /** One snapshot of what the car reports; each field is best-effort. Blocking. */
     private fun readTelemetry(): Telemetry {
-        val b = backend ?: return Telemetry()
-        fun d(c: Call): Double? = if (b.has(c)) (runCatching { b.invoke(c) }.getOrNull() as? Number)?.toDouble() else null
+        val b = backend
+        if (b == null && !ts.connected) return Telemetry()
+        fun d(c: Call): Double? = if (b != null && b.has(c)) (runCatching { b.invoke(c) }.getOrNull() as? Number)?.toDouble() else null
+        /** Desay's "general" service first (no permission needed), then BYD's statistic device. */
+        fun stat(getter: String): Double? = ts.number("general", getter) ?: d(Call(getter, device = "statistic"))
         fun tyre(corner: Corner): Tyre? {
             // getTyrePressureValueByType reads psi x10 on the Shark 6 (379 = 37.9 psi); fall back to kPa.
             val byType = d(Call("getTyrePressureValueByType", corner.code, device = "tyre"))
+                ?: ts.number("body", "getTyrePressureValueByType" + TS_TYRE[corner.ordinal])
             val psi = when {
                 byType != null && byType in 150.0..900.0 -> byType / 10.0
                 else -> d(Call("getTyrePressureValue", corner.code, device = "tyre"))
@@ -259,12 +266,12 @@ class CarManager(private val appContext: Context) {
             return Tyre(psi, state)
         }
         return Telemetry(
-            socPercent = d(Call("getElecPercentageValue", device = "statistic"))?.takeIf { it in 0.0..100.0 },
-            evRangeKm = d(Call("getElecDrivingRangeValue", device = "statistic"))?.takeIf { it >= 0 },
-            fuelPercent = d(Call("getFuelPercentageValue", device = "statistic"))?.takeIf { it in 0.0..100.0 },
-            fuelRangeKm = d(Call("getFuelDrivingRangeValue", device = "statistic"))?.takeIf { it >= 0 },
-            totalRangeKm = d(Call("getDrivingRangeAll", device = "statistic"))?.takeIf { it >= 0 },
-            odometerKm = d(Call("getTotalMileageValue", device = "statistic"))?.takeIf { it > 0 },
+            socPercent = stat("getElecPercentageValue")?.takeIf { it in 0.0..100.0 },
+            evRangeKm = stat("getElecDrivingRangeValue")?.takeIf { it >= 0 },
+            fuelPercent = stat("getFuelPercentageValue")?.takeIf { it in 0.0..100.0 },
+            fuelRangeKm = stat("getFuelDrivingRangeValue")?.takeIf { it >= 0 },
+            totalRangeKm = stat("getDrivingRangeAll")?.takeIf { it >= 0 },
+            odometerKm = stat("getTotalMileageValue")?.takeIf { it > 0 },
             speedKph = d(Call("getCurrentSpeed", device = "speed"))?.takeIf { it in 0.0..300.0 },
             outsideTempC = d(Call("getTemprature", Byd.ZONE_OUTSIDE, device = "ac"))?.takeIf { it in -40.0..50.0 },
             tyres = Corner.entries.map { tyre(it) },
@@ -287,6 +294,8 @@ class CarManager(private val appContext: Context) {
         const val TAG = "SharkOS/Car"
         const val SETTLE_MS = 2500L
         const val KPA_TO_PSI = 0.1450377
+        /** Desay's per-corner tyre getter suffixes, in [Corner] order (LF, RF, LR, RR). */
+        val TS_TYRE = listOf("Lf", "Rf", "Lb", "Rb")
     }
 }
 

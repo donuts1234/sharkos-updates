@@ -167,7 +167,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                             },
                             mediaAccess = mediaAccess,
                             attitude = attitude,
-                            carDataAllowed = carData,
+                            carDataAllowed = carData || telemetry.socPercent != null,
                             a = remember {
                                 HomeActions(
                                     playPause = NowPlaying::playPause,
@@ -220,7 +220,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                         )
                         Screen.SETTINGS -> SettingsScreen(
                             SettingsInfo(BuildConfig.VERSION_NAME, isHome, mediaAccess, link, car.backendName, zeroed >= 0 && inclino.calibrated, autoLaunch, canOverlay,
-                                update, updater.configured, canInstall, carData),
+                                update, updater.configured, canInstall, carData || telemetry.socPercent != null),
                             SettingsActions(
                                 chooseHome = { if (!openSettings(ctx, Settings.ACTION_HOME_SETTINGS)) notice = HIDDEN_PAGE },
                                 grantMedia = { if (!openSettings(ctx, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) notice = HIDDEN_PAGE },
