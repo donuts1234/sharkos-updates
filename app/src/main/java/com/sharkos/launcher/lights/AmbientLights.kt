@@ -132,6 +132,21 @@ object AmbientLights {
         }
     }
 
+    /** A second, filtered search alongside the open one: some car stacks only deliver results that match a filter. */
+    private val filteredCb = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) =
+            seen(result.device, result.rssi, result.scanRecord?.deviceName)
+        override fun onBatchScanResults(results: MutableList<ScanResult>) { results.forEach { onScanResult(0, it) } }
+        override fun onScanFailed(errorCode: Int) { log("Filtered search failed (error $errorCode)") }
+    }
+    private var filtered = false
+
+    private fun filters(): List<android.bluetooth.le.ScanFilter> {
+        val names = listOf("MHRS-QA21P", "MHRS-QA21P A6", "MELK-QA21P", "ELK-BLEDOM") + listOfNotNull(app?.let { savedName(it) })
+        return names.distinct().map { android.bluetooth.le.ScanFilter.Builder().setDeviceName(it).build() } +
+            android.bluetooth.le.ScanFilter.Builder().setServiceUuid(android.os.ParcelUuid(SERVICE)).build()
+    }
+
     /** The pre-Android-5 search: some head units return nothing to the modern one (Sharkware does the same). */
     private val legacyCb = BluetoothAdapter.LeScanCallback { device, rssi, _ -> main.post { seen(device, rssi, null) } }
 
@@ -201,6 +216,8 @@ object AmbientLights {
                 .apply { if (runCatching { a?.isLeExtendedAdvertisingSupported == true }.getOrDefault(false)) setLegacy(false) }
                 .build()
             scanner.startScan(null, settings, scanCb)
+            filtered = runCatching { scanner.startScan(filters(), ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build(), filteredCb); true }
+                .onFailure { log("Filtered search refused: ${it.message}") }.getOrDefault(false)
         }
         if (ok.isFailure) { log("Modern search refused: ${ok.exceptionOrNull()?.message}"); startLegacy() }
         // Like Sharkware: if the modern search has heard nothing after 2.5 s, use the older one
@@ -230,6 +247,8 @@ object AmbientLights {
     fun stopScan() {
         val c = app ?: return
         if (scanning) runCatching { adapter(c)?.bluetoothLeScanner?.stopScan(scanCb) }
+        if (filtered) runCatching { adapter(c)?.bluetoothLeScanner?.stopScan(filteredCb) }
+        filtered = false
         if (legacy) runCatching { adapter(c)?.stopLeScan(legacyCb) }
         stopDiscovery()
         legacy = false
