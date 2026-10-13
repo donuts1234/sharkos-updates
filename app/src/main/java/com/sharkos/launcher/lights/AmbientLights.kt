@@ -122,7 +122,7 @@ object AmbientLights {
 
     private val scanCb = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) =
-            seen(result.device, result.rssi, result.scanRecord?.deviceName)
+            seen(result.device, result.rssi, result.scanRecord?.deviceName, hasLightsService(result))
 
         override fun onBatchScanResults(results: MutableList<ScanResult>) { results.forEach { onScanResult(0, it) } }
 
@@ -135,7 +135,7 @@ object AmbientLights {
     /** A second, filtered search alongside the open one: some car stacks only deliver results that match a filter. */
     private val filteredCb = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) =
-            seen(result.device, result.rssi, result.scanRecord?.deviceName)
+            seen(result.device, result.rssi, result.scanRecord?.deviceName, hasLightsService(result))
         override fun onBatchScanResults(results: MutableList<ScanResult>) { results.forEach { onScanResult(0, it) } }
         override fun onScanFailed(errorCode: Int) { log("Filtered search failed (error $errorCode)") }
     }
@@ -150,10 +150,13 @@ object AmbientLights {
     /** The pre-Android-5 search: some head units return nothing to the modern one (Sharkware does the same). */
     private val legacyCb = BluetoothAdapter.LeScanCallback { device, rssi, _ -> main.post { seen(device, rssi, null) } }
 
-    private fun seen(device: BluetoothDevice, rssi: Int, advertisedName: String?) {
+    private fun hasLightsService(r: ScanResult) = r.scanRecord?.serviceUuids?.any { it.uuid == SERVICE } == true
+
+    private fun seen(device: BluetoothDevice, rssi: Int, advertisedName: String?, lightsService: Boolean = false) {
         rawSeen++
-        val name = advertisedName ?: runCatching { device.name }.getOrNull() ?: return
-        val f = Found(name, device.address, rssi, PREFIXES.any { name.startsWith(it, ignoreCase = true) })
+        // A box that advertises the lights' service counts even without a name in its advert
+        val name = advertisedName ?: runCatching { device.name }.getOrNull() ?: if (lightsService) "Unnamed lights (FFF0)" else return
+        val f = Found(name, device.address, rssi, lightsService || PREFIXES.any { name.startsWith(it, ignoreCase = true) })
         val list = _found.value.filterNot { it.address == f.address } + f
         _found.value = list.sortedWith(compareByDescending<Found> { it.lights }.thenByDescending { it.rssi }).take(16)
     }

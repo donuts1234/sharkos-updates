@@ -23,8 +23,8 @@ android {
         // 28, as Sharkware's Bluetooth helper uses: the Shark 6 returns no Bluetooth search results to
         // apps targeting Android 10+ (Sharkware's own app, targeting 35, gave up and ships that helper)
         targetSdk = 28
-        versionCode = 14
-        versionName = "0.1.13"
+        versionCode = 15
+        versionName = "0.1.14"
         // Where the car looks for updates (see README → Updates). Set once in gradle.properties.
         val updateUrl = (findProperty("sharkos.updateUrl") as String?)
             ?: "https://raw.githubusercontent.com/GITHUB_USER/sharkos-updates/main/latest.json"
