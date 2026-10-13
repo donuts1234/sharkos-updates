@@ -59,12 +59,13 @@ fun HomeScreen(
     mediaAccess: Boolean,
     attitude: Attitude?,
     a: HomeActions,
+    carDataAllowed: Boolean = true,
 ) {
     Column(Modifier.fillMaxSize().padding(start = 32.dp, end = 32.dp, top = 28.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Header(now, telemetry, link, a.settings)
         Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             NowPlayingCard(track, mediaAccess, a, Modifier.weight(1.3f).fillMaxHeight())
-            VehicleCard(telemetry, Modifier.weight(1f).fillMaxHeight())
+            VehicleCard(telemetry, carDataAllowed, a.settings, Modifier.weight(1f).fillMaxHeight())
             TyresCard(telemetry, attitude, a.offroad, Modifier.weight(1f).fillMaxHeight())
         }
     }
@@ -167,10 +168,11 @@ private fun clock(ms: Long): String {
 // ---- Vehicle ----
 
 @Composable
-private fun VehicleCard(t: Telemetry, modifier: Modifier) = Panel(modifier) {
+private fun VehicleCard(t: Telemetry, allowed: Boolean, onSettings: () -> Unit, modifier: Modifier) = Panel(modifier) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         SectionLabel("Shark 6", Modifier.weight(1f))
-        t.odometerKm?.let { Txt("%,d km".format(it.roundToInt()), Sh.text(14.sp, color = Sh.dim)) }
+        if (!allowed) Txt("Allow car data in Settings", Sh.text(14.sp, FontWeight.SemiBold, Sh.orange), Modifier.press(onSettings))
+        else t.odometerKm?.let { Txt("%,d km".format(it.roundToInt()), Sh.text(14.sp, color = Sh.dim)) }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(22.dp), verticalAlignment = Alignment.CenterVertically) {
         val soc = t.socPercent

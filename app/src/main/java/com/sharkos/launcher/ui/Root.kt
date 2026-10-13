@@ -75,10 +75,24 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     val prefs = remember { com.sharkos.launcher.data.Prefs(ctx) }
     var autoLaunch by remember { mutableStateOf(prefs.autoLaunch) }
     var canOverlay by remember { mutableStateOf(com.sharkos.launcher.AutoLaunch.canLaunchFromBackground(ctx)) }
+    var carData by remember { mutableStateOf(carDataAllowed(ctx)) }
+    var canInstall by remember { mutableStateOf(app.updater.canInstall()) }
+    var notice by remember { mutableStateOf<String?>(null) }
+    val askCarData = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        carData = carDataAllowed(ctx)
+        if (granted) car.reconnect()
+        else notice = "The car didn't show the permission prompt: use the adb command in Settings → Car"
+    }
     LifecycleResumeEffect(Unit) {
         mediaAccess = NowPlaying.hasAccess(ctx)
         isHome = isDefaultHome(ctx)
         canOverlay = com.sharkos.launcher.AutoLaunch.canLaunchFromBackground(ctx)
+        canInstall = app.updater.canInstall()
+        val nowCarData = carDataAllowed(ctx)
+        if (nowCarData && !carData) car.reconnect()   // granted over adb while SharkOS was open
+        carData = nowCarData
         if (mediaAccess) NowPlaying.attach(ctx)
         scope.launch { apps.refresh() }
         scope.launch { updater.checkDaily() }
@@ -99,7 +113,6 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     }
 
     // Tell the driver when the car turns a command down; quiet on a bench with no car.
-    var notice by remember { mutableStateOf<String?>(null) }
     var picking by remember { mutableStateOf(false) }
     LaunchedEffect(screen) { if (screen != Screen.APPS) picking = false }
     LaunchedEffect(Unit) {
@@ -154,13 +167,14 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                             },
                             mediaAccess = mediaAccess,
                             attitude = attitude,
+                            carDataAllowed = carData,
                             a = remember {
                                 HomeActions(
                                     playPause = NowPlaying::playPause,
                                     next = NowPlaying::next,
                                     previous = NowPlaying::previous,
                                     openMusic = { apps.launch(Apps.PKG_MUSIC) },
-                                    grantMedia = { openSettings(ctx, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS) },
+                                    grantMedia = { if (!openSettings(ctx, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) notice = HIDDEN_PAGE.replace("shown under it", "in Settings → Now playing") },
                                     offroad = { onScreen(Screen.OFFROAD) },
                                     settings = { onScreen(Screen.SETTINGS) },
                                 )
@@ -206,22 +220,19 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                         )
                         Screen.SETTINGS -> SettingsScreen(
                             SettingsInfo(BuildConfig.VERSION_NAME, isHome, mediaAccess, link, car.backendName, zeroed >= 0 && inclino.calibrated, autoLaunch, canOverlay,
-                                update, updater.configured, updater.canInstall()),
+                                update, updater.configured, canInstall, carData),
                             SettingsActions(
-                                chooseHome = { openSettings(ctx, Settings.ACTION_HOME_SETTINGS) },
-                                grantMedia = { openSettings(ctx, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS) },
+                                chooseHome = { if (!openSettings(ctx, Settings.ACTION_HOME_SETTINGS)) notice = HIDDEN_PAGE },
+                                grantMedia = { if (!openSettings(ctx, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) notice = HIDDEN_PAGE },
                                 zeroInclino = { if (inclino.calibrate()) zeroed++ else notice = "Zero needs the motion sensor: open Off-road first" },
                                 setAutoLaunch = { on -> prefs.autoLaunch = on; autoLaunch = on },
                                 checkUpdate = { scope.launch { updater.check() } },
                                 installUpdate = { r -> scope.launch { updater.downloadAndInstall(r) } },
-                                allowInstalls = { runCatching { ctx.startActivity(updater.allowInstallsIntent()) } },
+                                allowInstalls = { if (!openSettings(ctx, updater.allowInstallsIntent())) notice = HIDDEN_PAGE },
+                                allowCarData = { askCarData.launch(CAR_DATA) },
                                 allowOverlay = {
-                                    runCatching {
-                                        ctx.startActivity(
-                                            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}"))
-                                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                                        )
-                                    }.onFailure { openSettings(ctx, Settings.ACTION_MANAGE_OVERLAY_PERMISSION) }
+                                    val page = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}"))
+                                    if (!openSettings(ctx, page) && !openSettings(ctx, Settings.ACTION_MANAGE_OVERLAY_PERMISSION)) notice = HIDDEN_PAGE
                                 },
                                 back = { onScreen(Screen.HOME) },
                             ),
@@ -258,7 +269,23 @@ private fun isDefaultHome(ctx: Context): Boolean = runCatching {
     ctx.packageManager.resolveActivity(i, 0)?.activityInfo?.packageName == ctx.packageName
 }.getOrDefault(false)
 
-private fun openSettings(ctx: Context, action: String) {
-    runCatching { ctx.startActivity(Intent(action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-        .recoverCatching { ctx.startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+/**
+ * Open an Android settings page. BYD hides several of them on the Shark 6, so check the page exists
+ * first and report false instead of silently doing nothing; the caller then points at the adb command.
+ */
+private fun openSettings(ctx: Context, intent: Intent): Boolean {
+    val i = intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    if (ctx.packageManager.resolveActivity(i, 0) == null) return false
+    return runCatching { ctx.startActivity(i) }.isSuccess
 }
+
+private fun openSettings(ctx: Context, action: String): Boolean = openSettings(ctx, Intent(action))
+
+private const val HIDDEN_PAGE = "This car hides that settings page: use the adb command shown under it"
+
+private const val CAR_DATA = "android.permission.BYDAUTO_STATISTIC_COMMON"
+
+private fun carDataAllowed(ctx: Context): Boolean =
+    // A unit without BYD's permission (a bench) has nothing to grant: treat it as allowed.
+    runCatching { ctx.packageManager.getPermissionInfo(CAR_DATA, 0) }.isFailure ||
+        ctx.checkSelfPermission(CAR_DATA) == android.content.pm.PackageManager.PERMISSION_GRANTED

@@ -34,6 +34,7 @@ class SettingsInfo(
     val autoLaunch: Boolean = true,
     val canLaunchFromBackground: Boolean = false,
     val update: Updater.State = Updater.State.Idle,
+    val carDataAllowed: Boolean = true,
     val updatesConfigured: Boolean = true,
     val canInstall: Boolean = true,
 )
@@ -46,6 +47,7 @@ class SettingsActions(
     val setAutoLaunch: (Boolean) -> Unit = {},
     val allowOverlay: () -> Unit = {},
     val checkUpdate: () -> Unit = {},
+    val allowCarData: () -> Unit = {},
     val installUpdate: (Updater.Release) -> Unit = {},
     val allowInstalls: () -> Unit = {},
 )
@@ -96,6 +98,12 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
                 if (!s.mediaAccess) Hint("If the settings page won't open: adb shell cmd notification allow_listener com.sharkos.launcher/com.sharkos.launcher.media.MediaListener")
             }
             Group("Car") {
+                Item(
+                    "Car data access",
+                    "Battery, electric range, fuel and total range come from BYD's statistics service, which needs this one permission.",
+                    status = if (s.carDataAllowed) "Allowed" to Sh.green else "Needed" to Sh.orange,
+                ) { if (!s.carDataAllowed) PillButton("Allow", a.allowCarData, bg = Sh.blue, fg = Color.White) }
+                if (!s.carDataAllowed) Hint("If no prompt appears: adb shell pm grant com.sharkos.launcher android.permission.BYDAUTO_STATISTIC_COMMON")
                 Item(
                     "Vehicle connection",
                     when (s.link) {
@@ -153,6 +161,7 @@ private fun Updates(s: SettingsInfo, a: SettingsActions) {
         Item("Allow updates to install", "Android asks once before an app may install its own updates.", status = "Needed" to Sh.orange) {
             PillButton("Allow", a.allowInstalls, bg = Sh.blue, fg = Color.White)
         }
+        Hint("If that page won't open: adb shell appops set com.sharkos.launcher REQUEST_INSTALL_PACKAGES allow")
     }
 }
 

@@ -53,12 +53,17 @@ class CarManager(private val appContext: Context) {
     val climate: StateFlow<ClimateState> = _climate.asStateFlow()
     val commandResults: SharedFlow<CommandResult> = _results.asSharedFlow()
 
-    init {
+    init { connect() }
+
+    private fun connect() {
         io.launch {
             backend = CarBackend.discover(appContext)
             _link.value = if (backend != null) CarLink.CONNECTED else CarLink.OFFLINE
         }
     }
+
+    /** Re-open BYD's devices, e.g. after the car-data permission is granted while SharkOS runs. */
+    fun reconnect() = connect()
 
     // ---- Climate ----
 
