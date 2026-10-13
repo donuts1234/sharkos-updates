@@ -99,6 +99,19 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
         if (granted) car.reconnect()
         else notice = "The car didn't show the permission prompt: use the adb command in Settings → Car"
     }
+    val askLights = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
+    ) { r -> if (r.values.any { !it }) notice = "The car didn't allow it: use the adb command under Ambient lighting" }
+    val lightsActions = remember {
+        LightsActions(
+            requestPermission = { askLights.launch(com.sharkos.launcher.lights.AmbientLights.permissionsNeeded()) },
+            enableBluetooth = {
+                if (!openSettings(ctx, Intent(android.bluetooth.BluetoothAdapter.ACTION_REQUEST_ENABLE)) &&
+                    !openSettings(ctx, Intent(Settings.ACTION_BLUETOOTH_SETTINGS))) notice = "Turn Bluetooth on in the car's settings"
+            },
+            openLocation = { if (!openSettings(ctx, Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))) notice = HIDDEN_PAGE },
+        )
+    }
     LifecycleResumeEffect(Unit) {
         mediaAccess = NowPlaying.hasAccess(ctx)
         isHome = isDefaultHome(ctx)
@@ -277,6 +290,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 reconnectCar = { car.reconnect(); notice = "Reconnecting to the car…" },
                                 resetBar = { apps.resetDock(); notice = "The bar's apps are back to the defaults" },
                                 restart = { restartSharkOs(ctx) },
+                                lights = lightsActions,
                                 androidSettings = { if (!openSettings(ctx, Intent(Settings.ACTION_SETTINGS))) notice = "BYD hides Android's settings on this unit" },
                                 back = { onScreen(Screen.HOME) },
                             ),

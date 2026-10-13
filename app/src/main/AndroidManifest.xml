@@ -32,6 +32,15 @@
     <!-- Over-the-air updates: internet only to fetch latest.json and the APK; install via Android's installer. -->
     <!-- Desay CarPlay service (now playing). Granted only if the unit allows it; harmless otherwise. -->
     <uses-permission android:name="car.permission.CARPLAY_APP" />
+    <!-- Ambient lighting (experimental): Bluetooth LE to the aftermarket LED box. Android 11 needs
+         location to search for Bluetooth devices; 12+ uses the Bluetooth permissions instead. -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 

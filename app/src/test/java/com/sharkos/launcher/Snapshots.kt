@@ -221,6 +221,7 @@ class Snapshots {
     }
 
     @Test fun settingsHvac() = settingsPage(SettingsPage.HVAC)
+    @Test fun settingsAmbient() = settingsPage(SettingsPage.AMBIENT)
     @Test fun settingsSystem() = settingsPage(SettingsPage.SYSTEM)
     @Test fun settingsAbout() = settingsPage(SettingsPage.ABOUT)
     @Test fun settingsVehicle() = settingsPage(SettingsPage.VEHICLE)

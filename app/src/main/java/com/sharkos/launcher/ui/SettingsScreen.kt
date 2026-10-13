@@ -86,6 +86,7 @@ class SettingsActions(
     val resetBar: () -> Unit = {},
     val restart: () -> Unit = {},
     val androidSettings: () -> Unit = {},
+    val lights: LightsActions = LightsActions(),
 )
 
 /**
@@ -99,6 +100,7 @@ enum class SettingsPage(val label: String, val icon: ImageVector, val tint: Colo
     MEDIA("Now playing", ShIcons.music, Color(0xFFFF375F)),
     VEHICLE("Vehicle", ShIcons.car, Sh.green),
     UPDATES("Updates", ShIcons.download, Color(0xFF5E5CE6)),
+    AMBIENT("Ambient lighting", ShIcons.bulb, Color(0xFFFFB340)),
     SYSTEM("System", ShIcons.chip, Color(0xFF636366)),
     ABOUT("About", ShIcons.info, Color(0xFF8E8E93)),
 }
@@ -237,6 +239,7 @@ private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions)
             }
         }
         SettingsPage.UPDATES -> Group("Over the air") { Updates(s, a) }
+        SettingsPage.AMBIENT -> AmbientPage(a.lights)
         SettingsPage.SYSTEM -> SystemPage(a)
         SettingsPage.ABOUT -> {
             Group("SharkOS") {
@@ -405,3 +408,8 @@ private fun Item(title: String, body: String, status: Pair<String, Color>? = nul
 @Composable
 private fun Hint(text: String) =
     Txt(text, Sh.text(13.sp, color = Sh.dim).copy(fontFamily = FontFamily.Monospace), Modifier.padding(start = 22.dp, end = 22.dp, bottom = 16.dp), maxLines = 2)
+
+// For pages kept in their own files (Ambient lighting)
+@Composable internal fun SettingsGroup(title: String, content: @Composable () -> Unit) = Group(title, content)
+@Composable internal fun SettingsItem(title: String, body: String, status: Pair<String, Color>? = null, action: @Composable () -> Unit = {}) = Item(title, body, status, action)
+@Composable internal fun SettingsHint(text: String) = Hint(text)
