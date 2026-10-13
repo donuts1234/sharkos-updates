@@ -69,6 +69,8 @@ fun AmbientPage(a: LightsActions) {
     val allowed = remember(tick) { AmbientLights.hasPermission(ctx) }
     val locOn = remember(tick) { AmbientLights.locationOn(ctx) }
     val saved = remember(tick) { AmbientLights.savedName(ctx) }
+    val helper = remember(tick) { AmbientLights.helperInstalled(ctx) }
+    LaunchedEffect(helper) { if (helper) AmbientLights.helperStatus(ctx) }
 
     var on by remember { mutableStateOf(true) }
     var bright by remember { mutableFloatStateOf(1f) }
@@ -78,6 +80,13 @@ fun AmbientPage(a: LightsActions) {
         Sh.text(15.sp, color = Sh.dim), maxLines = 3)
 
     SettingsGroup("Setup") {
+        SettingsItem(
+            "SharkOS Lights helper",
+            if (helper) "Installed. It holds the connection to the lights in the background, the way Sharkware's helper does."
+            else "A small companion app that holds the Bluetooth connection. Install it once from a computer.",
+            status = if (helper) "Installed" to Sh.green else "Not installed" to Sh.orange,
+        ) { if (helper) PillButton("Allow location", { AmbientLights.helperSetup(ctx) }) }
+        if (!helper) SettingsHint("adb install SharkOS-Lights-1.0.apk")
         SettingsItem("Bluetooth", when { !present -> "No Bluetooth adapter found."; btOn -> "On."; else -> "Bluetooth is off." },
             status = if (btOn) "On" to Sh.green else "Off" to Sh.orange) {
             if (present && !btOn) PillButton("Turn on", a.enableBluetooth, bg = Sh.blue, fg = Color.White)

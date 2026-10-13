@@ -84,6 +84,9 @@ object AmbientLights {
     fun init(ctx: Context) {
         if (app != null) return
         app = ctx.applicationContext
+        runCatching {
+            app!!.registerReceiver(helperRx, android.content.IntentFilter(HELPER_STATE), HELPER_PERMISSION, null)
+        }
         _protocol.value = prefs(ctx).getString("protocol", null)?.let { p -> Protocol.entries.firstOrNull { it.name == p } } ?: Protocol.BOTH
     }
 
@@ -271,11 +274,20 @@ object AmbientLights {
         init(ctx)
         if (_link.value == Link.CONNECTED || _link.value == Link.CONNECTING) return
         val addr = prefs(ctx).getString("address", null)
-        if (addr == null) search(ctx) else if (ready(ctx)) connect(ctx, addr, savedName(ctx) ?: addr)
+        if (addr == null) search(ctx) else if (helperInstalled(ctx) || ready(ctx)) connect(ctx, addr, savedName(ctx) ?: addr)
     }
 
     fun connect(ctx: Context, address: String, name: String) {
         init(ctx)
+        prefs(ctx).edit().putString("address", address).putString("name", name).apply()
+        if (name.contains("-QA", ignoreCase = true) && _protocol.value != Protocol.BOTH) setProtocol(ctx, Protocol.BOTH)
+        if (helperInstalled(ctx)) {
+            stopScan()
+            disconnect(quiet = true)
+            log("Asking the SharkOS Lights helper to connect to $address")
+            toHelper(ctx, HELPER_CONNECT) { putExtra("address", address) }
+            return
+        }
         if (!ready(ctx)) return
         stopScan()
         disconnect(quiet = true)
@@ -348,6 +360,7 @@ object AmbientLights {
 
     fun disconnect(quiet: Boolean = false) {
         main.removeCallbacks(idle)
+        if (!quiet) app?.let { if (helperInstalled(it)) toHelper(it, HELPER_RELEASE) }
         val g = gatt ?: return
         if (!quiet) log("Released the lights")
         runCatching { g.disconnect(); g.close() }
@@ -373,6 +386,44 @@ object AmbientLights {
 
     private val idle = Runnable { if (_link.value == Link.CONNECTED) { log("Idle: letting go so the phone app can connect"); disconnect(quiet = true) } }
     private fun bumpIdle() { main.removeCallbacks(idle); main.postDelayed(idle, IDLE_MS) }
+
+    // ---- The SharkOS Lights helper (a separate app holding the connection, like Sharkware's) ----
+
+    private const val HELPER_PKG = "com.sharkos.lights"
+    private const val HELPER_SERVICE = "com.sharkos.lights.LightsService"
+    private const val HELPER_PERMISSION = "com.sharkos.permission.LIGHTS"
+    private const val HELPER_CONNECT = "com.sharkos.lights.CONNECT"
+    private const val HELPER_SEND = "com.sharkos.lights.SEND"
+    private const val HELPER_RELEASE = "com.sharkos.lights.RELEASE"
+    private const val HELPER_STATUS = "com.sharkos.lights.STATUS"
+    private const val HELPER_STATE = "com.sharkos.lights.STATE"
+
+    fun helperInstalled(ctx: Context): Boolean =
+        runCatching { ctx.packageManager.getPackageInfo(HELPER_PKG, 0); true }.getOrDefault(false)
+
+    /** Opens the helper's (invisible) screen that asks for location once. */
+    fun helperSetup(ctx: Context) {
+        runCatching { ctx.startActivity(android.content.Intent().setClassName(HELPER_PKG, "com.sharkos.lights.SetupActivity").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            .onFailure { log("Couldn't open the helper: ${it.message}") }
+    }
+
+    fun helperStatus(ctx: Context) { if (helperInstalled(ctx)) toHelper(ctx, HELPER_STATUS) }
+
+    private fun toHelper(ctx: Context, action: String, extras: android.content.Intent.() -> Unit = {}) {
+        val i = android.content.Intent(action).setClassName(HELPER_PKG, HELPER_SERVICE).apply(extras)
+        runCatching { ctx.startForegroundService(i) }.onFailure { log("Helper didn't start: ${it.javaClass.simpleName}: ${it.message}") }
+    }
+
+    private val helperRx = object : android.content.BroadcastReceiver() {
+        override fun onReceive(c: Context, i: android.content.Intent) {
+            i.getStringExtra("line")?.let { log("Helper: $it") }
+            when (i.getStringExtra("state")) {
+                "READY" -> { _link.value = Link.CONNECTED; _connectedName.value = savedName(c) ?: i.getStringExtra("address") }
+                "CONNECTING", "WAITING" -> { if (_link.value != Link.SEARCHING) _link.value = Link.CONNECTING; _connectedName.value = null }
+                "IDLE" -> { if (_link.value != Link.SEARCHING) _link.value = Link.IDLE; _connectedName.value = null }
+            }
+        }
+    }
 
     // ---- Commands ----
 
@@ -411,6 +462,13 @@ object AmbientLights {
     /** Only the newest command waits: dragging a slider sends a steady stream, never a backlog. */
     private fun send(frames: List<ByteArray>) {
         val c = app ?: return
+        if (helperInstalled(c)) {
+            val addr = prefs(c).getString("address", null) ?: return log("Search or enter the box address first")
+            val hex = frames.joinToString(",") { f -> f.joinToString("") { "%02X".format(it) } }
+            if (_link.value != Link.CONNECTED) toHelper(c, HELPER_CONNECT) { putExtra("address", addr) }
+            toHelper(c, HELPER_SEND) { putExtra("frames", hex) }
+            return
+        }
         pending = ArrayDeque(frames)
         if (_link.value != Link.CONNECTED) { connectSaved(c); return }
         flush()

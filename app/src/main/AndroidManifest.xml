@@ -41,6 +41,9 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
+    <!-- Talks to the SharkOS Lights helper app; only apps with the SharkOS key hold this -->
+    <permission android:name="com.sharkos.permission.LIGHTS" android:protectionLevel="signature" />
+    <uses-permission android:name="com.sharkos.permission.LIGHTS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 

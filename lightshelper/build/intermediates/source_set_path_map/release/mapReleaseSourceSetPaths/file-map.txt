@@ -1,0 +1,7 @@
+com.sharkos.lights.lightshelper-pngs-0 /home/claude/sharkos/lightshelper/build/generated/res/pngs/release
+com.sharkos.lights.lightshelper-resValues-1 /home/claude/sharkos/lightshelper/build/generated/res/resValues/release
+com.sharkos.lights.lightshelper-packageReleaseResources-2 /home/claude/sharkos/lightshelper/build/intermediates/incremental/release/packageReleaseResources/merged.dir
+com.sharkos.lights.lightshelper-packageReleaseResources-3 /home/claude/sharkos/lightshelper/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
+com.sharkos.lights.lightshelper-release-4 /home/claude/sharkos/lightshelper/build/intermediates/merged_res/release/mergeReleaseResources
+com.sharkos.lights.lightshelper-main-5 /home/claude/sharkos/lightshelper/src/main/res
+com.sharkos.lights.lightshelper-release-6 /home/claude/sharkos/lightshelper/src/release/res

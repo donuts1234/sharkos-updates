@@ -1,0 +1,6 @@
+com.sharkos.lights.SetupActivity
+com.sharkos.lights.PrimeScanService
+com.sharkos.lights.LightsService
+com.sharkos.lights.PrimeScanService: PrimeScanService()
+com.sharkos.lights.SetupActivity: SetupActivity()
+com.sharkos.lights.LightsService: LightsService()
