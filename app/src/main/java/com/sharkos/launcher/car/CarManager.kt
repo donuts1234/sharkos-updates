@@ -279,9 +279,14 @@ class CarManager(private val appContext: Context) {
     private val _media = MutableStateFlow<CarMedia?>(null)
     val media: StateFlow<CarMedia?> = _media.asStateFlow()
 
+    private val _mediaProbe = MutableStateFlow<List<String>>(emptyList())
+    /** Raw readings from every place a song might be, for Settings → Media diagnostics. */
+    val mediaProbe: StateFlow<List<String>> = _mediaProbe.asStateFlow()
+
     /** Read BYD's multimedia device. Blocking; runs with the telemetry poll. */
     private fun refreshMedia() {
         val b = backend ?: return
+        probeMediaSources(b)
         fun int(m: String): Int? {
             val c = Call(m, device = "multimedia")
             return if (b.has(c)) runCatching { b.invoke(c) as? Int }.getOrNull() else null
@@ -292,6 +297,28 @@ class CarManager(private val appContext: Context) {
         val info = Call("getPlayMediaInfo", device = "multimedia").takeIf { b.has(it) }?.let { runCatching { b.invoke(it) }.getOrNull() }
         if (source == null && state == null && info == null) return     // no multimedia device on this unit
         _media.value = CarMedia.fromFields(source, state, progress, describe(info), android.os.SystemClock.elapsedRealtime())
+    }
+
+    /** Readings from the cluster feed and Desay, plus why any device failed to open. Diagnostics only. */
+    private fun probeMediaSources(b: CarBackend) {
+        val lines = mutableListOf<String>()
+        for ((dev, why) in CarBackend.openErrors.filterKeys { it == "multimedia" || it == "instrument" }) lines += "Can't open $dev: $why"
+        fun read(m: String, vararg args: Any?): String? {
+            val c = Call(m, *args, device = "instrument")
+            return if (b.has(c)) runCatching { b.invoke(c)?.toString() }.getOrElse { "error ${it.javaClass.simpleName}" } else null
+        }
+        if ("instrument" in b.deviceKeys) {
+            listOfNotNull(
+                read("getLastMediaPackage")?.let { "lastMediaPackage=$it" },
+                read("getMusicInfoResult")?.let { "musicInfoResult=$it" },
+                read("getMusicChangeSource")?.let { "musicChangeSource=$it" },
+                read("getMusicProgress", 0)?.let { "musicProgress(0)=$it" },
+                read("getMusicProgress", 1)?.let { "musicProgress(1)=$it" },
+                read("getMusicControlStatus", 1)?.let { "musicControlStatus(1)=$it" },
+            ).let { if (it.isNotEmpty()) lines += "Cluster: " + it.joinToString(" · ") }
+        }
+        if (ts.found.isNotEmpty()) lines += "Desay services: " + ts.found.joinToString(", ")
+        _mediaProbe.value = lines
     }
 
     /** Every no-argument getter and public field of [o], as text: MediaInfo's shape isn't known yet. */

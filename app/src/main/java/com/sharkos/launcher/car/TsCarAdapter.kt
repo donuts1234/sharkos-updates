@@ -29,6 +29,10 @@ class TsCarAdapter(private val ctx: Context) {
 
     val connected: Boolean get() = services.isNotEmpty()
 
+    /** Desay services found by [PROBE], as "key=Interface"; empty until connected. */
+    @Volatile var found: List<String> = emptyList()
+        private set
+
     private val conn = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             runCatching {
@@ -42,6 +46,12 @@ class TsCarAdapter(private val ctx: Context) {
                     }.onFailure { Log.w(TAG, "service $key: ${it.message}") }
                 }
                 Log.w(TAG, "connected: ${services.keys}")
+                // Which other services this unit offers, by their binder's interface name: where a
+                // media / cluster feed might live. Diagnostics only.
+                found = PROBE.mapNotNull { key ->
+                    val b = runCatching { get.invoke(adapter, key) as? IBinder }.getOrNull() ?: return@mapNotNull null
+                    "$key=" + (runCatching { b.interfaceDescriptor }.getOrNull()?.substringAfterLast('.') ?: "?")
+                }
             }.onFailure { Log.w(TAG, "adapter: ${it.javaClass.simpleName}: ${it.message}") }
         }
 
@@ -85,5 +95,7 @@ class TsCarAdapter(private val ctx: Context) {
         const val ACTION = "com.ts.lib.caradapter.ICarAdapterService"
         const val LIB = "com.ts.lib.caradapter"
         val SERVICES = mapOf("general" to "general.ICarGeneralService", "body" to "body.ICarBodyService")
+        val PROBE = listOf("general", "body", "sensor", "cabin", "setting", "hvac", "cloud", "assist",
+            "media", "multimedia", "music", "audio", "source", "cluster", "carplay", "projection", "radio", "instrument")
     }
 }

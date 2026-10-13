@@ -66,6 +66,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     val now by remember { ticker() }.collectAsStateWithLifecycle(System.currentTimeMillis())
     val track by NowPlaying.track.collectAsStateWithLifecycle()
     val carMedia by car.media.collectAsStateWithLifecycle()
+    val mediaProbe by car.mediaProbe.collectAsStateWithLifecycle()
     val shownTrack = chooseTrack(carMedia, track)
     val latestTrack = androidx.compose.runtime.rememberUpdatedState(shownTrack)
     val allApps by apps.all.collectAsStateWithLifecycle()
@@ -240,7 +241,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 canInstall = canInstall,
                                 carDataAllowed = carData || telemetry.socPercent != null,
                                 barStyle = barStyle,
-                                mediaDebug = mediaDebug(carMedia, track),
+                                mediaDebug = mediaDebug(carMedia, track) + mediaProbe,
                             ),
                             SettingsActions(
                                 chooseHome = { if (!openSettings(ctx, Settings.ACTION_HOME_SETTINGS)) notice = HIDDEN_PAGE },
