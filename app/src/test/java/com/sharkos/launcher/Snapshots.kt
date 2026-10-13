@@ -201,6 +201,10 @@ class Snapshots {
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, t, true, Attitude(2.4f, -1.2f), home) }
     }
 
+    @Test fun carPlayPage() = paparazzi.snapshot {
+        Frame(Screen.CARPLAY) { com.sharkos.launcher.ui.CarPlayScreen(onHome = {}) }
+    }
+
     @Test fun homeLightsBar() = paparazzi.snapshot {
         Frame(Screen.HOME, showLights = true, wallpaper = com.sharkos.launcher.ui.Wallpaper.OCEAN) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
     }

@@ -173,6 +173,64 @@ object CarPlayLink {
         } finally { data.recycle() }
     }
 
+    // ---- CarPlay's picture and touch, the hooks BYD's own CarPlay screen uses (needs car.permission.CARPLAY) ----
+
+    private const val TX_CHANGE_VIDEO_FOCUS = 21
+    private const val TX_DISPLAY_STATUS = 22
+    private const val TX_SET_SURFACE_WITH_TYPE = 25
+    private const val TX_TOUCH = 28
+    private const val TX_REQUEST_UI = 29
+    private const val SCREEN_MAIN = 0
+
+    /** BYD's CarPlay picture is 1920 × 906 (the screen between its bars); touches are in those units. */
+    const val VIDEO_W = 1920
+    const val VIDEO_H = 906
+
+    val linkedNow: Boolean get() = service != null
+
+    /** Draw CarPlay into [surface] (null: stop drawing there). */
+    fun showOn(surface: android.view.Surface?): Boolean {
+        val b = service ?: return false
+        return runCatching {
+            transact(b, TX_SET_SURFACE_WITH_TYPE) { p ->
+                if (surface != null) { p.writeInt(1); surface.writeToParcel(p, 0) } else p.writeInt(0)
+                p.writeInt(SCREEN_MAIN)
+            }
+        }.onFailure { Log.w(TAG, "setSurface: ${it.message}") }.isSuccess
+    }
+
+    /** Give the screen to CarPlay (the iPhone streams its picture) or back to the car. */
+    fun screenToCarPlay(carPlay: Boolean): Boolean {
+        val b = service ?: return false
+        return runCatching {
+            transact(b, TX_CHANGE_VIDEO_FOCUS) { p -> p.writeInt(if (carPlay) 1 else 0); p.writeInt(1); p.writeString(""); p.writeInt(1) }
+        }.onFailure { Log.w(TAG, "videoFocus: ${it.message}") }.isSuccess
+    }
+
+    /** Ask the iPhone to bring up CarPlay (launch mode 0 normal, 1 maps, 2 music). */
+    fun requestUi(mode: Int = 0): Boolean {
+        val b = service ?: return false
+        return runCatching { transact(b, TX_REQUEST_UI) { it.writeInt(mode) } }.isSuccess
+    }
+
+    /** A touch on SharkOS's CarPlay view, already scaled to [VIDEO_W] × [VIDEO_H]. */
+    fun touch(event: android.view.MotionEvent): Boolean {
+        val b = service ?: return false
+        return runCatching { transact(b, TX_TOUCH) { p -> p.writeInt(1); event.writeToParcel(p, 0) } }.isSuccess
+    }
+
+    /** Whether CarPlay says its picture is showing; null if it didn't answer. */
+    fun displayShowing(): Boolean? {
+        val b = service ?: return null
+        val data = Parcel.obtain(); val reply = Parcel.obtain()
+        return try {
+            data.writeInterfaceToken(SERVICE)
+            b.transact(TX_DISPLAY_STATUS, data, reply, 0)
+            reply.readException()
+            reply.readInt() != 0
+        } catch (e: Exception) { Log.w(TAG, "displayStatus: ${e.message}"); null } finally { data.recycle(); reply.recycle() }
+    }
+
     /** Press a CarPlay media key (down then up). False if the service isn't there. */
     fun key(code: Int): Boolean {
         val b = service ?: return false

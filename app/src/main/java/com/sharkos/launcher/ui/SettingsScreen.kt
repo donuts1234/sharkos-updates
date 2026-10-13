@@ -89,6 +89,7 @@ class SettingsActions(
     val restart: () -> Unit = {},
     val androidSettings: () -> Unit = {},
     val lights: LightsActions = LightsActions(),
+    val openCarPlay: () -> Unit = {},
 )
 
 /**
@@ -211,6 +212,9 @@ private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions)
                 "Song, artwork and time come straight from the car's CarPlay service.",
                 status = if (s.carPlayLinked) "Connected" to Sh.green else "Not found" to Sh.faint,
             )
+            Item("CarPlay inside SharkOS (test)", "Shows CarPlay in SharkOS with the HVAC Bar below. A test: the line at the bottom reports what the car says.") {
+                PillButton("Open", a.openCarPlay, bg = Sh.blue, fg = Color.White)
+            }
         }
         SettingsPage.VEHICLE -> {
             Group("Car data") {

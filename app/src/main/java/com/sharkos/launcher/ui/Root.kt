@@ -54,7 +54,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 
-enum class Screen { HOME, CLIMATE, APPS, OFFROAD, SETTINGS }
+enum class Screen { HOME, CLIMATE, APPS, OFFROAD, SETTINGS, CARPLAY }
 
 /** The whole launcher: one screen at a time above the persistent bottom bar. */
 @Composable
@@ -268,6 +268,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                             onZero = { if (inclino.calibrate()) zeroed++ },
                             onBack = { onScreen(Screen.HOME) },
                         )
+                        Screen.CARPLAY -> CarPlayScreen(onHome = { onScreen(Screen.HOME) })
                         Screen.SETTINGS -> SettingsScreen(
                             SettingsInfo(
                                 version = BuildConfig.VERSION_NAME,
@@ -311,6 +312,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 resetBar = { apps.resetDock(); notice = "The bar's apps are back to the defaults" },
                                 restart = { restartSharkOs(ctx) },
                                 lights = lightsActions,
+                                openCarPlay = { onScreen(Screen.CARPLAY) },
                                 androidSettings = { if (!openSettings(ctx, Intent(Settings.ACTION_SETTINGS))) notice = "BYD hides Android's settings on this unit" },
                                 back = { onScreen(Screen.HOME) },
                             ),
