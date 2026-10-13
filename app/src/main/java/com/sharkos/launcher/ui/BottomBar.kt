@@ -88,6 +88,8 @@ class BarActions(
     val removeApp: (DockApp) -> Unit,
     /** Set the fan speed outright (the fan slider). */
     val setFan: (Int) -> Unit = {},
+    /** The bar's back button: one step back inside SharkOS. */
+    val back: () -> Unit = {},
 )
 
 /**
@@ -172,7 +174,7 @@ fun BottomBar(
     }
 }
 
-const val DOCK_SLOTS = 5
+const val DOCK_SLOTS = 3
 
 @Composable
 private fun RowScope.Centre(content: @Composable RowScope.() -> Unit) = Row(
@@ -195,10 +197,13 @@ private fun Divider() = Box(Modifier.width(1.dp).height(36.dp).background(Sh.lin
 @Composable
 private fun CapsuleDivider() = Box(Modifier.padding(horizontal = 4.dp).width(1.dp).height(32.dp).background(Sh.line))
 
-/** Home, the pinned apps, empty + spots, and All apps. */
+/**
+ * All apps on the left, then the three app spots (empty ones are + spots), then Home and Back on the
+ * right, by the driver. [homeInMiddle] (Mirrored) puts Home and Back in the middle of the spots.
+ */
 @Composable
 private fun Dock(dock: List<DockApp>, screen: Screen, a: BarActions, homeInMiddle: Boolean = false) {
-    val slots: List<@Composable () -> Unit> = dock.map { app ->
+    val slots: List<@Composable () -> Unit> = dock.take(DOCK_SLOTS).map { app ->
         @Composable {
             Box(
                 Modifier.size(56.dp).clip(RoundedCornerShape(14.dp))
@@ -207,17 +212,19 @@ private fun Dock(dock: List<DockApp>, screen: Screen, a: BarActions, homeInMiddl
             ) { AppIcon(app.pkg, app.label, 46.dp) }
         }
     } + List((DOCK_SLOTS - dock.size).coerceAtLeast(0)) { @Composable { AddSlot(a.addApp) } }
-    val home: @Composable () -> Unit = { BarIcon(ShIcons.home, "Home", screen == Screen.HOME, onClick = a.home) }
-    if (homeInMiddle) {
-        val half = slots.size / 2
-        slots.take(half).forEach { it() }
-        home()
-        slots.drop(half).forEach { it() }
-    } else {
-        home()
-        slots.forEach { it() }
+    val homeBack: @Composable () -> Unit = {
+        BarIcon(ShIcons.home, "Home", screen == Screen.HOME, onClick = a.home)
+        BarIcon(ShIcons.backArrow, "Back", false, onClick = a.back)
     }
     BarIcon(ShIcons.grid, "All apps", screen == Screen.APPS, onClick = a.apps)
+    if (homeInMiddle) {
+        slots.take(1).forEach { it() }
+        homeBack()
+        slots.drop(1).forEach { it() }
+    } else {
+        slots.forEach { it() }
+        homeBack()
+    }
 }
 
 /** An empty spot on the bar: a + that opens the app picker. */
@@ -427,7 +434,7 @@ private fun TempSlider(c: ClimateState, a: BarActions) {
 }
 
 /** Slider tracks: two must fit beside the apps and seats, so a little shorter than one alone would be. */
-private val SLIDER_W = 196.dp
+private val SLIDER_W = 230.dp
 private val SLIDER_THUMB_TRAVEL = SLIDER_W - 44.dp
 
 /**

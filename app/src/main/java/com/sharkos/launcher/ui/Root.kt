@@ -166,6 +166,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
 
     BackHandler(screen != Screen.HOME) { onScreen(Screen.HOME) }
 
+    val screenState = androidx.compose.runtime.rememberUpdatedState(screen)
     val dockApps = dock.mapNotNull { pkg -> apps.find(pkg)?.let { DockApp(it.pkg, it.label) } }
     val bar = remember(car, apps) {
         BarActions(
@@ -184,6 +185,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
             addApp = { picking = true; onScreen(Screen.APPS) },
             removeApp = { d -> apps.unpin(d.pkg); notice = "Removed ${d.label} from the bar" },
             setFan = car::setFanSpeed,
+            back = { if (screenState.value != Screen.HOME) onScreen(Screen.HOME) },
         )
     }
 

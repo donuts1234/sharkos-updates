@@ -32,7 +32,7 @@ class Apps(private val context: Context) {
     private val _all = MutableStateFlow<List<AppEntry>>(emptyList())
     val all: StateFlow<List<AppEntry>> = _all.asStateFlow()
 
-    private val _dock = MutableStateFlow(prefs.dock ?: emptyList())
+    private val _dock = MutableStateFlow(prefs.dock?.take(MAX_DOCK) ?: emptyList())   // older versions allowed 5
     /** Pinned package names, in order. */
     val dock: StateFlow<List<String>> = _dock.asStateFlow()
 
@@ -118,7 +118,7 @@ class Apps(private val context: Context) {
     fun isInstalled(pkg: String) = runCatching { pm.getPackageInfo(pkg, 0); true }.getOrDefault(false)
 
     companion object {
-        const val MAX_DOCK = 5
+        const val MAX_DOCK = 3
 
         // Shark 6 packages (Shark Hub's probe, SOC_260811_S), plus Google Maps if it's been added.
         const val PKG_MAPS = "com.google.android.apps.maps"
