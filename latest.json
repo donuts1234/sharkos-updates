@@ -1,6 +1,6 @@
 {
-  "versionCode": 8,
-  "versionName": "0.1.7",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.7.apk",
-  "notes": "CarPlay now playing on Home: song, artist, artwork and live elapsed time, with play/pause/skip. Media diagnostics now wrap."
+  "versionCode": 9,
+  "versionName": "0.1.8",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.8.apk",
+  "notes": "Smoother Settings: the clock and car readings no longer redraw every screen. Removed the old media probes and diagnostics now that CarPlay music comes straight from the car."
 }
