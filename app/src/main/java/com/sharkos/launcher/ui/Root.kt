@@ -249,6 +249,8 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 carDataAllowed = carData || hasCarData,
                                 barStyle = barStyle,
                                 carPlayLinked = carPlayLinked,
+                                climate = climate,
+                                dock = dockApps,
                             ),
                             SettingsActions(
                                 chooseHome = { if (!openSettings(ctx, Settings.ACTION_HOME_SETTINGS)) notice = HIDDEN_PAGE },
@@ -264,8 +266,13 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                     val page = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}"))
                                     if (!openSettings(ctx, page) && !openSettings(ctx, Settings.ACTION_MANAGE_OVERLAY_PERMISSION)) notice = HIDDEN_PAGE
                                 },
+                                reconnectCar = { car.reconnect(); notice = "Reconnecting to the car…" },
+                                resetBar = { apps.resetDock(); notice = "The bar's apps are back to the defaults" },
+                                restart = { restartSharkOs(ctx) },
+                                androidSettings = { if (!openSettings(ctx, Intent(Settings.ACTION_SETTINGS))) notice = "BYD hides Android's settings on this unit" },
                                 back = { onScreen(Screen.HOME) },
                             ),
+                            start = if (update is com.sharkos.launcher.update.Updater.State.Available) SettingsPage.UPDATES else SettingsPage.GENERAL,
                         )
                     }
                 }
@@ -303,6 +310,13 @@ private fun chooseTrack(carPlay: CarPlaySong?, session: Track?): Track? {
         session?.playing == true -> session
         else -> session ?: cp
     }
+}
+
+/** Close and reopen SharkOS in a fresh process. */
+private fun restartSharkOs(ctx: Context) {
+    val launch = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)?.component ?: return
+    ctx.startActivity(Intent.makeRestartActivityTask(launch))
+    Runtime.getRuntime().exit(0)
 }
 
 private fun ticker() = flow {

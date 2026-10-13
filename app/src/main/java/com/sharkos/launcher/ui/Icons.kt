@@ -62,4 +62,11 @@ object ShIcons {
     val cloud = icon("cloud", listOf("M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 0 1 0 9z"))
     val bolt = icon("bolt", listOf("M13 2 3 14h9l-1 8 10-12h-9l1-8z"))
     val fuel = icon("fuel", listOf("M3 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18", "M3 22h12", "M7 7h4", "M15 10h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"))
+    val car = icon("car", listOf("M2.5 16v-3.5L5 7.5h8.5l3.5 5h4.5V16", "M2.5 16h1.5M9 16h6M20 16h1.5", "M6.5 14a2 2 0 1 1 0 4a2 2 0 1 1 0-4z", "M17.5 14a2 2 0 1 1 0 4a2 2 0 1 1 0-4z", "M9.5 7.5v5h7.5"))
+    val info = icon("info", listOf("M12 3a9 9 0 1 1 0 18a9 9 0 1 1 0-18z", "M12 11v5.5", "M12 7.6v.01"), width = 2.2f)
+    val download = icon("download", listOf("M12 3.5v11", "M7 10l5 5 5-5", "M4.5 20h15"))
+    val chip = icon("chip", listOf(
+        "M8 6h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z", "M10 10h4v4h-4z",
+        "M9.5 2.5V6M14.5 2.5V6M9.5 18v3.5M14.5 18v3.5M2.5 9.5H6M2.5 14.5H6M18 9.5h3.5M18 14.5h3.5",
+    ))
 }

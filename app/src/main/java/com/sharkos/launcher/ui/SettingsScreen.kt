@@ -1,6 +1,27 @@
 package com.sharkos.launcher.ui
 
 import androidx.compose.foundation.background
+import android.os.Build
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import com.sharkos.launcher.car.ClimateState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +58,9 @@ class SettingsInfo(
     val carDataAllowed: Boolean = true,
     val barStyle: BarStyle = BarStyle.BALANCED,
     val carPlayLinked: Boolean = false,
+    /** What the HVAC Bar previews show: the car's real climate and the driver's own apps. */
+    val climate: ClimateState = ClimateState(),
+    val dock: List<DockApp> = emptyList(),
     val updatesConfigured: Boolean = true,
     val canInstall: Boolean = true,
 )
@@ -53,66 +77,132 @@ class SettingsActions(
     val setBarStyle: (BarStyle) -> Unit = {},
     val installUpdate: (Updater.Release) -> Unit = {},
     val allowInstalls: () -> Unit = {},
+    val reconnectCar: () -> Unit = {},
+    val resetBar: () -> Unit = {},
+    val restart: () -> Unit = {},
+    val androidSettings: () -> Unit = {},
 )
 
+/**
+ * Settings pages, listed down the right so they sit on the driver's side (right-hand drive). Add a
+ * page here and give it a branch in [PageContent].
+ */
+enum class SettingsPage(val label: String, val icon: ImageVector, val tint: Color) {
+    GENERAL("General", ShIcons.gear, Color(0xFF8E8E93)),
+    HVAC("HVAC Bar", ShIcons.fan, Sh.blue),
+    MEDIA("Now playing", ShIcons.music, Color(0xFFFF375F)),
+    VEHICLE("Vehicle", ShIcons.car, Sh.green),
+    UPDATES("Updates", ShIcons.download, Color(0xFF5E5CE6)),
+    SYSTEM("System", ShIcons.chip, Color(0xFF636366)),
+    ABOUT("About", ShIcons.info, Color(0xFF8E8E93)),
+}
+
 @Composable
-fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
-    Column(Modifier.fillMaxSize().padding(start = 32.dp, end = 32.dp, top = 24.dp)) {
-        Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
-            Row(Modifier.weight(1f).press(a.back, label = "Back to Home"), verticalAlignment = Alignment.CenterVertically) {
+fun SettingsScreen(s: SettingsInfo, a: SettingsActions, start: SettingsPage = SettingsPage.GENERAL) {
+    var page by rememberSaveable { mutableStateOf(start) }
+    Row(Modifier.fillMaxSize()) {
+        Column(Modifier.weight(1f).fillMaxHeight().padding(start = 32.dp, end = 24.dp, top = 24.dp)) {
+            Row(Modifier.height(48.dp).press(a.back, label = "Back to Home"), verticalAlignment = Alignment.CenterVertically) {
                 Glyph(ShIcons.back, Sh.blue, 22.dp)
                 Txt("Home", Sh.text(19.sp, FontWeight.Medium, Sh.blue))
             }
-            Txt("Settings", Sh.text(24.sp, FontWeight.Bold, spacing = (-0.3).sp))
-            Row(Modifier.weight(1f)) {}
+            Gap(4.dp)
+            Txt(page.label, Sh.text(32.sp, FontWeight.Bold, spacing = (-0.5).sp), Modifier.padding(start = 4.dp))
+            Gap(16.dp)
+            // A fresh scroll position per page
+            key(page) {
+                Column(
+                    Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) { PageContent(page, s, a) }
+            }
         }
-        Gap(16.dp)
-        Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Group("HVAC Bar") {
-                Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Txt("Layout", Sh.text(18.sp, FontWeight.SemiBold))
-                    Segmented(BarStyle.entries.map { it.label }, s.barStyle.ordinal, { a.setBarStyle(BarStyle.entries[it]) }, Modifier.fillMaxWidth(), greyFirst = false)
-                    Txt(s.barStyle.blurb + " One cabin temperature keeps both sides in sync.", Sh.text(15.sp, color = Sh.dim), maxLines = 2)
+        Sidebar(page, s, onPick = { page = it }, Modifier.padding(top = 16.dp, end = 16.dp, bottom = 16.dp))
+    }
+}
+
+@Composable
+private fun Sidebar(page: SettingsPage, s: SettingsInfo, onPick: (SettingsPage) -> Unit, modifier: Modifier) =
+    Column(
+        modifier.width(300.dp).fillMaxHeight().clip(RoundedCornerShape(26.dp)).background(Sh.card).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Txt("Settings", Sh.text(24.sp, FontWeight.Bold, spacing = (-0.3).sp), Modifier.padding(start = 12.dp, top = 8.dp, bottom = 12.dp))
+        for (p in SettingsPage.entries) {
+            val on = p == page
+            Row(
+                Modifier.fillMaxWidth().height(54.dp).clip(RoundedCornerShape(14.dp))
+                    .background(if (on) Sh.blue else Color.Transparent)
+                    .press({ onPick(p) }, label = p.label).padding(horizontal = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(p.tint), contentAlignment = Alignment.Center) {
+                    Glyph(p.icon, Color.White, 20.dp)
+                }
+                Gap(14.dp)
+                Txt(p.label, Sh.text(18.sp, FontWeight.Medium, if (on) Color.White else Sh.ink), Modifier.weight(1f))
+                badge(p, s)?.let { (text, c) ->
+                    Box(
+                        Modifier.height(24.dp).widthIn(min = 24.dp).clip(RoundedCornerShape(12.dp)).background(if (on) Color.White else c).padding(horizontal = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) { Txt(text, Sh.text(13.sp, FontWeight.Bold, if (on) c else Color.White)) }
                 }
             }
-            Group("Home screen") {
+        }
+    }
+
+/** A page's badge in the sidebar: something new, or something that needs allowing. */
+private fun badge(p: SettingsPage, s: SettingsInfo): Pair<String, Color>? = when (p) {
+    SettingsPage.UPDATES -> when {
+        s.update is Updater.State.Available -> "1" to Sh.red
+        !s.canInstall -> "!" to Sh.orange
+        else -> null
+    }
+    SettingsPage.GENERAL -> if (!s.isDefaultHome && s.autoLaunch && !s.canLaunchFromBackground) "!" to Sh.orange else null
+    SettingsPage.MEDIA -> if (!s.mediaAccess) "!" to Sh.orange else null
+    SettingsPage.VEHICLE -> if (!s.carDataAllowed) "!" to Sh.orange else null
+    else -> null
+}
+
+@Composable
+private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions) {
+    when (page) {
+        SettingsPage.GENERAL -> Group("Home screen") {
+            Item(
+                "Use SharkOS as the Home screen",
+                if (s.isDefaultHome) "SharkOS opens when you press Home." else "Choose SharkOS as the Home app so the Home button comes here.",
+                status = if (s.isDefaultHome) "On" to Sh.green else null,
+            ) { if (!s.isDefaultHome) PillButton("Choose", a.chooseHome, bg = Sh.blue, fg = Color.White) }
+            if (!s.isDefaultHome) Hint("If the car doesn't offer a choice: adb shell cmd package set-home-activity com.sharkos.launcher/.MainActivity")
+            Item(
+                "Open SharkOS when the car starts",
+                "Brings SharkOS up over BYD's home screen a few seconds after start-up. Works even if the car won't let SharkOS be the Home app.",
+            ) { Switch(s.autoLaunch, a.setAutoLaunch, "Open SharkOS when the car starts") }
+            if (s.autoLaunch) {
                 Item(
-                    "Use SharkOS as the Home screen",
-                    if (s.isDefaultHome) "SharkOS opens when you press Home." else "Choose SharkOS as the Home app so the Home button comes here.",
-                    status = if (s.isDefaultHome) "On" to Sh.green else null,
-                ) { if (!s.isDefaultHome) PillButton("Choose", a.chooseHome, bg = Sh.blue, fg = Color.White) }
-                if (!s.isDefaultHome) Hint("If the car doesn't offer a choice: adb shell cmd package set-home-activity com.sharkos.launcher/.MainActivity")
-                Item(
-                    "Open SharkOS when the car starts",
-                    "Brings SharkOS up over BYD's home screen a few seconds after start-up. Works even if the car won't let SharkOS be the Home app.",
-                ) { Switch(s.autoLaunch, a.setAutoLaunch, "Open SharkOS when the car starts") }
-                if (s.autoLaunch) {
-                    Item(
-                        "Display over other apps",
-                        "Android only lets an app open itself at start-up with this permission.",
-                        status = if (s.canLaunchFromBackground) "Allowed" to Sh.green else "Needed" to Sh.orange,
-                    ) { if (!s.canLaunchFromBackground) PillButton("Allow", a.allowOverlay, bg = Sh.blue, fg = Color.White) }
-                    if (!s.canLaunchFromBackground) Hint("If that page won't open: adb shell appops set com.sharkos.launcher SYSTEM_ALERT_WINDOW allow")
-                }
+                    "Display over other apps",
+                    "Android only lets an app open itself at start-up with this permission.",
+                    status = if (s.canLaunchFromBackground) "Allowed" to Sh.green else "Needed" to Sh.orange,
+                ) { if (!s.canLaunchFromBackground) PillButton("Allow", a.allowOverlay, bg = Sh.blue, fg = Color.White) }
+                if (!s.canLaunchFromBackground) Hint("If that page won't open: adb shell appops set com.sharkos.launcher SYSTEM_ALERT_WINDOW allow")
             }
-            Group("Now playing") {
-                Item(
-                    "Media access",
-                    "Lets the Home screen show and control what's playing. SharkOS reads the player only, never your notifications.",
-                    status = if (s.mediaAccess) "Allowed" to Sh.green else "Off" to Sh.faint,
-                ) { if (!s.mediaAccess) PillButton("Allow", a.grantMedia, bg = Sh.blue, fg = Color.White) }
-                if (!s.mediaAccess) Hint("If the settings page won't open: adb shell cmd notification allow_listener com.sharkos.launcher/com.sharkos.launcher.media.MediaListener")
-                Item(
-                    "CarPlay music",
-                    "Song, artwork and time come straight from the car's CarPlay service.",
-                    status = if (s.carPlayLinked) "Connected" to Sh.green else "Not found" to Sh.faint,
-                )
-            }
-            Group("Car") {
+        }
+        SettingsPage.HVAC -> HvacPage(s, a)
+        SettingsPage.MEDIA -> Group("Sources") {
+            Item(
+                "Media access",
+                "Lets the Home screen show and control what's playing in apps like Spotify. SharkOS reads the player only, never your notifications.",
+                status = if (s.mediaAccess) "Allowed" to Sh.green else "Off" to Sh.faint,
+            ) { if (!s.mediaAccess) PillButton("Allow", a.grantMedia, bg = Sh.blue, fg = Color.White) }
+            if (!s.mediaAccess) Hint("If the settings page won't open: adb shell cmd notification allow_listener com.sharkos.launcher/com.sharkos.launcher.media.MediaListener")
+            Item(
+                "CarPlay music",
+                "Song, artwork and time come straight from the car's CarPlay service.",
+                status = if (s.carPlayLinked) "Connected" to Sh.green else "Not found" to Sh.faint,
+            )
+        }
+        SettingsPage.VEHICLE -> {
+            Group("Car data") {
                 Item(
                     "Car data access",
                     "Battery, electric range, fuel and total range come from BYD's statistics service, which needs this one permission.",
@@ -132,20 +222,94 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
                         CarLink.OFFLINE -> "Offline" to Sh.faint
                     },
                 )
+            }
+            Group("Off-road") {
                 Item("Inclinometer", if (s.inclinoZeroed) "Zeroed for this screen position." else "Not zeroed yet: park on flat ground first.") {
                     PillButton(if (s.inclinoZeroed) "Re-zero" else "Zero now", a.zeroInclino)
                 }
             }
-            Group("Updates") { Updates(s, a) }
-            Group("About") {
-                Item("SharkOS ${s.version}", "A light launcher for the BYD Shark 6.")
-                Item(
-                    "Credits",
-                    "Car connection, climate mapping and inclinometer adapted from Shark Hub by Chris Murray (MIT licence). " +
-                        "Figtree typeface by Erik Kennedy (SIL Open Font Licence).",
-                )
+        }
+        SettingsPage.UPDATES -> Group("Over the air") { Updates(s, a) }
+        SettingsPage.SYSTEM -> SystemPage(a)
+        SettingsPage.ABOUT -> {
+            Group("SharkOS") {
+                Item("Version", "SharkOS ${s.version}, a light launcher for the BYD Shark 6.")
+                Item("Made for", "BYD Shark 6, right-hand drive, Desay SV head unit (Android 11).")
+            }
+            Group("Licences") {
+                Item("Shark Hub", "Car connection, climate mapping and inclinometer adapted from Shark Hub by Chris Murray. MIT licence.")
+                Item("Figtree", "Typeface by Erik Kennedy. SIL Open Font Licence 1.1.")
+                Item("AndroidX and Jetpack Compose", "Google. Apache licence 2.0.")
+                Item("Kotlin", "JetBrains. Apache licence 2.0.")
             }
         }
+    }
+}
+
+/** Each layout drawn small, exactly as it will look on the bar; tap one to use it. */
+@Composable
+private fun HvacPage(s: SettingsInfo, a: SettingsActions) {
+    Txt("Pick the bar along the bottom of every screen. One cabin temperature keeps both sides in sync.", Sh.text(16.sp, color = Sh.dim), maxLines = 2)
+    for (style in BarStyle.entries) {
+        val on = style == s.barStyle
+        Column(
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Sh.card)
+                .then(if (on) Modifier.border(2.dp, Sh.blue, RoundedCornerShape(22.dp)) else Modifier)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Txt(style.label, Sh.text(18.sp, FontWeight.SemiBold))
+                    Txt(style.blurb, Sh.text(14.sp, color = Sh.dim), maxLines = 2)
+                }
+                Gap(16.dp)
+                if (on) Txt("In use", Sh.text(15.sp, FontWeight.SemiBold, Sh.blue))
+                else PillButton("Use", { a.setBarStyle(style) })
+            }
+            BarPreview(style, s)
+        }
+    }
+}
+
+private val NoBar = BarActions({}, {}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+
+/** The real bar, drawn at the width of the screen and shrunk to fit; touches go to [Use], not the bar. */
+@Composable
+private fun BarPreview(style: BarStyle, s: SettingsInfo) = BoxWithConstraints(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))) {
+    val scale = maxWidth / 1280.dp
+    val d = LocalDensity.current
+    Box(Modifier.fillMaxWidth().height(88.dp * scale)) {
+        CompositionLocalProvider(LocalDensity provides Density(d.density * scale, d.fontScale)) {
+            BottomBar(s.climate, s.dock, Screen.HOME, NoBar, style = style)
+        }
+        Box(Modifier.matchParentSize().pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } })
+    }
+}
+
+@Composable
+private fun SystemPage(a: SettingsActions) {
+    val ctx = LocalContext.current
+    val config = LocalConfiguration.current
+    val dm = ctx.resources.displayMetrics
+    // Read once when the page opens: nothing here polls.
+    val memMb = remember {
+        runCatching {
+            val am = ctx.getSystemService(android.app.ActivityManager::class.java)
+            am.getProcessMemoryInfo(intArrayOf(android.os.Process.myPid()))[0].totalPss / 1024
+        }.getOrNull()
+    }
+    Group("Head unit") {
+        Item("Android", "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+        Item("Firmware", Build.DISPLAY.ifBlank { "Unknown" })
+        Item("Screen", "${dm.widthPixels} × ${dm.heightPixels} px at ${dm.densityDpi} dpi (${config.screenWidthDp} × ${config.screenHeightDp} dp)")
+        if (memMb != null && memMb > 0) Item("SharkOS memory", "$memMb MB in use right now.")
+    }
+    Group("Tools") {
+        Item("Reconnect to the car", "Re-opens BYD's climate and vehicle services if readings stop updating.") { PillButton("Reconnect", a.reconnectCar) }
+        Item("Reset the bar's apps", "Puts the bar's app spots back to Music, Phone and 360 View.") { PillButton("Reset", a.resetBar) }
+        Item("Restart SharkOS", "Closes and reopens SharkOS. Nothing you've set is lost.") { PillButton("Restart", a.restart) }
+        Item("Android settings", "The head unit's own Android settings, where BYD allows them.") { PillButton("Open", a.androidSettings) }
     }
 }
 
@@ -181,7 +345,7 @@ private fun Updates(s: SettingsInfo, a: SettingsActions) {
 }
 
 @Composable
-private fun Group(title: String, content: @Composable () -> Unit) = Column(Modifier.widthIn(max = 860.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+private fun Group(title: String, content: @Composable () -> Unit) = Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
     SectionLabel(title, Modifier.padding(start = 18.dp))
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Sh.card)) { content() }
 }

@@ -43,6 +43,8 @@ class LaunchTest {
 
         compose.onNodeWithContentDescription("Home").performClick()
         compose.onNodeWithContentDescription("SharkOS settings").performClick()
+        compose.onNodeWithText("Open SharkOS when the car starts").assertExists()
+        compose.onNodeWithContentDescription("Vehicle").performClick()
         compose.onNodeWithText("Vehicle connection").assertExists()
 
         // HVAC Bar: seat buttons step their seat; the cabin arrows move both zones together

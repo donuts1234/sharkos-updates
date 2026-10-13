@@ -23,6 +23,7 @@ import com.sharkos.launcher.sensors.Attitude
 import com.sharkos.launcher.ui.AppsScreen
 import com.sharkos.launcher.ui.BarActions
 import com.sharkos.launcher.ui.BottomBar
+import com.sharkos.launcher.ui.SettingsPage
 import com.sharkos.launcher.ui.ClimateActions
 import com.sharkos.launcher.ui.ClimateScreen
 import com.sharkos.launcher.ui.DockApp
@@ -147,9 +148,26 @@ class Snapshots {
                 SettingsInfo("0.1.3", true, true, CarLink.CONNECTED, "bydauto (BydHvac.apk)", true, autoLaunch = true, canLaunchFromBackground = true,
                     update = com.sharkos.launcher.update.Updater.State.Available(r)),
                 SettingsActions({}, {}, {}, {}),
+                start = SettingsPage.UPDATES,
             )
         }
     }
+
+    private fun settingsPage(page: SettingsPage) = paparazzi.snapshot {
+        Frame(Screen.SETTINGS) {
+            SettingsScreen(
+                SettingsInfo("0.1.9", true, true, CarLink.CONNECTED, "bydauto (BydHvac.apk)", true, autoLaunch = true, canLaunchFromBackground = true,
+                    carPlayLinked = true, climate = climate, dock = dock),
+                SettingsActions({}, {}, {}, {}),
+                start = page,
+            )
+        }
+    }
+
+    @Test fun settingsHvac() = settingsPage(SettingsPage.HVAC)
+    @Test fun settingsSystem() = settingsPage(SettingsPage.SYSTEM)
+    @Test fun settingsAbout() = settingsPage(SettingsPage.ABOUT)
+    @Test fun settingsVehicle() = settingsPage(SettingsPage.VEHICLE)
 
     @Test fun offroad() = paparazzi.snapshot {
         Frame(Screen.OFFROAD) { OffroadScreen(Attitude(12.6f, -23.4f), calibrated = true, onZero = {}, onBack = {}) }

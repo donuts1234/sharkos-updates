@@ -82,6 +82,12 @@ class Apps(private val context: Context) {
         return true
     }
 
+    /** Back to the first-run bar: the BYD apps this unit has from [DEFAULT_DOCK]. */
+    fun resetDock() {
+        _dock.value = DEFAULT_DOCK.filter { isInstalled(it) }
+        prefs.dock = _dock.value
+    }
+
     fun unpin(pkg: String) {
         _dock.value = _dock.value - pkg
         prefs.dock = _dock.value
