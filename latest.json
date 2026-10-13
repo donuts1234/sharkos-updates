@@ -1,6 +1,6 @@
 {
-  "versionCode": 13,
-  "versionName": "0.1.12",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.12.apk",
-  "notes": "Ambient lighting: a third way of searching, and connecting straight to the lights' address."
+  "versionCode": 14,
+  "versionName": "0.1.13",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.13.apk",
+  "notes": "Ambient lighting: also searches specifically for your MHRS-QA21P box."
 }
