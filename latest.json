@@ -1,6 +1,6 @@
 {
-  "versionCode": 6,
-  "versionName": "0.1.5",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.5.apk",
-  "notes": "Now Playing shows CarPlay music (first try) with live elapsed time, prefers whatever is actually playing, and shows Paused. New Settings \u2192 Media diagnostics."
+  "versionCode": 7,
+  "versionName": "0.1.6",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.6.apk",
+  "notes": "Looks harder for CarPlay music (searches all of BYD's apps, plus the cluster feed). Media diagnostics now show why if it still can't."
 }
