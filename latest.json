@@ -1,6 +1,6 @@
 {
-  "versionCode": 18,
-  "versionName": "0.1.17",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.17.apk",
-  "notes": "Ambient lighting on the HVAC Bar: tap the bulb to slide to the lighting controls. Each zone now switches off on its own. Three HVAC Bar layouts: Balanced, Mirrored and Slider."
+  "versionCode": 19,
+  "versionName": "0.1.18",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.18.apk",
+  "notes": "Test: CarPlay inside SharkOS (Settings \u2192 Now playing \u2192 CarPlay inside SharkOS)."
 }
