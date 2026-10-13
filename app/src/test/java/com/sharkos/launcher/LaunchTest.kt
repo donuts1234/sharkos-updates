@@ -45,11 +45,12 @@ class LaunchTest {
         compose.onNodeWithContentDescription("SharkOS settings").performClick()
         compose.onNodeWithText("Vehicle connection").assertExists()
 
-        // Bottom-bar seat buttons and temperatures step the shared climate state
+        // HVAC Bar: seat buttons step their seat; the cabin arrows move both zones together
         compose.onNodeWithContentDescription("Home").performClick()
         compose.onNodeWithContentDescription("Driver seat heat off").performClick()
         compose.onNodeWithContentDescription("Driver seat heat low").assertExists()
-        compose.onNodeWithContentDescription("Passenger warmer").performClick()
+        compose.onNodeWithContentDescription("Warmer").performClick()
+        compose.onNodeWithContentDescription("Fan faster").performClick()
         val app = compose.activity.application as SharkOsApp
 
         // An empty + spot opens the picker; with no apps installed on the test device it just shows the picker title
@@ -74,9 +75,10 @@ class LaunchTest {
         BootReceiver().onReceive(app, android.content.Intent(android.content.Intent.ACTION_BOOT_COMPLETED))
         assertEquals(0, js.allPendingJobs.size)
         assertEquals(1, app.car.climate.value.driverSeat.heat)
-        assertEquals(23f, app.car.climate.value.driverTemp)   // warmed once on the Climate page
-        assertEquals(24f, app.car.climate.value.passengerTemp) // zones were linked at 23; the bar splits them and warms the passenger
-        assertEquals(true, app.car.climate.value.dual)
-        assertEquals(4, app.car.climate.value.fan)
+        val c = app.car.climate.value
+        assertEquals(24f, c.driverTemp)      // 22 → 23 on the Climate page → 24 from the bar
+        assertEquals(24f, c.passengerTemp)   // the bar keeps both sides together
+        assertEquals(false, c.dual)
+        assertEquals(5, c.fan)               // 3 → 4 on the Climate page → 5 from the bar
     }
 }

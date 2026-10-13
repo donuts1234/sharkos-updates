@@ -35,6 +35,7 @@ class SettingsInfo(
     val canLaunchFromBackground: Boolean = false,
     val update: Updater.State = Updater.State.Idle,
     val carDataAllowed: Boolean = true,
+    val barStyle: BarStyle = BarStyle.BALANCED,
     val updatesConfigured: Boolean = true,
     val canInstall: Boolean = true,
 )
@@ -48,6 +49,7 @@ class SettingsActions(
     val allowOverlay: () -> Unit = {},
     val checkUpdate: () -> Unit = {},
     val allowCarData: () -> Unit = {},
+    val setBarStyle: (BarStyle) -> Unit = {},
     val installUpdate: (Updater.Release) -> Unit = {},
     val allowInstalls: () -> Unit = {},
 )
@@ -69,6 +71,13 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            Group("HVAC Bar") {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Txt("Layout", Sh.text(18.sp, FontWeight.SemiBold))
+                    Segmented(BarStyle.entries.map { it.label }, s.barStyle.ordinal, { a.setBarStyle(BarStyle.entries[it]) }, Modifier.fillMaxWidth(), greyFirst = false)
+                    Txt(s.barStyle.blurb + " One cabin temperature keeps both sides in sync.", Sh.text(15.sp, color = Sh.dim), maxLines = 2)
+                }
+            }
             Group("Home screen") {
                 Item(
                     "Use SharkOS as the Home screen",

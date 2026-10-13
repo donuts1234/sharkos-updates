@@ -24,6 +24,11 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("auto_launch", true)
         set(v) = sp.edit().putBoolean("auto_launch", v).apply()
 
+    /** Which HVAC Bar layout (BarStyle ordinal). */
+    var barStyle: Int
+        get() = sp.getInt("bar_style", 0)
+        set(v) = sp.edit().putInt("bar_style", v).apply()
+
     var askedCarPermission: Boolean
         get() = sp.getBoolean("asked_car_perm", false)
         set(v) = sp.edit().putBoolean("asked_car_perm", v).apply()

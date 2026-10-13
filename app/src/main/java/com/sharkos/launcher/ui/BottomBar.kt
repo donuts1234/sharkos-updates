@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,7 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sharkos.launcher.car.ClimateState
@@ -29,9 +30,20 @@ import com.sharkos.launcher.car.Zone
 
 data class DockApp(val pkg: String, val label: String)
 
-/** What the bottom bar can do; wired to the car and the launcher in [Root]. */
+/**
+ * The HVAC Bar's three layouts, picked in Settings. All share one cabin temperature (both zones
+ * together, so the bar can never leave them out of sync) and a fan speed with its own arrows.
+ */
+enum class BarStyle(val label: String, val blurb: String) {
+    BALANCED("Balanced", "Fan by the passenger, temperature by the driver, A/C beside the apps."),
+    CAPSULE("Capsule", "Fan, A/C and temperature together in one pill on the driver's side."),
+    MIRRORED("Mirrored", "Fan with level bars on the left, temperature on the right, Home centred."),
+}
+
+/** What the HVAC Bar can do; wired to the car and the launcher in [Root]. */
 class BarActions(
-    val nudgeTemp: (Zone, Int) -> Unit,
+    val nudgeCabin: (Int) -> Unit,
+    val nudgeFan: (Int) -> Unit,
     val cycleHeat: (Zone) -> Unit,
     val cycleVent: (Zone) -> Unit,
     val toggleAc: () -> Unit,
@@ -46,46 +58,50 @@ class BarActions(
 )
 
 /**
- * The bar that stays on every SharkOS screen, standing in for BYD's own climate bar:
- * passenger seat + temperature on the left, the dock in the middle, driver on the right
- * (the Shark 6 here is right-hand drive).
+ * The bar on every SharkOS screen, standing in for BYD's own climate bar. Seat heat and cooling sit
+ * on the outer edges in every style: passenger on the left, driver on the right (right-hand drive).
  */
 @Composable
-fun BottomBar(climate: ClimateState, dock: List<DockApp>, screen: Screen, a: BarActions, modifier: Modifier = Modifier) {
+fun BottomBar(
+    climate: ClimateState,
+    dock: List<DockApp>,
+    screen: Screen,
+    a: BarActions,
+    modifier: Modifier = Modifier,
+    style: BarStyle = BarStyle.BALANCED,
+) {
     Row(
         modifier.fillMaxWidth().height(88.dp).background(Sh.bar).padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Passenger
         SeatButton(ShIcons.flame, climate.passengerSeat.heat, Sh.orange, "Passenger seat heat") { a.cycleHeat(Zone.PASSENGER) }
         Gap(8.dp)
         SeatButton(ShIcons.vent, climate.passengerSeat.vent, Sh.cyan, "Passenger seat cooling") { a.cycleVent(Zone.PASSENGER) }
         Gap(12.dp)
-        TempControl(climate, Zone.PASSENGER, a)
 
-        // Dock
-        Row(
-            Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            BarIcon(ShIcons.home, "Home", screen == Screen.HOME, onClick = a.home)
-            for (app in dock) {
-                Box(
-                    Modifier.size(56.dp).clip(RoundedCornerShape(14.dp))
-                        .press({ a.launch(app.pkg) }, onLongClick = { a.removeApp(app) }, label = app.label),
-                    contentAlignment = Alignment.Center,
-                ) { AppIcon(app.pkg, app.label, 46.dp) }
+        when (style) {
+            BarStyle.BALANCED -> {
+                FanArrows(climate, a)
+                Centre { Dock(dock, screen, a); Divider(); AcButton(climate, a) }
+                CabinArrows(climate, a)
             }
-            repeat((DOCK_SLOTS - dock.size).coerceAtLeast(0)) { AddSlot(a.addApp) }
-            BarIcon(ShIcons.grid, "All apps", screen == Screen.APPS, onClick = a.apps)
-            Box(Modifier.width(1.dp).height(36.dp).background(Sh.line))
-            BarIcon(ShIcons.snow, "A/C", climate.ac && climate.power, onClick = a.toggleAc, onColor = Sh.blue)
-            FanButton(climate, screen == Screen.CLIMATE, a.climate)
+            BarStyle.CAPSULE -> {
+                Centre { Dock(dock, screen, a) }
+                Capsule {
+                    FanArrows(climate, a, compact = true)
+                    CapsuleDivider()
+                    AcButton(climate, a, size = 48.dp, round = true)
+                    CapsuleDivider()
+                    CabinArrows(climate, a, compact = true)
+                }
+            }
+            BarStyle.MIRRORED -> {
+                Capsule { FanArrows(climate, a, bars = true) }
+                Centre { Dock(dock, screen, a, homeInMiddle = true); AcButton(climate, a) }
+                Capsule { CabinArrows(climate, a, caption = "Cabin · synced") }
+            }
         }
 
-        // Driver
-        TempControl(climate, Zone.DRIVER, a)
         Gap(12.dp)
         SeatButton(ShIcons.vent, climate.driverSeat.vent, Sh.cyan, "Driver seat cooling") { a.cycleVent(Zone.DRIVER) }
         Gap(8.dp)
@@ -95,7 +111,53 @@ fun BottomBar(climate: ClimateState, dock: List<DockApp>, screen: Screen, a: Bar
 
 const val DOCK_SLOTS = 5
 
-/** An empty spot on the bar: a dashed-looking + that opens the app picker. */
+@Composable
+private fun RowScope.Centre(content: @Composable RowScope.() -> Unit) = Row(
+    Modifier.weight(1f),
+    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+    verticalAlignment = Alignment.CenterVertically,
+    content = content,
+)
+
+@Composable
+private fun Capsule(content: @Composable RowScope.() -> Unit) = Row(
+    Modifier.height(68.dp).clip(RoundedCornerShape(34.dp)).background(Sh.card).padding(horizontal = 6.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    content = content,
+)
+
+@Composable
+private fun Divider() = Box(Modifier.width(1.dp).height(36.dp).background(Sh.line))
+
+@Composable
+private fun CapsuleDivider() = Box(Modifier.padding(horizontal = 4.dp).width(1.dp).height(32.dp).background(Sh.line))
+
+/** Home, the pinned apps, empty + spots, and All apps. */
+@Composable
+private fun Dock(dock: List<DockApp>, screen: Screen, a: BarActions, homeInMiddle: Boolean = false) {
+    val slots: List<@Composable () -> Unit> = dock.map { app ->
+        @Composable {
+            Box(
+                Modifier.size(56.dp).clip(RoundedCornerShape(14.dp))
+                    .press({ a.launch(app.pkg) }, onLongClick = { a.removeApp(app) }, label = app.label),
+                contentAlignment = Alignment.Center,
+            ) { AppIcon(app.pkg, app.label, 46.dp) }
+        }
+    } + List((DOCK_SLOTS - dock.size).coerceAtLeast(0)) { @Composable { AddSlot(a.addApp) } }
+    val home: @Composable () -> Unit = { BarIcon(ShIcons.home, "Home", screen == Screen.HOME, onClick = a.home) }
+    if (homeInMiddle) {
+        val half = slots.size / 2
+        slots.take(half).forEach { it() }
+        home()
+        slots.drop(half).forEach { it() }
+    } else {
+        home()
+        slots.forEach { it() }
+    }
+    BarIcon(ShIcons.grid, "All apps", screen == Screen.APPS, onClick = a.apps)
+}
+
+/** An empty spot on the bar: a + that opens the app picker. */
 @Composable
 private fun AddSlot(onClick: () -> Unit) = Box(
     Modifier.size(56.dp).clip(RoundedCornerShape(14.dp)).press(onClick, label = "Add an app to the bar"),
@@ -106,22 +168,76 @@ private fun AddSlot(onClick: () -> Unit) = Box(
     }
 }
 
-/** ‹ 22° › for one zone. */
 @Composable
-private fun TempControl(c: ClimateState, zone: Zone, a: BarActions) {
-    val t = c.temp(zone)
+private fun Arrow(icon: ImageVector, tint: Color, label: String, width: Dp, onClick: () -> Unit) = Box(
+    Modifier.size(width, 60.dp).press(onClick, label = label),
+    contentAlignment = Alignment.Center,
+) { Glyph(icon, tint, 22.dp) }
+
+/**
+ * ‹ 22° › for the whole cabin: sets both zones at once (and leaves dual mode), so the bar can never
+ * leave the two sides different. Tapping the number opens the full Climate page.
+ */
+@Composable
+private fun CabinArrows(c: ClimateState, a: BarActions, compact: Boolean = false, caption: String = "Cabin") {
+    val w = if (compact) 38.dp else 44.dp
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(44.dp, 56.dp).press({ a.nudgeTemp(zone, -1) }, label = "${zone.label} cooler"), contentAlignment = Alignment.Center) {
-            Glyph(ShIcons.chevronLeft, Sh.cyan, 22.dp)
+        Arrow(ShIcons.chevronLeft, Sh.cyan, "Cooler", w) { a.nudgeCabin(-1) }
+        Column(
+            Modifier.width(if (compact) 60.dp else 72.dp).press(a.climate, label = "Climate"),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Txt(if (c.power) "${c.driverTemp.toInt()}°" else "Off", Sh.text(if (compact) 27.sp else 30.sp, FontWeight.SemiBold, if (c.power) Sh.ink else Sh.faint, (-0.6).sp))
+            if (!compact) Txt(caption, Sh.text(11.sp, FontWeight.Medium, Sh.dim))
         }
-        Column(Modifier.width(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Txt(if (c.power) "${t.toInt()}°" else "Off", Sh.text(28.sp, FontWeight.SemiBold, if (c.power) Sh.ink else Sh.faint, (-0.5).sp))
-            Txt(zone.label, Sh.text(11.sp, FontWeight.Medium, Sh.dim))
-        }
-        Box(Modifier.size(44.dp, 56.dp).press({ a.nudgeTemp(zone, 1) }, label = "${zone.label} warmer"), contentAlignment = Alignment.Center) {
-            Glyph(ShIcons.chevronRight, Sh.orange, 22.dp)
-        }
+        Arrow(ShIcons.chevronRight, Sh.orange, "Warmer", w) { a.nudgeCabin(1) }
     }
+}
+
+/** ‹ fan 3 › with its own arrows; [bars] shows the level as seven small bars instead. */
+@Composable
+private fun FanArrows(c: ClimateState, a: BarActions, compact: Boolean = false, bars: Boolean = false) {
+    val w = if (compact) 38.dp else 44.dp
+    val on = c.power
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Arrow(ShIcons.chevronLeft, Sh.dim, "Fan slower", w) { a.nudgeFan(-1) }
+        if (bars) {
+            Column(Modifier.width(96.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    for (n in 1..ClimateState.MAX_FAN) {
+                        Box(Modifier.size(8.dp, 16.dp).clip(RoundedCornerShape(3.dp)).background(if (on && n <= c.fan) Sh.blue else Sh.line))
+                    }
+                }
+                Txt(fanLabel(c), Sh.text(11.sp, FontWeight.Medium, Sh.dim))
+            }
+        } else {
+            Column(Modifier.width(if (compact) 60.dp else 72.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Glyph(ShIcons.fan, if (on) Sh.ink else Sh.faint, if (compact) 18.dp else 20.dp)
+                    Txt(if (on) "${c.fan}" else "–", Sh.text(if (compact) 25.sp else 27.sp, FontWeight.SemiBold, if (on) Sh.ink else Sh.faint))
+                }
+                if (!compact) Txt(if (c.auto && on) "Auto" else "Fan", Sh.text(11.sp, FontWeight.Medium, Sh.dim))
+            }
+        }
+        Arrow(ShIcons.chevronRight, Sh.dim, "Fan faster", w) { a.nudgeFan(1) }
+    }
+}
+
+private fun fanLabel(c: ClimateState) = when {
+    !c.power -> "Fan off"
+    c.auto -> "Fan auto · ${c.fan}"
+    else -> "Fan ${c.fan}"
+}
+
+@Composable
+private fun AcButton(c: ClimateState, a: BarActions, size: Dp = 56.dp, round: Boolean = false) {
+    val on = c.ac && c.power
+    val bg by animateColorAsState(if (on) Sh.blue else if (round) Sh.raised else Color.Transparent, tween(180), label = "ac")
+    Box(
+        Modifier.size(size).clip(RoundedCornerShape(if (round) size / 2 else 16.dp)).background(bg)
+            .press(a.toggleAc, label = "A/C ${if (on) "on" else "off"}"),
+        contentAlignment = Alignment.Center,
+    ) { Glyph(ShIcons.snow, if (on) Color.White else Sh.dim, if (round) 22.dp else 26.dp) }
 }
 
 /**
@@ -153,21 +269,4 @@ private fun BarIcon(icon: ImageVector, label: String, active: Boolean, onClick: 
         Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(bg).press(onClick, label = label),
         contentAlignment = Alignment.Center,
     ) { Glyph(icon, if (active) onColor else Sh.dim, 26.dp) }
-}
-
-/** Opens the full climate page; shows the fan speed (or AUTO) so it doubles as a status. */
-@Composable
-private fun FanButton(c: ClimateState, active: Boolean, onClick: () -> Unit) {
-    val bg by animateColorAsState(if (active) Sh.raised else Color.Transparent, tween(180), label = "fanbg")
-    Column(
-        Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(bg).press(onClick, label = "Climate"),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Glyph(ShIcons.fan, if (c.power) Sh.ink else Sh.dim, 22.dp)
-        Txt(
-            when { !c.power -> "OFF"; c.auto -> "AUTO"; else -> "${c.fan}" },
-            Sh.text(11.sp, FontWeight.Bold, if (c.power) Sh.ink else Sh.faint, 0.3.sp).copy(textAlign = TextAlign.Center),
-        )
-    }
 }

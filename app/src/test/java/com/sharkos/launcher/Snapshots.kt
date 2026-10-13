@@ -64,18 +64,26 @@ class Snapshots {
     )
     // The out-of-the-box bar: three BYD apps and two empty + spots
     private val dock = listOf(DockApp("music", "Music"), DockApp("phone", "Phone"), DockApp("avm", "360 View"))
-    private val bar = BarActions({ _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, {})
+    private val bar = BarActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
     private val home = HomeActions({}, {}, {}, {}, {}, {}, {})
     private val track = Track("Sample Song Title", "Artist Name", "Bluetooth audio", null, true, 102_000, 238_000, 0)
     // 9:41 on Tuesday 13 October 2026 (local), fixed so the clock doesn't change between runs
     private val now = java.util.Calendar.getInstance().apply { set(2026, 9, 13, 9, 41, 0) }.timeInMillis
 
     @Composable
-    private fun Frame(screen: Screen, c: ClimateState = climate, content: @Composable () -> Unit) =
+    private fun Frame(screen: Screen, c: ClimateState = climate, style: com.sharkos.launcher.ui.BarStyle = com.sharkos.launcher.ui.BarStyle.BALANCED, content: @Composable () -> Unit) =
         Column(Modifier.fillMaxSize().background(Sh.bg)) {
             Box(Modifier.weight(1f).fillMaxWidth()) { content() }
-            BottomBar(c, dock, screen, bar)
+            BottomBar(c, dock, screen, bar, style = style)
         }
+
+    @Test fun homeCapsuleBar() = paparazzi.snapshot {
+        Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.CAPSULE) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+    }
+
+    @Test fun homeMirroredBar() = paparazzi.snapshot {
+        Frame(Screen.HOME, style = com.sharkos.launcher.ui.BarStyle.MIRRORED) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+    }
 
     @Test fun home() = paparazzi.snapshot {
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }

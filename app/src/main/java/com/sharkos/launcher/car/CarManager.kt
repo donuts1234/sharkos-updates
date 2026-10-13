@@ -97,6 +97,25 @@ class CarManager(private val appContext: Context) {
 
     fun nudgeTemp(zone: Zone, delta: Int) = setZoneTemp(zone, _climate.value.temp(zone) + delta)
 
+    /**
+     * One temperature for the whole cabin (the HVAC Bar): both zones together, leaving dual mode if
+     * it was on, so the bar can never leave the two sides at different settings. Debounced.
+     */
+    fun setCabinTemp(celsius: Float) {
+        val t = celsius.roundToInt().toFloat().coerceIn(ClimateState.MIN_TEMP, ClimateState.MAX_TEMP)
+        val wasDual = _climate.value.dual
+        command("temp-cabin", "Cabin ${t.toInt()}°", debounceMs = 350,
+            change = { copy(driverTemp = t, passengerTemp = t, dual = false) }) {
+            if (wasDual) first(Call("setAcTemperatureControlMode", Byd.SOURCE_UI, Byd.OFF, device = "ac"))
+            first(Call("setAcTemperature", Byd.ZONE_BOTH, t.roundToInt(), Byd.SOURCE_UI, Byd.UNIT_CELSIUS, device = "ac"))
+        }
+    }
+
+    fun nudgeCabin(delta: Int) = setCabinTemp(_climate.value.driverTemp + delta)
+
+    /** Fan arrows on the bar: 1..7 (off is the climate power switch, not the fan). */
+    fun nudgeFan(delta: Int) = setFanSpeed((_climate.value.fan + delta).coerceIn(1, ClimateState.MAX_FAN))
+
     fun setDualZone(on: Boolean) = command("dual", if (on) "Dual zone on" else "Zones synced",
         change = { if (on) copy(dual = true) else copy(dual = false, passengerTemp = driverTemp) }) {
         first(Call("setAcTemperatureControlMode", Byd.SOURCE_UI, if (on) Byd.ON else Byd.OFF, device = "ac"))

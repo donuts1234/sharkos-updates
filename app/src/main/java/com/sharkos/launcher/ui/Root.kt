@@ -74,6 +74,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     var isHome by remember { mutableStateOf(isDefaultHome(ctx)) }
     val prefs = remember { com.sharkos.launcher.data.Prefs(ctx) }
     var autoLaunch by remember { mutableStateOf(prefs.autoLaunch) }
+    var barStyle by remember { mutableStateOf(BarStyle.entries.getOrElse(prefs.barStyle) { BarStyle.BALANCED }) }
     var canOverlay by remember { mutableStateOf(com.sharkos.launcher.AutoLaunch.canLaunchFromBackground(ctx)) }
     var carData by remember { mutableStateOf(carDataAllowed(ctx)) }
     var canInstall by remember { mutableStateOf(app.updater.canInstall()) }
@@ -140,7 +141,8 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     val dockApps = dock.mapNotNull { pkg -> apps.find(pkg)?.let { DockApp(it.pkg, it.label) } }
     val bar = remember(car, apps) {
         BarActions(
-            nudgeTemp = car::nudgeTemp,
+            nudgeCabin = car::nudgeCabin,
+            nudgeFan = car::nudgeFan,
             cycleHeat = car::cycleSeatHeat,
             cycleVent = car::cycleSeatVent,
             toggleAc = { car.setAcOn(!car.climate.value.ac) },
@@ -219,8 +221,21 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                             onBack = { onScreen(Screen.HOME) },
                         )
                         Screen.SETTINGS -> SettingsScreen(
-                            SettingsInfo(BuildConfig.VERSION_NAME, isHome, mediaAccess, link, car.backendName, zeroed >= 0 && inclino.calibrated, autoLaunch, canOverlay,
-                                update, updater.configured, canInstall, carData || telemetry.socPercent != null),
+                            SettingsInfo(
+                                version = BuildConfig.VERSION_NAME,
+                                isDefaultHome = isHome,
+                                mediaAccess = mediaAccess,
+                                link = link,
+                                backend = car.backendName,
+                                inclinoZeroed = zeroed >= 0 && inclino.calibrated,
+                                autoLaunch = autoLaunch,
+                                canLaunchFromBackground = canOverlay,
+                                update = update,
+                                updatesConfigured = updater.configured,
+                                canInstall = canInstall,
+                                carDataAllowed = carData || telemetry.socPercent != null,
+                                barStyle = barStyle,
+                            ),
                             SettingsActions(
                                 chooseHome = { if (!openSettings(ctx, Settings.ACTION_HOME_SETTINGS)) notice = HIDDEN_PAGE },
                                 grantMedia = { if (!openSettings(ctx, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) notice = HIDDEN_PAGE },
@@ -230,6 +245,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 installUpdate = { r -> scope.launch { updater.downloadAndInstall(r) } },
                                 allowInstalls = { if (!openSettings(ctx, updater.allowInstallsIntent())) notice = HIDDEN_PAGE },
                                 allowCarData = { askCarData.launch(CAR_DATA) },
+                                setBarStyle = { st -> prefs.barStyle = st.ordinal; barStyle = st },
                                 allowOverlay = {
                                     val page = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}"))
                                     if (!openSettings(ctx, page) && !openSettings(ctx, Settings.ACTION_MANAGE_OVERLAY_PERMISSION)) notice = HIDDEN_PAGE
@@ -241,7 +257,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                 }
                 NoticePill(notice, Modifier.align(Alignment.TopCenter).padding(top = 16.dp))
             }
-            BottomBar(climate, dockApps, screen, bar)
+            BottomBar(climate, dockApps, screen, bar, style = barStyle)
         }
     }
 }
