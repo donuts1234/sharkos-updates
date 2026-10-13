@@ -51,12 +51,11 @@ hands it to Android's installer (one tap to confirm on Android 11). It reopens i
 source stays private.
 
 **Publishing an update:** bump `versionCode` and `versionName` in `app/build.gradle.kts`, then
-`tools/release.sh "what changed"`. It builds, uploads the APK as a GitHub release, then updates
-`latest.json`. By hand instead: create a release `vX.Y.Z` with the APK attached, then edit
-`latest.json` in the repo:
+`tools/release.sh "what changed"`. It builds, adds the APK under `apk/` in the updates repo and updates
+`latest.json`, in one push. By hand instead: upload the APK into `apk/` and edit `latest.json`:
 ```json
 { "versionCode": 5, "versionName": "0.1.4",
-  "apkUrl": "https://github.com/donuts1234/sharkos-updates/releases/download/v0.1.4/SharkOS-0.1.4.apk",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.4.apk",
   "notes": "What changed" }
 ```
 Every update **must be signed with the same key** (`sharkos-release.jks`), or Android refuses it.
