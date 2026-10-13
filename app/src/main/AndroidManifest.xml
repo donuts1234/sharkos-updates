@@ -18,6 +18,10 @@
     <uses-permission android:name="android.permission.BYDAUTO_SPEED_GET" />
     <uses-permission android:name="android.permission.BYDAUTO_TYRE_COMMON" />
     <uses-permission android:name="android.permission.BYDAUTO_TYRE_GET" />
+    <!-- What's playing (any source, CarPlay included). Not listed in the Shark 6's permission dump, so
+         possibly unguarded; declared in case a firmware checks. -->
+    <uses-permission android:name="android.permission.BYDAUTO_MULTIMEDIA_COMMON" />
+    <uses-permission android:name="android.permission.BYDAUTO_MULTIMEDIA_GET" />
 
     <!-- A launcher has to see every installed app (targetSdk >= 30 hides them otherwise), and the
          car backend has to find BYD's client APK. -->

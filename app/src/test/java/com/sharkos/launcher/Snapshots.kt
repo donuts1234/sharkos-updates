@@ -101,6 +101,11 @@ class Snapshots {
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
     }
 
+    @Test fun homeCarPlaySong() = paparazzi.snapshot {
+        val t = Track("My Universe", "Coldplay", "CarPlay", null, true, 61_000, 227_000, 0, fromCar = true)
+        Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, t, true, Attitude(2.4f, -1.2f), home) }
+    }
+
     @Test fun homeNoMediaAccess() = paparazzi.snapshot {
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, null, false, Attitude(0f, 0f), home) }
     }

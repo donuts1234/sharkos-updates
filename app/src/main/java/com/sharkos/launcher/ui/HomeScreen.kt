@@ -108,7 +108,7 @@ private fun Chip(content: @Composable () -> Unit) = Row(
 private fun NowPlayingCard(track: Track?, access: Boolean, a: HomeActions, modifier: Modifier) = Panel(modifier) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         SectionLabel("Now playing", Modifier.weight(1f))
-        track?.let { Txt(it.source, Sh.text(14.sp, color = Sh.dim)) }
+        track?.let { Txt(if (it.playing) it.source else "${it.source} · Paused", Sh.text(14.sp, color = Sh.dim)) }
     }
     if (track == null) {
         Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -142,13 +142,22 @@ private fun NowPlayingCard(track: Track?, access: Boolean, a: HomeActions, modif
         }
     }
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.Bottom) {
+        val pos = track.positionMs.coerceAtLeast(0)
         if (track.durationMs > 0) {
-            val pos = track.positionMs.coerceIn(0, track.durationMs)
-            Meter(pos.toFloat() / track.durationMs, Sh.ink, height = 5.dp)
+            // Full bar with elapsed and remaining time
+            val p = pos.coerceAtMost(track.durationMs)
+            Meter(p.toFloat() / track.durationMs, Sh.ink, height = 5.dp)
             Gap(8.dp)
             Row(Modifier.fillMaxWidth()) {
-                Txt(clock(pos), Sh.text(13.sp, color = Sh.dim), Modifier.weight(1f))
-                Txt("−" + clock(track.durationMs - pos), Sh.text(13.sp, color = Sh.dim))
+                Txt(clock(p), Sh.text(13.sp, color = Sh.dim), Modifier.weight(1f))
+                Txt("−" + clock(track.durationMs - p), Sh.text(13.sp, color = Sh.dim))
+            }
+        } else if (track.knowsPosition) {
+            // The source gives no length: still show the elapsed time ticking
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f).height(5.dp).clip(RoundedCornerShape(3.dp)).background(Sh.line))
+                Gap(12.dp)
+                Txt(clock(pos), Sh.text(13.sp, color = Sh.dim))
             }
         }
     }

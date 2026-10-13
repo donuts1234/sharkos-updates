@@ -26,7 +26,17 @@ data class Track(
     val durationMs: Long,
     /** When [positionMs] was sampled (elapsedRealtime), to advance the bar between updates. */
     val sampledAt: Long,
-)
+    /** From the head unit's own media channel (CarPlay etc.), not an Android media session. */
+    val fromCar: Boolean = false,
+    /** False when the source gives no position at all: hide the time rather than show 0:00. */
+    val knowsPosition: Boolean = true,
+) {
+    /** Where playback is now, advancing from the last sample while playing. */
+    fun positionAt(nowElapsed: Long): Long {
+        val p = if (playing) positionMs + (nowElapsed - sampledAt) else positionMs
+        return if (durationMs > 0) p.coerceIn(0, durationMs) else p.coerceAtLeast(0)
+    }
+}
 
 /**
  * Bridges Android's media sessions to the Home screen. Android only hands the session list to an
@@ -72,8 +82,10 @@ object NowPlaying {
     }
 
     private fun pick(sessions: List<MediaController>) {
-        // Prefer whatever is actually playing; otherwise the most recent session.
-        val next = sessions.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING } ?: sessions.firstOrNull()
+        // Prefer whatever is actually playing; otherwise the most recent session that has a song.
+        // Sessions with no song at all (Amazon Music idling, a disconnected Bluetooth player) are skipped.
+        val withSong = sessions.filter { !it.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE).isNullOrBlank() }
+        val next = withSong.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING } ?: withSong.firstOrNull()
         if (next?.sessionToken == controller?.sessionToken) { publish(); return }
         controller?.unregisterCallback(callback)
         controller = next
@@ -92,9 +104,10 @@ object NowPlaying {
             source = sourceNames[c.packageName] ?: c.packageName.substringAfterLast('.').replaceFirstChar { it.uppercase() },
             art = md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART) ?: md.getBitmap(MediaMetadata.METADATA_KEY_ART),
             playing = ps?.state == PlaybackState.STATE_PLAYING,
-            positionMs = ps?.position ?: 0,
+            positionMs = ps?.position?.coerceAtLeast(0) ?: 0,
             durationMs = md.getLong(MediaMetadata.METADATA_KEY_DURATION),
-            sampledAt = ps?.lastPositionUpdateTime ?: android.os.SystemClock.elapsedRealtime(),
+            sampledAt = ps?.lastPositionUpdateTime?.takeIf { it > 0 } ?: android.os.SystemClock.elapsedRealtime(),
+            knowsPosition = ps != null && ps.position >= 0,
         )
     }
 

@@ -99,6 +99,8 @@ class CarBackend private constructor(val name: String, targets: Map<String, Any>
             "statistic" to "android.hardware.bydauto.statistic.BYDAutoStatisticDevice",
             "speed" to "android.hardware.bydauto.speed.BYDAutoSpeedDevice",
             "tyre" to "android.hardware.bydauto.tyre.BYDAutoTyreDevice",
+            // What's playing, from any source including CarPlay (BYD's own widget and cluster read it)
+            "multimedia" to "android.hardware.bydauto.multimedia.BYDAutoMultimediaDevice",
         )
 
         /**
