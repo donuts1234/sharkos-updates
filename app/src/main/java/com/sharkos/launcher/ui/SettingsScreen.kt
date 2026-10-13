@@ -136,7 +136,7 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions) {
                 Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Txt("What the car and Android each report as playing. Handy for a photo when something looks wrong.", Sh.text(14.sp, color = Sh.dim), maxLines = 2)
                     Gap(6.dp)
-                    for (line in s.mediaDebug) Txt(line, Sh.text(13.sp, color = Sh.ink).copy(fontFamily = FontFamily.Monospace))
+                    for (line in s.mediaDebug) Txt(line, Sh.text(13.sp, color = Sh.ink).copy(fontFamily = FontFamily.Monospace), maxLines = 6)
                 }
             }
             Group("About") {

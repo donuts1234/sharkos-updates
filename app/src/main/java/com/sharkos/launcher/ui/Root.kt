@@ -67,7 +67,9 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     val track by NowPlaying.track.collectAsStateWithLifecycle()
     val carMedia by car.media.collectAsStateWithLifecycle()
     val mediaProbe by car.mediaProbe.collectAsStateWithLifecycle()
-    val shownTrack = chooseTrack(carMedia, track)
+    val carPlay by com.sharkos.launcher.car.CarPlayLink.song.collectAsStateWithLifecycle()
+    val carPlayStatus by com.sharkos.launcher.car.CarPlayLink.status.collectAsStateWithLifecycle()
+    val shownTrack = chooseTrack(carPlay, carMedia, track)
     val latestTrack = androidx.compose.runtime.rememberUpdatedState(shownTrack)
     val allApps by apps.all.collectAsStateWithLifecycle()
     val dock by apps.dock.collectAsStateWithLifecycle()
@@ -99,6 +101,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
         if (nowCarData && !carData) car.reconnect()   // granted over adb while SharkOS was open
         carData = nowCarData
         if (mediaAccess) NowPlaying.attach(ctx)
+        com.sharkos.launcher.car.CarPlayLink.start(ctx)
         scope.launch { apps.refresh() }
         scope.launch { updater.checkDaily() }
         onPauseOrDispose { }
@@ -178,9 +181,9 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                             a = remember {
                                 HomeActions(
                                     // CarPlay and other car-only sources take the car's media keys; app players take their own controls
-                                    playPause = { if (latestTrack.value?.fromCar == true) car.mediaKey(android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) else NowPlaying.playPause() },
-                                    next = { if (latestTrack.value?.fromCar == true) car.mediaKey(android.view.KeyEvent.KEYCODE_MEDIA_NEXT) else NowPlaying.next() },
-                                    previous = { if (latestTrack.value?.fromCar == true) car.mediaKey(android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS) else NowPlaying.previous() },
+                                    playPause = { if (latestTrack.value?.source == "CarPlay" && com.sharkos.launcher.car.CarPlayLink.key(com.sharkos.launcher.car.CarPlayLink.KEY_PLAY_PAUSE)) Unit else if (latestTrack.value?.fromCar == true) car.mediaKey(android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) else NowPlaying.playPause() },
+                                    next = { if (latestTrack.value?.source == "CarPlay" && com.sharkos.launcher.car.CarPlayLink.key(com.sharkos.launcher.car.CarPlayLink.KEY_NEXT)) Unit else if (latestTrack.value?.fromCar == true) car.mediaKey(android.view.KeyEvent.KEYCODE_MEDIA_NEXT) else NowPlaying.next() },
+                                    previous = { if (latestTrack.value?.source == "CarPlay" && com.sharkos.launcher.car.CarPlayLink.key(com.sharkos.launcher.car.CarPlayLink.KEY_PREV)) Unit else if (latestTrack.value?.fromCar == true) car.mediaKey(android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS) else NowPlaying.previous() },
                                     openMusic = { apps.launch(Apps.PKG_MUSIC) },
                                     grantMedia = { if (!openSettings(ctx, Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) notice = HIDDEN_PAGE.replace("shown under it", "in Settings → Now playing") },
                                     offroad = { onScreen(Screen.OFFROAD) },
@@ -241,7 +244,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 canInstall = canInstall,
                                 carDataAllowed = carData || telemetry.socPercent != null,
                                 barStyle = barStyle,
-                                mediaDebug = mediaDebug(carMedia, track) + mediaProbe,
+                                mediaDebug = listOf(carPlayStatus) + carPlayDebug(carPlay) + mediaDebug(carMedia, track) + mediaProbe,
                             ),
                             SettingsActions(
                                 chooseHome = { if (!openSettings(ctx, Settings.ACTION_HOME_SETTINGS)) notice = HIDDEN_PAGE },
@@ -284,7 +287,21 @@ private fun NoticePill(notice: String?, modifier: Modifier) =
  * session carries artwork and precise controls; but CarPlay never has one, so when the car says
  * CarPlay is playing, the car's channel wins. Otherwise whatever has a song.
  */
-private fun chooseTrack(car: com.sharkos.launcher.car.CarMedia?, session: com.sharkos.launcher.media.Track?): com.sharkos.launcher.media.Track? {
+private fun chooseTrack(
+    carPlay: com.sharkos.launcher.car.CarPlaySong?,
+    car: com.sharkos.launcher.car.CarMedia?,
+    session: com.sharkos.launcher.media.Track?,
+): com.sharkos.launcher.media.Track? {
+    // CarPlay's own feed: song, elapsed time and artwork, the same as BYD's widget shows.
+    val cp = carPlay?.takeIf { it.title.isNotBlank() }?.let { s ->
+        com.sharkos.launcher.media.Track(
+            title = s.title, artist = s.artist, source = "CarPlay", art = s.art, playing = s.playing,
+            positionMs = s.elapsedMs.coerceAtLeast(0), durationMs = s.durationMs, sampledAt = s.sampledAt,
+            fromCar = true, knowsPosition = s.elapsedMs >= 0,
+        )
+    }
+    if (cp?.playing == true) return cp
+    if (session?.playing != true && cp != null && car?.playing != true) return cp
     val fromCar = car?.takeIf { it.hasSong }?.let { m ->
         com.sharkos.launcher.media.Track(
             title = m.title.orEmpty(), artist = m.artist.orEmpty(), source = m.source, art = null,
@@ -300,6 +317,10 @@ private fun chooseTrack(car: com.sharkos.launcher.car.CarMedia?, session: com.sh
         else -> session ?: fromCar
     }
 }
+
+private fun carPlayDebug(s: com.sharkos.launcher.car.CarPlaySong?): List<String> =
+    if (s == null) emptyList()
+    else listOf("CarPlay song: \"${s.title}\" · ${s.artist} · status ${s.status} · ${s.elapsedMs / 1000}s of ${s.durationMs / 1000}s · art ${if (s.art != null) "yes" else "no"}")
 
 /** Lines for Settings → Media diagnostics: what the car and Android each say is playing. */
 private fun mediaDebug(car: com.sharkos.launcher.car.CarMedia?, session: com.sharkos.launcher.media.Track?): List<String> {
