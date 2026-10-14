@@ -1,6 +1,6 @@
 {
-  "versionCode": 25,
-  "versionName": "0.1.24",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.24.apk",
-  "notes": "Driver display: album art, now playing and tyre pressures on the cluster; uses BYD's map slot; takes the cluster back when a CarPlay route ends"
+  "versionCode": 26,
+  "versionName": "0.1.25",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.25.apk",
+  "notes": "Instrument cluster page: cover card or cover fade, fitted to the cluster's window, starts by itself, returns after CarPlay routes. Lights fade smoothly between colours and never go white."
 }
