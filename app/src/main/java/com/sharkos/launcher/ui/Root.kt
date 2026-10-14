@@ -435,9 +435,12 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
             }
             // At night the HVAC Bar stays usable, just dimmed
             val night = NightMode.active.value
-            Box(if (night) Modifier.alpha(0.5f) else Modifier) {
-                BottomBar(climate, dockApps, screen, bar, style = barStyle, tempSide = tempSide, lights = barLights,
-                    art = if (night) null else barArt, plain = if (night) Color(0xFF050506) else null)
+            // (on solid black, so the wallpaper doesn't show through the dimmed bar)
+            Box(if (night) Modifier.background(Color.Black) else Modifier) {
+                Box(if (night) Modifier.alpha(0.5f) else Modifier) {
+                    BottomBar(climate, dockApps, screen, bar, style = barStyle, tempSide = tempSide, lights = barLights,
+                        art = if (night) null else barArt, plain = if (night) Color.Black else null)
+                }
             }
         }
     }
