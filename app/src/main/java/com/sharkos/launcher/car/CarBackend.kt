@@ -99,6 +99,7 @@ class CarBackend private constructor(val name: String, targets: Map<String, Any>
             "statistic" to "android.hardware.bydauto.statistic.BYDAutoStatisticDevice",
             "speed" to "android.hardware.bydauto.speed.BYDAutoSpeedDevice",
             "tyre" to "android.hardware.bydauto.tyre.BYDAutoTyreDevice",
+            "light" to "android.hardware.bydauto.light.BYDAutoLightDevice",
         )
 
         /**

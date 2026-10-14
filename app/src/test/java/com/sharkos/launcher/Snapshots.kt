@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.cash.paparazzi.DeviceConfig
@@ -27,6 +28,8 @@ import com.sharkos.launcher.ui.SettingsPage
 import com.sharkos.launcher.ui.wallpaper
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.sp
 import com.sharkos.launcher.ui.ClimateActions
 import com.sharkos.launcher.ui.ClimateScreen
 import com.sharkos.launcher.ui.DockApp
@@ -80,7 +83,8 @@ class Snapshots {
         side: com.sharkos.launcher.ui.TempSide = com.sharkos.launcher.ui.TempSide.RIGHT,
         lights: com.sharkos.launcher.ui.BarLights? = com.sharkos.launcher.ui.BarLights(true, true, 100, 0.62f),
         showLights: Boolean = false,
-        wallpaper: com.sharkos.launcher.ui.Wallpaper = com.sharkos.launcher.ui.Wallpaper.BLACK, content: @Composable () -> Unit,
+        wallpaper: com.sharkos.launcher.ui.Wallpaper = com.sharkos.launcher.ui.Wallpaper.BLACK,
+        art: com.sharkos.launcher.ui.ArtColors? = null, content: @Composable () -> Unit,
     ) =
         Column(
             Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black)
@@ -88,7 +92,7 @@ class Snapshots {
         ) {
             Box(Modifier.weight(1f).fillMaxWidth()) { content() }
             androidx.compose.runtime.CompositionLocalProvider(com.sharkos.launcher.ui.LocalWallpaper provides wallpaper) {
-                BottomBar(c, dock, screen, bar, style = style, tempSide = side, lights = lights, showLights = showLights)
+                BottomBar(c, dock, screen, bar, style = style, tempSide = side, lights = lights, showLights = showLights, art = art)
             }
         }
 
@@ -122,7 +126,7 @@ class Snapshots {
 
     @Test fun climate() = paparazzi.snapshot {
         Frame(Screen.CLIMATE) {
-            ClimateScreen(climate, ClimateActions({}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, { _, _ -> }, {}))
+            ClimateScreen(climate, outsideC = 14.0, a = ClimateActions({}, { _, _ -> }, {}, {}, {}, {}, {}, {}, {}, {}, { _, _ -> }, { _, _ -> }, {}))
         }
     }
 
@@ -201,8 +205,92 @@ class Snapshots {
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, t, true, Attitude(2.4f, -1.2f), home) }
     }
 
-    @Test fun carPlayPage() = paparazzi.snapshot {
-        Frame(Screen.CARPLAY) { com.sharkos.launcher.ui.CarPlayScreen(onHome = {}) }
+    @Test fun musicPage() = paparazzi.snapshot {
+        val art = cover(0xFFFF8A3D.toInt(), 0xFF7A1F5C.toInt())
+        val t = Track("Golden Hour", "Sample Artist", "CarPlay", art, true, 84_000, 222_000, 0, carPlay = true)
+        Frame(Screen.MUSIC, art = com.sharkos.launcher.ui.artColors(art)) { com.sharkos.launcher.ui.MusicScreen(t, home, onHome = {}) }
+    }
+
+    @Test fun musicPageSettings() = paparazzi.snapshot {
+        val art = cover(0xFF2AD4C8.toInt(), 0xFF0A2A6B.toInt())
+        val t = Track("Blue Water", "Sample Artist", "Spotify", art, false, 95_000, 201_000, 0)
+        Frame(Screen.MUSIC, art = com.sharkos.launcher.ui.artColors(art)) {
+            com.sharkos.launcher.ui.MusicScreen(t, home, onHome = {}, lightsFollowArt = true, showSettings = true)
+        }
+    }
+
+    @Test fun wallpapersAll() = paparazzi.snapshot {
+        androidx.compose.foundation.layout.Column(
+            Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black).padding(12.dp),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+        ) {
+            for (row in com.sharkos.launcher.ui.Wallpaper.entries.drop(7).chunked(4)) androidx.compose.foundation.layout.Row(
+                Modifier.weight(1f), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+            ) {
+                for (w in row) Box(Modifier.weight(1f).fillMaxSize().clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp)).wallpaper(w)) {
+                    com.sharkos.launcher.ui.Txt(w.label, com.sharkos.launcher.ui.Sh.text(18.sp, androidx.compose.ui.text.font.FontWeight.SemiBold), Modifier.padding(14.dp))
+                }
+                repeat(4 - row.size) { Box(Modifier.weight(1f)) }
+            }
+        }
+    }
+
+    @Test fun homeTyreAlert() = paparazzi.snapshot {
+        val t = telemetry.copy(tyres = listOf(Tyre(37.9, 0), Tyre(38.2, 0), Tyre(27.6, 0), Tyre(41.6, 0)))
+        val limits = com.sharkos.launcher.car.TyreLimits()
+        Frame(Screen.HOME) {
+            Box(Modifier.fillMaxSize()) {
+                HomeScreen(now, t, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home, tyreLimits = limits)
+                com.sharkos.launcher.ui.TyreAlert(limits.check(t.tyres), {}, Modifier.align(androidx.compose.ui.Alignment.TopCenter).padding(top = 16.dp))
+            }
+        }
+    }
+
+    @Test fun tripsPage() = paparazzi.snapshot {
+        val t = com.sharkos.launcher.car.Trips(
+            drive = com.sharkos.launcher.car.Drive(42.6, 1_760_392_680_000, 47, 54.4, 18.0, 5.3, 0.78),
+            trip1 = com.sharkos.launcher.car.TripMeter(186.4, avgKph = 48.0),
+            trip2 = com.sharkos.launcher.car.TripMeter(1204.0, 1450, 50.0, 20.4, 2.6),
+            lifetime = com.sharkos.launcher.car.Lifetime(21883.0, 14960.0, 6923.0, 21.1, 3.1),
+        )
+        Frame(Screen.TRIPS) { com.sharkos.launcher.ui.TripsScreen(t, onHome = {}) }
+    }
+
+    @Test fun homeOtherCards() = paparazzi.snapshot {
+        val ex = com.sharkos.launcher.ui.HomeExtras(
+            drive = com.sharkos.launcher.car.Drive(42.6, 0, 47, 54.0, 18.0, 5.3, 0.78),
+            climate = climate,
+        )
+        Frame(Screen.HOME) {
+            HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home,
+                cards = listOf(com.sharkos.launcher.ui.HomeCard.NOW_PLAYING, com.sharkos.launcher.ui.HomeCard.DRIVE, com.sharkos.launcher.ui.HomeCard.CLIMATE), extras = ex)
+        }
+    }
+
+    @Test fun homeLightsShortcuts() = paparazzi.snapshot {
+        val ex = com.sharkos.launcher.ui.HomeExtras(
+            lights = com.sharkos.launcher.ui.BarLights(true, true, 70, 0.75f), lightsNote = "Matching album art",
+            shortcuts = listOf(DockApp("carplay", "CarPlay"), DockApp("music", "Music"), DockApp("avm", "360 View"), null),
+        )
+        Frame(Screen.HOME) {
+            HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home,
+                cards = listOf(com.sharkos.launcher.ui.HomeCard.SHARK6, com.sharkos.launcher.ui.HomeCard.LIGHTS, com.sharkos.launcher.ui.HomeCard.SHORTCUTS), extras = ex)
+        }
+    }
+
+    /** The CarPlay layout (SharkOS drawing it), with a stand-in for the picture. */
+    @Test fun carPlayLayout() = paparazzi.snapshot {
+        val r = com.sharkos.launcher.ui.CARPLAY_RADIUS
+        androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black)) {
+            Box(Modifier.fillMaxWidth().height(8.dp))
+            Box(Modifier.fillMaxWidth().height(604.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(r))
+                .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(androidx.compose.ui.graphics.Color(0xFF6B1F3A), androidx.compose.ui.graphics.Color(0xFF2A0B26)))))
+            Box(Modifier.fillMaxWidth().height(4.dp))
+            Box(Modifier.fillMaxWidth().weight(1f)) {
+                BottomBar(climate, dock, Screen.HOME, bar, Modifier.fillMaxSize().clip(androidx.compose.foundation.shape.RoundedCornerShape(r, r, 12.dp, 12.dp)),
+                    lights = com.sharkos.launcher.ui.BarLights(true, true, 100, 0.62f))
+            }
+        }
     }
 
     @Test fun homeLightsBar() = paparazzi.snapshot {
@@ -252,6 +340,7 @@ class Snapshots {
     @Test fun settingsSystem() = settingsPage(SettingsPage.SYSTEM)
     @Test fun settingsAbout() = settingsPage(SettingsPage.ABOUT)
     @Test fun settingsVehicle() = settingsPage(SettingsPage.VEHICLE)
+    @Test fun settingsCluster() = settingsPage(SettingsPage.CLUSTER)
 
     @Test fun offroad() = paparazzi.snapshot {
         Frame(Screen.OFFROAD) { OffroadScreen(Attitude(12.6f, -23.4f), calibrated = true, onZero = {}, onBack = {}) }

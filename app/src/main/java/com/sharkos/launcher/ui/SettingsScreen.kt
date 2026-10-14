@@ -67,6 +67,12 @@ class SettingsInfo(
     val wallpaper: Wallpaper = Wallpaper.BLACK,
     val corners: Corners = Corners.LIGHT,
     val tempSide: TempSide = TempSide.RIGHT,
+    val tyreAlerts: Boolean = true,
+    val homeCards: List<HomeCard> = HomeCard.DEFAULT,
+    val carPlayInSharkOs: Boolean = false,
+    val carPlayTopGap: Int = 12,
+    val carPlayAlwaysBar: Boolean = true,
+    val tyreLimits: com.sharkos.launcher.car.TyreLimits = com.sharkos.launcher.car.TyreLimits(),
 )
 
 class SettingsActions(
@@ -75,6 +81,12 @@ class SettingsActions(
     val zeroInclino: () -> Unit,
     val back: () -> Unit,
     val setAutoLaunch: (Boolean) -> Unit = {},
+    val setTyreAlerts: (Boolean) -> Unit = {},
+    val setHomeCards: (List<HomeCard>) -> Unit = {},
+    val setCarPlayInSharkOs: (Boolean) -> Unit = {},
+    val setCarPlayTopGap: (Int) -> Unit = {},
+    val setCarPlayAlwaysBar: (Boolean) -> Unit = {},
+    val setTyreLimits: (com.sharkos.launcher.car.TyreLimits) -> Unit = {},
     val allowOverlay: () -> Unit = {},
     val checkUpdate: () -> Unit = {},
     val allowCarData: () -> Unit = {},
@@ -102,6 +114,7 @@ enum class SettingsPage(val label: String, val icon: ImageVector, val tint: Colo
     HVAC("HVAC Bar", ShIcons.fan, Sh.blue),
     MEDIA("Now playing", ShIcons.music, Color(0xFFFF375F)),
     VEHICLE("Vehicle", ShIcons.car, Sh.green),
+    CLUSTER("Instrument cluster", ShIcons.gauge, Color(0xFF30B0C7)),
     UPDATES("Updates", ShIcons.download, Color(0xFF5E5CE6)),
     AMBIENT("Ambient lighting", ShIcons.bulb, Color(0xFFFFB340)),
     SYSTEM("System", ShIcons.chip, Color(0xFF636366)),
@@ -135,7 +148,7 @@ fun SettingsScreen(s: SettingsInfo, a: SettingsActions, start: SettingsPage = Se
 @Composable
 private fun Sidebar(page: SettingsPage, s: SettingsInfo, onPick: (SettingsPage) -> Unit, modifier: Modifier) =
     Column(
-        modifier.width(300.dp).fillMaxHeight().clip(RoundedCornerShape(26.dp)).background(Sh.card).padding(12.dp),
+        modifier.width(300.dp).fillMaxHeight().clip(RoundedCornerShape(26.dp)).background(Sh.card).verticalScroll(rememberScrollState()).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Txt("Settings", Sh.text(24.sp, FontWeight.Bold, spacing = (-0.3).sp), Modifier.padding(start = 12.dp, top = 8.dp, bottom = 12.dp))
@@ -178,7 +191,7 @@ private fun badge(p: SettingsPage, s: SettingsInfo): Pair<String, Color>? = when
 @Composable
 private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions) {
     when (page) {
-        SettingsPage.GENERAL -> Group("Home screen") {
+        SettingsPage.GENERAL -> { HomeCardsGroup(s, a); Group("Home screen") {
             Item(
                 "Use SharkOS as the Home screen",
                 if (s.isDefaultHome) "SharkOS opens when you press Home." else "Choose SharkOS as the Home app so the Home button comes here.",
@@ -197,7 +210,7 @@ private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions)
                 ) { if (!s.canLaunchFromBackground) PillButton("Allow", a.allowOverlay, bg = Sh.blue, fg = Color.White) }
                 if (!s.canLaunchFromBackground) Hint("If that page won't open: adb shell appops set com.sharkos.launcher SYSTEM_ALERT_WINDOW allow")
             }
-        }
+        } }
         SettingsPage.APPEARANCE -> AppearancePage(s, a)
         SettingsPage.HVAC -> HvacPage(s, a)
         SettingsPage.MEDIA -> Group("Sources") {
@@ -212,8 +225,19 @@ private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions)
                 "Song, artwork and time come straight from the car's CarPlay service.",
                 status = if (s.carPlayLinked) "Connected" to Sh.green else "Not found" to Sh.faint,
             )
-            Item("CarPlay inside SharkOS (test)", "Shows CarPlay in SharkOS with the HVAC Bar below. A test: the line at the bottom reports what the car says.") {
+            Item("CarPlay with the HVAC Bar", "BYD's CarPlay with SharkOS's HVAC Bar underneath, also from CarPlay on the bar or in All apps. Needs \"display over other apps\": ${CarPlayOverlay.ALLOW_COMMAND}") {
                 PillButton("Open", a.openCarPlay, bg = Sh.blue, fg = Color.White)
+            }
+            Item("Always add the HVAC Bar to CarPlay", "Puts SharkOS's bar back on CarPlay however it opens: after the reversing camera, from BYD's CarPlay icon, or a call.") {
+                Switch(s.carPlayAlwaysBar, a.setCarPlayAlwaysBar, "Always add the HVAC Bar to CarPlay")
+            }
+            Item("Move CarPlay clear of the top edge (test)",
+                "SharkOS draws CarPlay itself, a little lower so nothing is cut off at the top. BYD's CarPlay still runs underneath for the driver display and steering wheel. Off: BYD draws it, as before.") {
+                Switch(s.carPlayInSharkOs, a.setCarPlayInSharkOs, "Move CarPlay clear of the top edge")
+            }
+            if (s.carPlayInSharkOs) Item("Gap at the top", "How far down CarPlay sits. The HVAC Bar takes the rest. Applies next time CarPlay opens.") {
+                Stepper("${s.carPlayTopGap} px", { a.setCarPlayTopGap((s.carPlayTopGap - 4).coerceAtLeast(0)) },
+                    { a.setCarPlayTopGap((s.carPlayTopGap + 4).coerceAtMost(60)) }, "CarPlay gap")
             }
         }
         SettingsPage.VEHICLE -> {
@@ -238,12 +262,29 @@ private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions)
                     },
                 )
             }
+            Group("Tyres") {
+                Item("Tyre pressure alerts", "A warning at the top of SharkOS when a tyre is outside your range or the car flags one. Tap it to dismiss.") {
+                    Switch(s.tyreAlerts, a.setTyreAlerts, "Tyre pressure alerts")
+                }
+                if (s.tyreAlerts) {
+                    val l = s.tyreLimits
+                    Item("Warn below", "Low pressure warning.") {
+                        Stepper("${l.lowPsi} psi", { a.setTyreLimits(l.copy(lowPsi = (l.lowPsi - 1).coerceAtLeast(15))) },
+                            { a.setTyreLimits(l.copy(lowPsi = (l.lowPsi + 1).coerceAtMost(l.highPsi - 2))) }, "Low warning")
+                    }
+                    Item("Warn above", "High pressure warning.") {
+                        Stepper("${l.highPsi} psi", { a.setTyreLimits(l.copy(highPsi = (l.highPsi - 1).coerceAtLeast(l.lowPsi + 2))) },
+                            { a.setTyreLimits(l.copy(highPsi = (l.highPsi + 1).coerceAtMost(70))) }, "High warning")
+                    }
+                }
+            }
             Group("Off-road") {
                 Item("Inclinometer", if (s.inclinoZeroed) "Zeroed for this screen position." else "Not zeroed yet: park on flat ground first.") {
                     PillButton(if (s.inclinoZeroed) "Re-zero" else "Zero now", a.zeroInclino)
                 }
             }
         }
+        SettingsPage.CLUSTER -> ClusterPage()
         SettingsPage.UPDATES -> Group("Over the air") { Updates(s, a) }
         SettingsPage.AMBIENT -> AmbientPage(a.lights)
         SettingsPage.SYSTEM -> SystemPage(a)
@@ -434,3 +475,87 @@ private fun Hint(text: String) =
 @Composable internal fun SettingsGroup(title: String, content: @Composable () -> Unit) = Group(title, content)
 @Composable internal fun SettingsItem(title: String, body: String, status: Pair<String, Color>? = null, action: @Composable () -> Unit = {}) = Item(title, body, status, action)
 @Composable internal fun SettingsHint(text: String) = Hint(text)
+
+/** − value + for a small number. */
+@Composable
+private fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit, label: String) =
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        RoundButton(ShIcons.minus, "$label lower", onMinus, size = 40.dp, iconSize = 18.dp)
+        Txt(value, Sh.text(17.sp, FontWeight.SemiBold), Modifier.width(64.dp), )
+        RoundButton(ShIcons.plus, "$label higher", onPlus, size = 40.dp, iconSize = 18.dp)
+    }
+
+/**
+ * Home screen cards: three (one wide) or two, and which card goes in each spot. Picking a card
+ * that's already in another spot swaps the two.
+ */
+@Composable
+private fun HomeCardsGroup(s: SettingsInfo, a: SettingsActions) = Group("Home screen cards") {
+    val cards = s.homeCards
+    Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Txt("Layout", Sh.text(17.sp, FontWeight.SemiBold))
+                Txt("The first card is the wide one.", Sh.text(14.sp, color = Sh.dim))
+            }
+            Segmented(listOf("3 cards", "2 cards"), if (cards.size == 3) 0 else 1, { i ->
+                val next = if (i == 0) (cards + HomeCard.entries.filter { it !in cards }).take(3) else cards.take(2)
+                a.setHomeCards(next)
+            }, Modifier.width(260.dp), greyFirst = false)
+        }
+        for ((slot, current) in cards.withIndex()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Txt("Card ${slot + 1}" + if (slot == 0) " · wide" else "", Sh.text(15.sp, FontWeight.SemiBold, Sh.dim))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    for (c in HomeCard.entries) {
+                        val on = c == current
+                        Box(
+                            Modifier.height(38.dp).clip(RoundedCornerShape(19.dp)).background(if (on) Sh.blue else Sh.raised)
+                                .press({
+                                    val next = cards.toMutableList()
+                                    val other = next.indexOf(c)
+                                    if (other >= 0) next[other] = current
+                                    next[slot] = c
+                                    a.setHomeCards(next)
+                                }, label = "Card ${slot + 1}: ${c.label}")
+                                .padding(horizontal = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) { Txt(c.label, Sh.text(14.sp, FontWeight.SemiBold, if (on) Color.White else Sh.ink)) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** SharkOS on the instrument cluster (the driver display): on/off, style, and the technical bits. */
+@Composable
+private fun ClusterPage() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val on = ClusterDisplay.enabled.value
+    Group("Driver display") {
+        Item("Show SharkOS on the instrument cluster",
+            "Album art, what's playing and your tyre pressures in the cluster's map area. Comes on by itself when SharkOS starts. CarPlay directions take over during a route, then SharkOS comes back.") {
+            Switch(on, { ClusterDisplay.setEnabled(ctx, it) }, "Show SharkOS on the instrument cluster")
+        }
+        Hint(ClusterDisplay.status.value)
+    }
+    Group("Style") {
+        Item("Album cover", when (ClusterDisplay.style.value) {
+            ClusterStyle.CARD -> "The whole cover as a rounded card, glowing in its own colour."
+            ClusterStyle.FADE -> "The whole cover against the left edge, fading out to the right."
+        }) {
+            Segmented(ClusterStyle.entries.map { it.label }, ClusterStyle.entries.indexOf(ClusterDisplay.style.value),
+                onSelect = { ClusterDisplay.setStyle(ctx, ClusterStyle.entries[it]) }, modifier = Modifier.width(360.dp), greyFirst = false)
+        }
+    }
+    Group("Advanced") {
+        Item("Map slot", "Which of the cluster's map slots SharkOS uses. 1 (BYD's own navigation) is the one that works on the Shark 6; 3 wakes BYD's Android Auto app, which blacks the cluster out.") {
+            Segmented(listOf("1 · BYD", "3 · Auto"), listOf(1, 3).indexOf(ClusterDisplay.slot.value).coerceAtLeast(0),
+                onSelect = { i -> ClusterDisplay.setSlot(ctx, listOf(1, 3)[i]) }, modifier = Modifier.width(280.dp), greyFirst = false)
+        }
+        if (on) Item("Not showing?", "Puts SharkOS back on the cluster, for example after CarPlay directions kept it.") {
+            PillButton("Show again", { ClusterDisplay.show(ctx, com.sharkos.launcher.car.ClusterLink.STATE_FULL) })
+        }
+    }
+}

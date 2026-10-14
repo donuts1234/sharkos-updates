@@ -11,6 +11,14 @@ class Prefs(context: Context) {
         get() = sp.getString("dock", null)?.split(',')?.filter { it.isNotBlank() }
         set(v) = sp.edit().putString("dock", v?.joinToString(",")).apply()
 
+    /** Home screen: which cards, in order (HomeCard names), and the Shortcuts card's apps. */
+    var homeCards: List<String>?
+        get() = sp.getString("home_cards", null)?.split(',')?.filter { it.isNotBlank() }
+        set(v) = sp.edit().putString("home_cards", v?.joinToString(",")).apply()
+    var shortcuts: List<String>?
+        get() = sp.getString("shortcuts", null)?.split(',')
+        set(v) = sp.edit().putString("shortcuts", v?.joinToString(",")).apply()
+
     /** Inclinometer zero for a display rotation: up (3 floats) then right (3 floats), sensor frame. */
     fun inclinoMount(rotation: Int): FloatArray? =
         sp.getString("inclino_mount_$rotation", null)
@@ -18,6 +26,43 @@ class Prefs(context: Context) {
 
     fun setInclinoMount(rotation: Int, v: FloatArray) =
         sp.edit().putString("inclino_mount_$rotation", v.joinToString(",")).apply()
+
+    /** CarPlay drawn by SharkOS (moved clear of the screen's top edge) rather than by BYD's screen. */
+    var carPlayInSharkOs: Boolean
+        get() = sp.getBoolean("carplay_in_sharkos", false)
+        set(v) = sp.edit().putBoolean("carplay_in_sharkos", v).apply()
+
+    /** Bring SharkOS's bar back whenever BYD's CarPlay is on screen (after reversing and so on). */
+    var carPlayAlwaysBar: Boolean
+        get() = sp.getBoolean("carplay_always_bar", true)
+        set(v) = sp.edit().putBoolean("carplay_always_bar", v).apply()
+
+    /** How far SharkOS draws CarPlay below the screen's top edge, in screen pixels. */
+    var carPlayTopGap: Int
+        get() = sp.getInt("carplay_top_gap", 12)
+        set(v) = sp.edit().putInt("carplay_top_gap", v).apply()
+
+    /** SharkOS on the instrument cluster: on at start-up, its style, and the cluster map slot it uses. */
+    var clusterOn: Boolean
+        get() = sp.getBoolean("cluster_on", true)
+        set(v) = sp.edit().putBoolean("cluster_on", v).apply()
+    var clusterStyle: String
+        get() = sp.getString("cluster_style", "FADE") ?: "FADE"
+        set(v) = sp.edit().putString("cluster_style", v).apply()
+    var clusterSlot: Int
+        get() = sp.getInt("cluster_slot", 1)
+        set(v) = sp.edit().putInt("cluster_slot", v).apply()
+
+    /** Tyre alerts and their limits (psi). */
+    var tyreAlerts: Boolean
+        get() = sp.getBoolean("tyre_alerts", true)
+        set(v) = sp.edit().putBoolean("tyre_alerts", v).apply()
+    var tyreLow: Int
+        get() = sp.getInt("tyre_low", 30)
+        set(v) = sp.edit().putInt("tyre_low", v).apply()
+    var tyreHigh: Int
+        get() = sp.getInt("tyre_high", 44)
+        set(v) = sp.edit().putInt("tyre_high", v).apply()
 
     /** Open SharkOS automatically when the car starts. On by default. */
     var autoLaunch: Boolean

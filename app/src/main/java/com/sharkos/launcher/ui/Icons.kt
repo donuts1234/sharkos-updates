@@ -23,6 +23,15 @@ object ShIcons {
             )
         }.build()
 
+    // Climate page: Dual zone, and a seated person with where the air goes
+    val dual = icon("dual", listOf("M8 4v16", "M16 4v16", "M4 8h8", "M12 16h8"))
+    val auto = icon("auto", listOf("M4 19 9.5 5l5.5 14", "M6.3 14h6.4", "M18.5 4v6", "M15.5 7h6"))
+    private val seated = listOf("M9 3a2 2 0 1 1 0 4a2 2 0 1 1 0-4z", "M9 8v6l4 3v4", "M9 14H6")
+    val airFace = icon("airFace", seated + listOf("M14 7h6", "M17 4l3 3-3 3"), width = 1.8f)
+    val airFaceFeet = icon("airFaceFeet", seated + listOf("M14 7h6", "M17 4l3 3-3 3", "M15 20h5"), width = 1.8f)
+    val airFeet = icon("airFeet", seated + listOf("M15 20h5", "M18 17l2 3-2 3"), width = 1.8f)
+    val airFeetScreen = icon("airFeetScreen", seated + listOf("M15 20h5", "M14 3l6 3"), width = 1.8f)
+
     val home = icon("home", listOf("M3 10.5 12 3l9 7.5", "M5.5 9v11h13V9", "M10 20v-6h4v6"))
     val grid = icon("grid", listOf(
         "M4.8 3h3.4A1.8 1.8 0 0 1 10 4.8v3.4A1.8 1.8 0 0 1 8.2 10H4.8A1.8 1.8 0 0 1 3 8.2V4.8A1.8 1.8 0 0 1 4.8 3z",
@@ -43,6 +52,7 @@ object ShIcons {
     val power = icon("power", listOf("M12 3v8", "M6.3 6.3a8 8 0 1 0 11.4 0"))
     val back = icon("back", listOf("M15 5 8 12l7 7"), width = 2.4f)
     val chevronLeft = icon("chevronLeft", listOf("M14.5 6 8.5 12l6 6"), width = 2.6f)
+    val chevronDown = icon("chevronDown", listOf("M6 9.5l6 6 6-6"), width = 2.6f)
     val chevronRight = icon("chevronRight", listOf("M9.5 6l6 6-6 6"), width = 2.6f)
     val minus = icon("minus", listOf("M5 12h14"), width = 2.4f)
     val plus = icon("plus", listOf("M12 5v14", "M5 12h14"), width = 2.4f)
@@ -72,5 +82,6 @@ object ShIcons {
     val brush = icon("brush", listOf("M12 3a9 9 0 1 0 0 18c1.2 0 2-.8 2-1.8 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z", "M7.5 11.5v.01M9.5 7.5v.01M14.5 7.5v.01M17 11v.01"), width = 2.2f)
     val bulb = icon("bulb", listOf("M9 18h6", "M10 21h4", "M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"))
     val backArrow = icon("backArrow", listOf("M9 14 4 9l5-5", "M4 9h10.5a5.5 5.5 0 0 1 0 11H11"))
+    val gauge = icon("gauge", listOf("M3.5 16a8.5 8.5 0 1 1 17 0", "M12 16l4-5", "M6 16h1.5M16.5 16H18M12 8.5V10"))
     val sun = icon("sun", listOf("M12 8a4 4 0 1 1 0 8a4 4 0 1 1 0-8z", "M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"))
 }

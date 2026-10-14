@@ -53,6 +53,34 @@ class HomeActions(
     val grantMedia: () -> Unit,
     val offroad: () -> Unit,
     val settings: () -> Unit,
+    /** Tap on the music card: the full-screen music page. */
+    val openNowPlaying: () -> Unit = {},
+    /** Tap on the Shark 6 card: the Trip page. */
+    val openTrips: () -> Unit = {},
+    // The extra cards' controls
+    val openClimate: () -> Unit = {},
+    val toggleAc: () -> Unit = {},
+    val toggleRecirc: () -> Unit = {},
+    val toggleDemist: () -> Unit = {},
+    val lightsOn: (Boolean) -> Unit = {},
+    val lightsBrightness: (Int) -> Unit = {},
+    val lightsHue: (Float) -> Unit = {},
+    val openLights: () -> Unit = {},
+    val launch: (String) -> Unit = {},
+    /** An empty Shortcuts spot: pick an app for spot n. */
+    val addShortcut: (Int) -> Unit = {},
+    /** Hold a shortcut: empty its spot. */
+    val removeShortcut: (Int) -> Unit = {},
+)
+
+/** What the optional cards show; each is read only when its card is on Home. */
+data class HomeExtras(
+    val drive: com.sharkos.launcher.car.Drive? = null,
+    val climate: com.sharkos.launcher.car.ClimateState = com.sharkos.launcher.car.ClimateState(),
+    val lights: BarLights? = null,
+    /** "Matching album art" and the like, under the Lights card. */
+    val lightsNote: String? = null,
+    val shortcuts: List<DockApp?> = emptyList(),
 )
 
 @Composable
@@ -65,13 +93,26 @@ fun HomeScreen(
     attitude: Attitude?,
     a: HomeActions,
     carDataAllowed: Boolean = true,
+    tyreLimits: com.sharkos.launcher.car.TyreLimits = com.sharkos.launcher.car.TyreLimits(),
+    cards: List<HomeCard> = HomeCard.DEFAULT,
+    extras: HomeExtras = HomeExtras(),
 ) {
     Column(Modifier.fillMaxSize().padding(start = 32.dp, end = 32.dp, top = 28.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Header(now, telemetry, link, a.settings)
         Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            NowPlayingCard(track, mediaAccess, a, Modifier.weight(1.3f).fillMaxHeight())
-            VehicleCard(telemetry, carDataAllowed, a.settings, Modifier.weight(1f).fillMaxHeight())
-            TyresCard(telemetry, attitude, a.offroad, Modifier.weight(1f).fillMaxHeight())
+            // The first card is the wide one; with two cards it's wider still
+            cards.forEachIndexed { i, card ->
+                val m = Modifier.weight(if (i == 0) (if (cards.size == 2) 1.6f else 1.3f) else 1f).fillMaxHeight()
+                when (card) {
+                    HomeCard.NOW_PLAYING -> NowPlayingCard(track, mediaAccess, a, m)
+                    HomeCard.SHARK6 -> VehicleCard(telemetry, carDataAllowed, a.settings, m.press(a.openTrips, label = "Open trips"))
+                    HomeCard.TYRES -> TyresCard(telemetry, tyreLimits, attitude, a.offroad, m)
+                    HomeCard.DRIVE -> DriveCard(extras.drive, a, m)
+                    HomeCard.CLIMATE -> ClimateCard(extras.climate, a, m)
+                    HomeCard.LIGHTS -> LightsCard(extras.lights, extras.lightsNote, a, m)
+                    HomeCard.SHORTCUTS -> ShortcutsCard(extras.shortcuts, a, m)
+                }
+            }
         }
     }
 }
@@ -126,7 +167,7 @@ private fun ArtCard(track: Track, art: android.graphics.Bitmap, a: HomeActions, 
     val onAccent by animateColorAsState(colors.onAccent, tween(500), label = "onAccent")
     val shade by animateColorAsState(colors.shade, tween(500), label = "shade")
     val image = remember(art) { art.asImageBitmap() }
-    Box(modifier.clip(RoundedCornerShape(28.dp)).background(shade)) {
+    Box(modifier.clip(RoundedCornerShape(28.dp)).background(shade).press(a.openNowPlaying, label = "Open now playing")) {
         Image(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         Box(
             Modifier.fillMaxSize().background(
@@ -158,7 +199,9 @@ private fun ArtCard(track: Track, art: android.graphics.Bitmap, a: HomeActions, 
 }
 
 @Composable
-private fun PlainCard(track: Track?, access: Boolean, a: HomeActions, modifier: Modifier) = Panel(modifier) {
+private fun PlainCard(track: Track?, access: Boolean, a: HomeActions, modifier: Modifier) = Panel(
+    if (track != null) modifier.press(a.openNowPlaying, label = "Open now playing") else modifier,
+) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         SectionLabel("Now playing", Modifier.weight(1f))
         track?.let { Txt(if (it.playing) it.source else "${it.source} · Paused", Sh.text(14.sp, color = Sh.dim)) }
@@ -226,7 +269,7 @@ private fun Controls(track: Track, a: HomeActions, play: Color, onPlay: Color, s
         RoundButton(ShIcons.next, "Next track", a.next, size = 60.dp, iconSize = 28.dp, bg = Color.Transparent, tint = sideTint)
     }
 
-private fun clock(ms: Long): String {
+internal fun clock(ms: Long): String {
     val s = (ms / 1000).toInt()
     return "%d:%02d".format(s / 60, s % 60)
 }
@@ -287,14 +330,15 @@ private fun StatTile(label: String, value: String, modifier: Modifier, footer: @
 // ---- Tyres + off-road ----
 
 @Composable
-private fun TyresCard(t: Telemetry, attitude: Attitude?, onOffroad: () -> Unit, modifier: Modifier) = Panel(modifier) {
+private fun TyresCard(t: Telemetry, limits: com.sharkos.launcher.car.TyreLimits, attitude: Attitude?, onOffroad: () -> Unit, modifier: Modifier) = Panel(modifier) {
     SectionLabel("Tyres")
+    val warned = limits.check(t.tyres).map { it.corner }.toSet()
     Column(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         for (row in listOf(listOf(Corner.LF, Corner.RF), listOf(Corner.LR, Corner.RR))) {
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 for (c in row) {
                     val tyre = t.tyres.getOrNull(c.ordinal)
-                    val warn = tyre?.low == true || tyre?.high == true
+                    val warn = c in warned
                     Column(
                         Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(18.dp))
                             .background(if (warn) Sh.orange.copy(alpha = 0.18f) else Sh.raised).padding(14.dp),

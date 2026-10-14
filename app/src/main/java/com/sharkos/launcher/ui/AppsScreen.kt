@@ -36,11 +36,13 @@ fun AppsScreen(
     /** True when opened from a + spot on the bar: a tap adds the app instead of opening it. */
     picking: Boolean = false,
     onCancelPick: () -> Unit = {},
+    /** What the pick is for, shown as the title. */
+    pickTitle: String = "Add to the bar",
 ) {
     Column(Modifier.fillMaxSize().padding(start = 32.dp, end = 32.dp, top = 24.dp)) {
         Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
             if (picking) {
-                Txt("Add to the bar", Sh.text(30.sp, FontWeight.Bold, spacing = (-0.5).sp), Modifier.weight(1f))
+                Txt(pickTitle, Sh.text(30.sp, FontWeight.Bold, spacing = (-0.5).sp), Modifier.weight(1f))
                 Txt("Tap an app to put it in the empty spot", Sh.text(15.sp, color = Sh.dim))
                 Gap(16.dp)
                 PillButton("Cancel", onCancelPick)

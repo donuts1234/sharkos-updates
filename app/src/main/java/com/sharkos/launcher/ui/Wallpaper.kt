@@ -19,15 +19,29 @@ import kotlin.math.sin
  * and drawn once per screen size (drawWithCache) then reused, so they cost nothing while driving.
  * Kept dark at the top and calm behind text; the colour sits low and to the sides.
  */
-enum class Wallpaper(val label: String, internal val barTint: List<Color>) {
-    BLACK("Black", emptyList()),
-    GRAPHITE("Graphite", listOf(Color(0xFF4A4E5C), Color(0xFF2A2C33))),
-    MIDNIGHT("Midnight", listOf(Color(0xFF1A4FB0), Color(0xFF3A2A8C))),
-    CONTOUR("Contour", listOf(Color(0xFF3A3A40), Color(0xFF3A3A40))),
-    AURORA("Aurora", listOf(Color(0xFF16A889), Color(0xFF2AD4C8), Color(0xFF7B4DFF))),
-    OCEAN("Ocean", listOf(Color(0xFF0A4BB5), Color(0xFF0A84FF), Color(0xFF1C64D8))),
-    SUNSET("Sunset", listOf(Color(0xFF8E3BD9), Color(0xFFE0457B), Color(0xFFFF7A3D))),
+enum class Wallpaper(
+    val label: String,
+    internal val barTint: List<Color>,
+    /** Ambient lighting to match: door trims, then pockets and footwells (0–1 hue, below 0 white). */
+    val lights: Pair<Float, Float>,
+) {
+    BLACK("Black", emptyList(), W to W),
+    GRAPHITE("Graphite", listOf(Color(0xFF4A4E5C), Color(0xFF2A2C33)), W to W),
+    MIDNIGHT("Midnight", listOf(Color(0xFF1A4FB0), Color(0xFF3A2A8C)), 0.62f to 0.72f),
+    CONTOUR("Contour", listOf(Color(0xFF3A3A40), Color(0xFF3A3A40)), W to W),
+    AURORA("Aurora", listOf(Color(0xFF16A889), Color(0xFF2AD4C8), Color(0xFF7B4DFF)), 0.47f to 0.72f),
+    OCEAN("Ocean", listOf(Color(0xFF0A4BB5), Color(0xFF0A84FF), Color(0xFF1C64D8)), 0.6f to 0.53f),
+    SUNSET("Sunset", listOf(Color(0xFF8E3BD9), Color(0xFFE0457B), Color(0xFFFF7A3D)), 0.06f to 0.92f),
+    EMBER("Ember", listOf(Color(0xFFB3261E), Color(0xFFFF5A1F), Color(0xFFFFA000)), 0.0f to 0.07f),
+    ROSE("Rose", listOf(Color(0xFFE0457B), Color(0xFFFF6FAE), Color(0xFFB0307A)), 0.92f to 0.85f),
+    LAVENDER("Lavender", listOf(Color(0xFF7B4DFF), Color(0xFFB07CFF), Color(0xFFE07BD8)), 0.75f to 0.86f),
+    FOREST("Forest", listOf(Color(0xFF0E7A3C), Color(0xFF2FBF5A), Color(0xFF8FD13A)), 0.33f to 0.24f),
+    CITRUS("Citrus", listOf(Color(0xFFFFB000), Color(0xFFFFD60A), Color(0xFF9BD13A)), 0.12f to 0.22f),
+    ARCTIC("Arctic", listOf(Color(0xFF5AC8FA), Color(0xFFA8E6FF), Color(0xFF3A8FD9)), 0.53f to W),
+    NEON("Neon", listOf(Color(0xFFFF2D95), Color(0xFF7B2DFF), Color(0xFF00E5FF)), 0.87f to 0.5f),
 }
+
+private const val W = -1f   // white light
 
 /** The background's colours, for the HVAC Bar to pick up a hint of. Provided once in Root. */
 val LocalWallpaper = staticCompositionLocalOf { Wallpaper.BLACK }
@@ -43,6 +57,17 @@ fun Modifier.barTint(w: Wallpaper): Modifier = if (w.barTint.isEmpty()) this els
     onDrawBehind {
         drawRect(wash)
         drawRect(edge, size = Size(size.width, line))
+    }
+}
+
+/** The bar in the album's colours (music page): its dark tone, washed and edged with its accent. */
+fun Modifier.artTint(c: ArtColors): Modifier = drawWithCache {
+    val line = 1.dp.toPx()
+    val wash = Brush.horizontalGradient(listOf(c.accent.copy(alpha = 0.22f), c.accent.copy(alpha = 0.08f)))
+    onDrawBehind {
+        drawRect(c.shade)
+        drawRect(wash)
+        drawRect(c.accent.copy(alpha = 0.6f), size = Size(size.width, line))
     }
 }
 
@@ -62,6 +87,20 @@ fun Modifier.wallpaper(w: Wallpaper): Modifier = drawWithCache {
         Wallpaper.AURORA -> aurora(size)
         Wallpaper.OCEAN -> ocean(size)
         Wallpaper.SUNSET -> sunset(size)
+        Wallpaper.EMBER -> waves(size, Color(0xFF080302), Color(0xFF6E1608), Color(0xFF3A0E06),
+            Color(0xFFB3261E), Color(0xFFFF5A1F), Color(0xFFFFA000), Color(0xFF7A1A0A))
+        Wallpaper.ROSE -> waves(size, Color(0xFF080207), Color(0xFF6A1440), Color(0xFF3A0A30),
+            Color(0xFFB0307A), Color(0xFFE0457B), Color(0xFFFF6FAE), Color(0xFFFFA0A0))
+        Wallpaper.LAVENDER -> waves(size, Color(0xFF05030A), Color(0xFF3A1E7A), Color(0xFF4A1650),
+            Color(0xFF7B4DFF), Color(0xFFB07CFF), Color(0xFFE07BD8), Color(0xFF5A3AC0))
+        Wallpaper.FOREST -> waves(size, Color(0xFF020603), Color(0xFF0B4A22), Color(0xFF12301A),
+            Color(0xFF0E7A3C), Color(0xFF2FBF5A), Color(0xFF8FD13A), Color(0xFF0A5A2C))
+        Wallpaper.CITRUS -> waves(size, Color(0xFF070602), Color(0xFF6A4A00), Color(0xFF2E3A08),
+            Color(0xFFFF9500), Color(0xFFFFD60A), Color(0xFF9BD13A), Color(0xFFB37400))
+        Wallpaper.ARCTIC -> waves(size, Color(0xFF02060A), Color(0xFF0E3A5A), Color(0xFF1A2A4A),
+            Color(0xFF3A8FD9), Color(0xFF5AC8FA), Color(0xFFA8E6FF), Color(0xFF1C64A8))
+        Wallpaper.NEON -> waves(size, Color(0xFF04020A), Color(0xFF5A0A4A), Color(0xFF0A2A5A),
+            Color(0xFFFF2D95), Color(0xFF7B2DFF), Color(0xFF00E5FF), Color(0xFFFF2D95))
     }
     onDrawBehind(draw)
 }
@@ -130,6 +169,21 @@ private fun sunset(s: Size): DrawScope.() -> Unit = layered(
         WaveSpec(0.63f, 0.08f, 0.95f, 2.6f, Color(0xFFE0457B), 0.34f),
         WaveSpec(0.75f, 0.06f, 1.15f, 4.0f, Color(0xFFFF7A3D), 0.34f),
         WaveSpec(0.86f, 0.05f, 0.85f, 5.3f, Color(0xFFFF9F0A), 0.30f),
+    ),
+)
+
+/** The wave family: a dark ground, two low glows, four waves in the given colours (back to front). */
+private fun waves(s: Size, bg: Color, glowA: Color, glowB: Color, c1: Color, c2: Color, c3: Color, c4: Color): DrawScope.() -> Unit = layered(
+    s, bg,
+    glows = listOf(
+        Triple(Offset(s.width * 0.12f, s.height * 1.0f), s.width * 0.6f, glowA),
+        Triple(Offset(s.width * 0.9f, s.height * 0.15f), s.width * 0.5f, glowB),
+    ),
+    waves = listOf(
+        WaveSpec(0.50f, 0.09f, 1.25f, 0.4f, c1, 0.32f),
+        WaveSpec(0.61f, 0.08f, 0.95f, 2.0f, c2, 0.34f),
+        WaveSpec(0.73f, 0.06f, 1.15f, 3.6f, c3, 0.30f),
+        WaveSpec(0.85f, 0.05f, 0.85f, 5.1f, c4, 0.40f),
     ),
 )
 

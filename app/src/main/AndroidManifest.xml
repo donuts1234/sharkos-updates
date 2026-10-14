@@ -18,6 +18,9 @@
     <uses-permission android:name="android.permission.BYDAUTO_SPEED_GET" />
     <uses-permission android:name="android.permission.BYDAUTO_TYRE_COMMON" />
     <uses-permission android:name="android.permission.BYDAUTO_TYRE_GET" />
+    <!-- Headlights on/off, for dimming the ambient lighting at night -->
+    <uses-permission android:name="android.permission.BYDAUTO_LIGHT_COMMON" />
+    <uses-permission android:name="android.permission.BYDAUTO_LIGHT_GET" />
 
     <!-- A launcher has to see every installed app (targetSdk >= 30 hides them otherwise), and the
          car backend has to find BYD's client APK. -->

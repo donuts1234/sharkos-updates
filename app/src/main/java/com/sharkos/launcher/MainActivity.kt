@@ -12,6 +12,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.sharkos.launcher.data.Prefs
+import com.sharkos.launcher.ui.CarPlayOverlay
 import com.sharkos.launcher.ui.Root
 import com.sharkos.launcher.ui.Screen
 
@@ -21,6 +22,8 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_AUTO_LAUNCH = "sharkos.auto_launch"
+        /** Open on this [Screen] (by name): used when the CarPlay bar hands back to SharkOS. */
+        const val EXTRA_SCREEN = "sharkos.screen"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,6 +32,8 @@ class MainActivity : ComponentActivity() {
         hideSystemBars()
         val app = application as SharkOsApp
         setContent { Root(app, screen) { screen = it } }
+        CarPlayOverlay.startAutoAttach(this)
+        com.sharkos.launcher.ui.ClusterDisplay.autoStart(this)
         askForCarPermissionOnce()
     }
 
@@ -36,6 +41,19 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.hasCategory(Intent.CATEGORY_HOME) || intent.getBooleanExtra(EXTRA_AUTO_LAUNCH, false)) screen = Screen.HOME
+        intent.getStringExtra(EXTRA_SCREEN)?.let { name -> Screen.entries.firstOrNull { it.name == name }?.let { screen = it } }
+    }
+
+    /** Back in SharkOS: the CarPlay bar isn't needed on top of it. */
+    override fun onResume() {
+        super.onResume()
+        CarPlayOverlay.sharkOsInFront = true
+        if (CarPlayOverlay.isOpen) CarPlayOverlay.close(this, then = null)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        CarPlayOverlay.sharkOsInFront = false
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

@@ -298,6 +298,62 @@ class CarManager(private val appContext: Context) {
         )
     }
 
+    /** The trip figures for the Trip page. Blocking; each field best-effort (null when the car is silent). */
+    private fun readTrips(): Trips {
+        val b = backend
+        if (b == null && !ts.connected) return Trips()
+        fun d(c: Call): Double? = if (b != null && b.has(c)) (runCatching { b.invoke(c) }.getOrNull() as? Number)?.toDouble() else null
+        fun stat(getter: String, vararg args: Any?): Double? =
+            (if (args.isEmpty()) ts.number("general", getter) else null) ?: d(Call(getter, *args, device = "statistic"))
+        fun pos(v: Double?) = v?.takeIf { it > 0 && it.isFinite() }
+        fun meter(index: Int, target: Int) = TripMeter(
+            km = stat("getMileageNumber", index)?.takeIf { it >= 0 && it.isFinite() },
+            minutes = pos(stat("getTravelTime", target))?.let { (it * 60).toInt() },
+            avgKph = pos(stat("getAverageSpeed", target)),
+            kwhPer100 = pos(stat("getAverageElectricConsumption", target)),
+            litresPer100 = pos(stat("getAverageFuelConsumption", target)),
+        )
+        val odo = pos(stat("getTotalMileageValue"))
+        val evKm = stat("getEVMileageValue")?.takeIf { it >= 0 }
+        val fuelKm = stat("getHEVMileageValue")?.takeIf { it >= 0 }
+        val drive = DriveTracker.update(appContext, Counters(
+            odometerKm = odo,
+            evKm = evKm,
+            fuelKm = fuelKm,
+            socPercent = stat("getElecPercentageValue")?.takeIf { it in 0.0..100.0 },
+            packKwh = pos(stat("getBatteryPackEnergy")),
+            tripMinutes = null,
+        ))
+        return Trips(
+            drive = drive,
+            trip1 = meter(0, 2),
+            trip2 = meter(1, 3),
+            lifetime = Lifetime(
+                km = odo, evKm = evKm, fuelKm = fuelKm,
+                kwhPer100 = pos(stat("getTotalElecConPHMValue")),
+                litresPer100 = pos(stat("getTotalFuelConPHMValue") ?: stat("getTotalFuelConPhmValue")),
+            ),
+        )
+    }
+
+    /**
+     * Whether the headlights are on (side/position lights or low beam), or null if the car doesn't
+     * say. Desay's body service first (no permission needed), then BYD's light device. Blocking.
+     */
+    fun headlightsOn(): Boolean? {
+        val b = backend
+        fun d(c: Call): Double? = if (b != null && b.has(c)) (runCatching { b.invoke(c) }.getOrNull() as? Number)?.toDouble() else null
+        val side = ts.number("body", "getLightSideStatus") ?: d(Call("getLightStatus", 1, device = "light"))
+        val low = ts.number("body", "getLightLowBeamStatus") ?: d(Call("getLightStatus", 2, device = "light"))
+        if (side == null && low == null) return null
+        return side?.toInt() == 1 || low?.toInt() == 1
+    }
+
+    /** Trip figures every [periodMs] while the Trip page is open. */
+    fun trips(periodMs: Long = 3000): Flow<Trips> = flow {
+        while (true) { emit(readTrips()); delay(periodMs) }
+    }.flowOn(Dispatchers.IO)
+
     /**
      * Telemetry plus a climate readback every [periodMs]. Collect with collectAsStateWithLifecycle
      * so polling stops whenever SharkOS isn't on screen: no work in the background.

@@ -135,6 +135,34 @@ object CarPlayLink {
         if (fromData) BitmapFactory.decodeByteArray(data, 0, data!!.size, real) else BitmapFactory.decodeFile(path, real)
     }.getOrNull()
 
+    // ---- CarPlay's app states: is the iPhone giving turn-by-turn directions right now? ----
+
+    private const val STATE_CALLBACK = "com.ts.carplay.common.aidl.ICarPlayStateCallback"
+    private const val TX_REGISTER_STATE = 3
+    private const val CB_APP_STATE = 4
+    private const val APP_STATE_NAVIGATION = 1
+
+    private val _routeActive = MutableStateFlow(false)
+    /** True while a CarPlay route is being guided (the iPhone's turn-by-turn state). */
+    val routeActive: StateFlow<Boolean> = _routeActive.asStateFlow()
+
+    internal val stateCallback = object : Binder() {
+        init { attachInterface(null, STATE_CALLBACK) }
+
+        override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
+            if (code !in 1..5) return super.onTransact(code, data, reply, flags)
+            if (code == CB_APP_STATE) runCatching {
+                data.enforceInterface(STATE_CALLBACK)
+                val appState = data.readInt()
+                val enable = data.readInt() != 0
+                val speechMode = data.readInt()
+                Log.w(TAG, "app state $appState enable=$enable speech=$speechMode")
+                if (appState == APP_STATE_NAVIGATION) _routeActive.value = enable
+            }.onFailure { Log.w(TAG, "state callback: ${it.message}") }
+            return true
+        }
+    }
+
     private val conn = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, binder: IBinder?) { if (binder != null) attach(binder) }
         override fun onServiceDisconnected(name: ComponentName?) { service = null; _linked.value = false }
@@ -162,6 +190,8 @@ object CarPlayLink {
         val ok = runCatching { transact(binder, TX_REGISTER_NOW_PLAYING) { it.writeStrongBinder(callback) } }
         _linked.value = ok.isSuccess
         if (ok.isFailure) Log.w(TAG, "register failed: ${ok.exceptionOrNull()?.message}")
+        runCatching { transact(binder, TX_REGISTER_STATE) { it.writeStrongBinder(stateCallback) } }
+            .onFailure { Log.w(TAG, "state register failed: ${it.message}") }
     }
 
     private fun transact(b: IBinder, code: Int, write: (Parcel) -> Unit) {
@@ -173,7 +203,7 @@ object CarPlayLink {
         } finally { data.recycle() }
     }
 
-    // ---- CarPlay's picture and touch, the hooks BYD's own CarPlay screen uses (needs car.permission.CARPLAY) ----
+    // ---- CarPlay's screen (BYD's own CarPlay app draws it; SharkOS only asks and watches) ----
 
     private const val TX_CHANGE_VIDEO_FOCUS = 21
     private const val TX_DISPLAY_STATUS = 22
@@ -182,13 +212,11 @@ object CarPlayLink {
     private const val TX_REQUEST_UI = 29
     private const val SCREEN_MAIN = 0
 
-    /** BYD's CarPlay picture is 1920 × 906 (the screen between its bars); touches are in those units. */
+    /** CarPlay's picture as the iPhone sends it (BYD's view area); touches are in these units. */
     const val VIDEO_W = 1920
     const val VIDEO_H = 906
 
-    val linkedNow: Boolean get() = service != null
-
-    /** Draw CarPlay into [surface] (null: stop drawing there). */
+    /** Draw CarPlay into [surface] instead of BYD's screen (null: stop drawing there). */
     fun showOn(surface: android.view.Surface?): Boolean {
         val b = service ?: return false
         return runCatching {
@@ -199,7 +227,7 @@ object CarPlayLink {
         }.onFailure { Log.w(TAG, "setSurface: ${it.message}") }.isSuccess
     }
 
-    /** Give the screen to CarPlay (the iPhone streams its picture) or back to the car. */
+    /** Hand the screen to CarPlay (the iPhone streams) or back to the car (it stops). */
     fun screenToCarPlay(carPlay: Boolean): Boolean {
         val b = service ?: return false
         return runCatching {
@@ -207,16 +235,16 @@ object CarPlayLink {
         }.onFailure { Log.w(TAG, "videoFocus: ${it.message}") }.isSuccess
     }
 
-    /** Ask the iPhone to bring up CarPlay (launch mode 0 normal, 1 maps, 2 music). */
-    fun requestUi(mode: Int = 0): Boolean {
-        val b = service ?: return false
-        return runCatching { transact(b, TX_REQUEST_UI) { it.writeInt(mode) } }.isSuccess
-    }
-
-    /** A touch on SharkOS's CarPlay view, already scaled to [VIDEO_W] × [VIDEO_H]. */
+    /** A touch on SharkOS's CarPlay picture, already in [VIDEO_W] × [VIDEO_H] units. */
     fun touch(event: android.view.MotionEvent): Boolean {
         val b = service ?: return false
         return runCatching { transact(b, TX_TOUCH) { p -> p.writeInt(1); event.writeToParcel(p, 0) } }.isSuccess
+    }
+
+    /** Ask the iPhone to bring up CarPlay (launch mode 0 normal, 1 maps, 2 music, 3 phone). */
+    fun requestUi(mode: Int = 0): Boolean {
+        val b = service ?: return false
+        return runCatching { transact(b, TX_REQUEST_UI) { it.writeInt(mode) } }.isSuccess
     }
 
     /** Whether CarPlay says its picture is showing; null if it didn't answer. */

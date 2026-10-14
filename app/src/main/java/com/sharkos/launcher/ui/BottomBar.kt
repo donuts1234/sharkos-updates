@@ -120,6 +120,10 @@ fun BottomBar(
     lights: BarLights? = null,
     /** Start on the lighting controls (screenshots). */
     showLights: Boolean = false,
+    /** Album colours on the music page, in place of the wallpaper's tint. */
+    art: ArtColors? = null,
+    /** A plain colour instead of any tint (CarPlay: neutral, so it never clashes with the picture). */
+    plain: Color? = null,
 ) {
     val swap = tempSide == TempSide.LEFT
     var lightsMode by remember { mutableStateOf(showLights) }
@@ -129,7 +133,7 @@ fun BottomBar(
     LaunchedEffect(lightsMode, touches) { if (lightsMode && !showLights) { delay(10_000); lightsMode = false } }
     val openLights: (() -> Unit)? = lights?.let { { lightsMode = true } }
     Row(
-        modifier.fillMaxWidth().height(88.dp).background(Sh.bar).barTint(LocalWallpaper.current)
+        modifier.fillMaxWidth().height(88.dp).then(when { plain != null -> Modifier.background(plain); art != null -> Modifier.artTint(art); else -> Modifier.background(Sh.bar).barTint(LocalWallpaper.current) })
             .pointerInput(Unit) { awaitPointerEventScope { while (true) { awaitPointerEvent(PointerEventPass.Initial); touches++ } } }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -230,7 +234,6 @@ private fun RowScope.LightsStrip(l: BarLights, a: BarActions, close: () -> Unit)
     Gap(12.dp)
 }
 
-private val RAINBOW = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
 
 /** A light setting's colour: around the wheel, or white below 0. */
 fun lightColor(h: Float): Color = if (h < 0f) Color.White else Color.hsv((h.coerceIn(0f, 1f) * 360f) % 360f, 1f, 1f)

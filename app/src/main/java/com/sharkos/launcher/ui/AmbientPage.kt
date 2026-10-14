@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,7 +38,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sharkos.launcher.lights.AutoLights
 import com.sharkos.launcher.lights.Lights
+import com.sharkos.launcher.lights.NightLights
 import com.sharkos.launcher.lights.Lights.Zone
 import kotlinx.coroutines.delay
 
@@ -55,6 +58,12 @@ fun AmbientPage(a: LightsActions) {
     val link by Lights.link.collectAsStateWithLifecycle()
     val zones by Lights.zones.collectAsStateWithLifecycle()
     val linked by Lights.linked.collectAsStateWithLifecycle()
+    val followArt by AutoLights.followArt.collectAsStateWithLifecycle()
+    val followWall by AutoLights.followWallpaper.collectAsStateWithLifecycle()
+    val nightOn by NightLights.enabled.collectAsStateWithLifecycle()
+    val night by NightLights.nightPercent.collectAsStateWithLifecycle()
+    val day by NightLights.dayPercent.collectAsStateWithLifecycle()
+    val headlights by NightLights.headlights.collectAsStateWithLifecycle()
 
     // Settings that live outside a flow, re-read every couple of seconds while the page is open
     var tick by remember { mutableIntStateOf(0) }
@@ -81,6 +90,25 @@ fun AmbientPage(a: LightsActions) {
                 Lights.Link.OFF -> "Off" to Sh.faint
             },
         ) { if (link == Lights.Link.OFF && address != null) PillButton("Connect", { Lights.connect(ctx) }, bg = Sh.blue, fg = Color.White) }
+        SettingsItem("Match album art", "Each song's cover colour, while music plays. Wins over the wallpaper.") {
+            Switch(followArt, { AutoLights.setFollowArt(ctx, it) }, "Match album art")
+        }
+        SettingsItem("Match wallpaper", "The wallpaper's colours: one for the door trims, one for the pockets and footwells.") {
+            Switch(followWall, { AutoLights.setFollowWallpaper(ctx, it) }, "Match wallpaper")
+        }
+        SettingsItem("Dim with the headlights", when (headlights) {
+            true -> "Headlights on now: ${night}%."
+            false -> "Headlights off now: ${day}%."
+            null -> "Waiting for the car to report the headlights."
+        }) { Switch(nightOn, { NightLights.setEnabled(ctx, it) }, "Dim with the headlights") }
+        if (nightOn) {
+            SettingsItem("Headlights on", "Brightness at night.") {
+                PercentStepper(night, { NightLights.setPercents(ctx, it, day) }, "Night brightness")
+            }
+            SettingsItem("Headlights off", "Brightness by day.") {
+                PercentStepper(day, { NightLights.setPercents(ctx, night, it) }, "Day brightness")
+            }
+        }
         SettingsItem("Same settings for both zones", "Off to set the door trims and the pockets and footwells separately.") {
             Switch(linked, { Lights.setLinked(ctx, it) }, "Same settings for both zones")
         }
@@ -163,10 +191,10 @@ private fun ZoneCard(title: String, s: Lights.ZoneState, zone: Zone?, modifier: 
     }
 }
 
-private val PRESETS = listOf(Lights.WHITE, 0f, 0.07f, 0.14f, 0.33f, 0.5f, 0.62f, 0.75f, 0.88f)
-private fun presetName(h: Float) = when (h) { Lights.WHITE -> "white"; 0f -> "red"; 0.07f -> "orange"; 0.14f -> "yellow"; 0.33f -> "green"; 0.5f -> "cyan"; 0.62f -> "blue"; 0.75f -> "purple"; else -> "pink" }
-private fun swatch(h: Float): Color = if (h < 0f) Color.White else Color.hsv((h.coerceIn(0f, 1f) * 360f) % 360f, 1f, 1f)
-private val RAINBOW = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
+internal val PRESETS = listOf(Lights.WHITE, 0f, 0.07f, 0.14f, 0.33f, 0.5f, 0.62f, 0.75f, 0.88f)
+internal fun presetName(h: Float) = when (h) { Lights.WHITE -> "white"; 0f -> "red"; 0.07f -> "orange"; 0.14f -> "yellow"; 0.33f -> "green"; 0.5f -> "cyan"; 0.62f -> "blue"; 0.75f -> "purple"; else -> "pink" }
+internal fun swatch(h: Float): Color = if (h < 0f) Color.White else Color.hsv((h.coerceIn(0f, 1f) * 360f) % 360f, 1f, 1f)
+internal val RAINBOW = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta, Color.Red)
 
 /** Type the box's Bluetooth address, AA:BB:CC:DD:EE:FF. */
 @Composable
@@ -191,7 +219,7 @@ private fun AddressEntry(initial: String, onSave: (String) -> Unit) {
 
 /** A track painted with [brush] and a white knob; drag or tap anywhere along it. */
 @Composable
-private fun GradientSlider(value: Float, brush: Brush, label: String, showKnob: Boolean = true, onChange: (Float) -> Unit) {
+internal fun GradientSlider(value: Float, brush: Brush, label: String, showKnob: Boolean = true, onChange: (Float) -> Unit) {
     val change by rememberUpdatedState(onChange)
     Canvas(
         Modifier.fillMaxWidth().height(44.dp)
@@ -208,3 +236,12 @@ private fun GradientSlider(value: Float, brush: Brush, label: String, showKnob: 
         drawCircle(Color.White, r, Offset(x, size.height / 2))
     }
 }
+
+/** − 20% + in steps of 5. */
+@Composable
+private fun PercentStepper(value: Int, onChange: (Int) -> Unit, label: String) =
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        RoundButton(ShIcons.minus, "$label lower", { onChange((value - 5).coerceAtLeast(5)) }, size = 40.dp, iconSize = 18.dp)
+        Txt("$value%", Sh.text(17.sp, FontWeight.SemiBold), Modifier.width(52.dp))
+        RoundButton(ShIcons.plus, "$label higher", { onChange((value + 5).coerceAtMost(100)) }, size = 40.dp, iconSize = 18.dp)
+    }

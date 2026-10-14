@@ -55,6 +55,19 @@ class Apps(private val context: Context) {
         }
     }
 
+    // ---- The Home screen's Shortcuts card: four spots, "" for an empty one ----
+
+    private val _shortcuts = MutableStateFlow(prefs.shortcuts?.let { fit(it) } ?: fit(DEFAULT_SHORTCUTS))
+    val shortcuts: StateFlow<List<String>> = _shortcuts.asStateFlow()
+
+    private fun fit(l: List<String>) = (l + List(SHORTCUTS) { "" }).take(SHORTCUTS)
+
+    fun setShortcut(index: Int, pkg: String) {
+        if (index !in 0 until SHORTCUTS) return
+        _shortcuts.value = _shortcuts.value.toMutableList().also { it[index] = pkg }
+        prefs.shortcuts = _shortcuts.value
+    }
+
     fun find(pkg: String): AppEntry? = _all.value.firstOrNull { it.pkg == pkg }
 
     fun isPinned(pkg: String) = pkg in _dock.value
@@ -128,5 +141,8 @@ class Apps(private val context: Context) {
         const val PKG_CAR_SETTINGS = "com.byd.carsettings"
         /** Three BYD apps to start; the other two spots stay empty (+) for the driver to fill. */
         val DEFAULT_DOCK = listOf(PKG_MUSIC, PKG_PHONE, PKG_CAMERA_360)
+        const val PKG_CARPLAY = "com.ts.carplay.app"
+        const val SHORTCUTS = 4
+        val DEFAULT_SHORTCUTS = listOf(PKG_CARPLAY, PKG_MUSIC, PKG_CAMERA_360, PKG_PHONE)
     }
 }

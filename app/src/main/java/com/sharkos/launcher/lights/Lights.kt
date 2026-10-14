@@ -107,6 +107,8 @@ object Lights {
     /** At start-up and whenever SharkOS opens: connect if set to, and not already. */
     fun start(ctx: Context) {
         init(ctx)
+        AutoLights.start(ctx)
+        NightLights.start(ctx)
         if (autoConnect(ctx) && _link.value == Link.OFF) connect(ctx)
     }
 

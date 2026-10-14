@@ -94,8 +94,9 @@ fun RoundButton(
     iconSize: Dp = 22.dp,
     bg: Color = Sh.raised,
     tint: Color = Sh.ink,
+    modifier: Modifier = Modifier,
 ) = Box(
-    Modifier.size(size).clip(RoundedCornerShape(size / 2)).background(bg).press(onClick, label = label),
+    modifier.size(size).clip(RoundedCornerShape(size / 2)).background(bg).press(onClick, label = label),
     contentAlignment = Alignment.Center,
 ) { Glyph(icon, tint, iconSize) }
 

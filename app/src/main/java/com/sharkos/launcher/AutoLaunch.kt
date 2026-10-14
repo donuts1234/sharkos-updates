@@ -57,6 +57,10 @@ class BootReceiver : BroadcastReceiver() {
         Log.w("SharkOS/AutoLaunch", "start-up broadcast: ${intent.action}")
         // Ambient lighting reconnects at start-up whether or not SharkOS opens itself
         com.sharkos.launcher.lights.Lights.start(context.applicationContext)
+        // The car just started: "this drive" on the Trip page counts from here
+        com.sharkos.launcher.car.DriveTracker.markNewDrive(context)
+        com.sharkos.launcher.ui.CarPlayOverlay.startAutoAttach(context)
+        com.sharkos.launcher.ui.ClusterDisplay.autoStart(context)
         if (!Prefs(context).autoLaunch) return
         AutoLaunch.schedule(context.applicationContext)
     }

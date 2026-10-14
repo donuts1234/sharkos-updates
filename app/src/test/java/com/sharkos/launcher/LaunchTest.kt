@@ -28,9 +28,10 @@ class LaunchTest {
         compose.onNodeWithText("Now playing".uppercase()).assertExists()
 
         compose.onNodeWithContentDescription("Climate").performClick()
-        assertEquals(2, compose.onAllNodesWithText("Seat heat").fetchSemanticsNodes().size)
-        compose.onNodeWithContentDescription("Fan up").performClick()
-        compose.onAllNodesWithContentDescription("Driver warmer")[0].performClick()
+        compose.onNodeWithContentDescription("Passenger seat heat").performClick()
+        compose.onNodeWithContentDescription("Passenger seat cooling").performClick()
+        compose.onNodeWithContentDescription("Fan 4").performClick()
+        compose.onNodeWithContentDescription("Feet").performClick()
         compose.onNodeWithContentDescription("Climate power").performClick()
         compose.onNodeWithContentDescription("Climate power").performClick()
 
@@ -78,9 +79,9 @@ class LaunchTest {
         assertEquals(0, js.allPendingJobs.size)
         assertEquals(1, app.car.climate.value.driverSeat.heat)
         val c = app.car.climate.value
-        assertEquals(24f, c.driverTemp)      // 22 → 23 on the Climate page → 24 from the bar
-        assertEquals(24f, c.passengerTemp)   // the bar keeps both sides together
+        assertEquals(23f, c.driverTemp)      // 22 → 23 from the bar's Warmer
+        assertEquals(23f, c.passengerTemp)   // the bar keeps both sides together
         assertEquals(false, c.dual)
-        assertEquals(5, c.fan)               // 3 → 4 on the Climate page → 5 from the bar
+        assertEquals(5, c.fan)               // fan 4 tapped on the Climate page → 5 from the bar
     }
 }
