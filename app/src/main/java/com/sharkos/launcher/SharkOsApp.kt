@@ -10,4 +10,9 @@ class SharkOsApp : Application() {
     val car: CarManager by lazy { CarManager(this) }
     val apps: Apps by lazy { Apps(this) }
     val updater: Updater by lazy { Updater(this) }
+
+    override fun onCreate() {
+        super.onCreate()
+        AutoLaunch.watchWake(this)
+    }
 }

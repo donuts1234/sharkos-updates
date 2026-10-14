@@ -165,6 +165,18 @@ object ClusterDisplay {
         }
     }
 
+    /** The car woke from sleep: the cluster may have forgotten SharkOS's map view, so ask again. */
+    fun afterWake(ctx: Context) {
+        val app = ctx.applicationContext
+        load(app)
+        if (!enabled.value) return
+        if (!isShowing) { autoStart(app); return }
+        scope.launch {
+            delay(3000)
+            if (isShowing && !CarPlayLink.routeActive.value) reclaim(app, "Car woke up")
+        }
+    }
+
     fun setEnabled(ctx: Context, on: Boolean) {
         val app = ctx.applicationContext
         load(app)

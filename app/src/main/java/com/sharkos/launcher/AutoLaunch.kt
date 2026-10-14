@@ -47,6 +47,48 @@ object AutoLaunch {
             .onFailure { Log.w(TAG, "couldn't open SharkOS: ${it.message}") }
     }
 
+    /**
+     * The Shark 6 doesn't restart when the car is switched off: it sleeps (BYD's "STR") and wakes
+     * where it was, so the start-up broadcast only comes after a real restart. Waking turns the
+     * screen back on, which a running SharkOS hears here; it then does what start-up does.
+     */
+    fun watchWake(app: Context) {
+        if (watching) return
+        watching = true
+        val r = object : BroadcastReceiver() {
+            override fun onReceive(c: Context, i: Intent) {
+                Log.w(TAG, "wake: ${i.action}")
+                if (i.action == Intent.ACTION_SCREEN_OFF) { asleepAt = android.os.SystemClock.elapsedRealtime(); return }
+                onWake(app)
+            }
+        }
+        runCatching {
+            app.registerReceiver(r, android.content.IntentFilter().apply {
+                addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_SCREEN_OFF); addAction(Intent.ACTION_USER_PRESENT)
+            })
+        }.onFailure { Log.w(TAG, "can't watch for wake: ${it.message}") }
+    }
+
+    private var watching = false
+    private var asleepAt = 0L
+    private var lastWake = 0L
+
+    private fun onWake(app: Context) {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastWake < 15_000) return            // SCREEN_ON and USER_PRESENT both arrive
+        lastWake = now
+        com.sharkos.launcher.lights.Lights.start(app)
+        com.sharkos.launcher.car.DriveTracker.markNewDrive(app)
+        com.sharkos.launcher.ui.ClusterDisplay.afterWake(app)
+        if (!Prefs(app).autoLaunch) return
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            // Not over CarPlay (or anything else of SharkOS's own) that the driver had up
+            if (com.sharkos.launcher.ui.CarPlayOverlay.sharkOsInFront) return@postDelayed
+            if (com.sharkos.launcher.car.CarPlayLink.displayShowing() == true) return@postDelayed
+            bringToFront(app)
+        }, START_DELAY_MS)
+    }
+
     /** Long enough for BYD's launcher to finish appearing, so SharkOS lands on top of it, not under. */
     private const val START_DELAY_MS = 4_000L
 }
