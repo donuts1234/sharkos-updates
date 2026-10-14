@@ -1,6 +1,6 @@
 {
-  "versionCode": 29,
-  "versionName": "0.1.28",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.28.apk",
-  "notes": "Instrument cluster background: Custom colour with red, green and blue controls."
+  "versionCode": 30,
+  "versionName": "0.1.29",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.29.apk",
+  "notes": "Opens when the car wakes from sleep; lights match album art and wallpaper in exact colours with clean fades; cluster grey 21,21,21; cluster bubble no longer brings up BYD's bar; night mode bar fully black."
 }
