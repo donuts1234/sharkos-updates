@@ -181,6 +181,30 @@ object Lights {
         send(ctx, hues.filter { next.getValue(it.key).on }.map { (z, h) -> colorFrame(ctx, z, h) })
     }
 
+    /**
+     * Exact colours (0xRRGGBB) for each zone, in one send: album art and wallpaper matching use
+     * these, so a fade goes straight between the two colours instead of around the colour wheel.
+     * The zones remember the nearest hue for the Lights page.
+     */
+    fun setColors(ctx: Context, trims: Int, pockets: Int) {
+        init(ctx)
+        val cols = mapOf(Zone.TRIMS to trims, Zone.POCKETS to pockets)
+        val next = _zones.value.toMutableMap()
+        val e = prefs(ctx).edit()
+        val hsv = FloatArray(3)
+        for ((z, c) in cols) {
+            android.graphics.Color.colorToHSV(c or 0xFF000000.toInt(), hsv)
+            val h = hsv[0] / 360f
+            next[z] = next.getValue(z).copy(hue = h)
+            runCatching { e.putFloat("${z.name}_hue", h) }
+        }
+        runCatching { e.apply() }
+        _zones.value = next
+        send(ctx, cols.filter { next.getValue(it.key).on }.map { (z, c) ->
+            Builder(format(ctx, z)).apply { color(c shr 16 and 255, c shr 8 and 255, c and 255) }.bytes!!
+        })
+    }
+
     /** Save the change for [targets]; returns every zone's new state. */
     private fun store(ctx: Context, targets: List<Zone>, change: (ZoneState) -> ZoneState): Map<Zone, ZoneState> {
         val next = _zones.value.toMutableMap()
