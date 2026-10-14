@@ -1,6 +1,6 @@
 {
-  "versionCode": 27,
-  "versionName": "0.1.26",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.26.apk",
-  "notes": "Eight instrument cluster designs with a picker pill on Home; Night mode (pill, two night looks, dimmed bar, Night on the cluster); SharkOS starts 4px below the screen's top edge."
+  "versionCode": 28,
+  "versionName": "0.1.27",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.27.apk",
+  "notes": "Instrument cluster background: dark grey to match BYD, with a Black / Dark grey / Grey choice in Settings."
 }
