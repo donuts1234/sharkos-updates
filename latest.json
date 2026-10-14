@@ -1,6 +1,6 @@
 {
-  "versionCode": 22,
-  "versionName": "0.1.21",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.21.apk",
-  "notes": "CarPlay: 12 px gap (adjustable), no more BYD picture showing through, rounded CarPlay and bar cards, dark grey bar in CarPlay, bar comes back after reversing or when CarPlay opens from BYD."
+  "versionCode": 23,
+  "versionName": "0.1.22",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.22.apk",
+  "notes": "Test: SharkOS on the driver display (Settings > Vehicle > Driver display)."
 }
