@@ -88,6 +88,12 @@ import kotlin.math.roundToInt
  * SharkOS on the driver display (test): a SharkOS panel drawn on the cluster's Android display,
  * then the cluster asked to show its map area (where that display appears). See [ClusterLink].
  */
+/** The cluster's background, to match the grey BYD draws around it. */
+enum class ClusterBackground(val label: String, val color: Color) {
+    BLACK("Black", Color(0xFF000000)), DARK("Dark grey", Color(0xFF111215)), GREY("Grey", Color(0xFF1A1B1F));
+    companion object { fun parse(s: String?) = entries.firstOrNull { it.name == s } ?: DARK }
+}
+
 /** How the driver display shows the album cover. */
 enum class ClusterStyle(val label: String, val blurb: String) {
     CARD("Cover card", "The whole cover as a rounded card, song in the middle, tyres on the right."),
@@ -114,6 +120,7 @@ object ClusterDisplay {
      *  which then covers the cluster display in black; 1 is BYD's own navigation; 9 is one nobody uses. */
     val slot = mutableStateOf(1)
     val style = mutableStateOf(ClusterStyle.FADE)
+    val background = mutableStateOf(ClusterBackground.DARK)
     /** Latest tyres and drive, for the design previews on the head unit. */
     val liveTyres = mutableStateOf<List<com.sharkos.launcher.car.Tyre?>>(List(4) { null })
     val liveDrive = mutableStateOf<com.sharkos.launcher.car.Drive?>(null)
@@ -128,6 +135,7 @@ object ClusterDisplay {
         if (loaded) return
         val p = Prefs(app)
         slot.value = p.clusterSlot; style.value = ClusterStyle.parse(p.clusterStyle); enabled.value = p.clusterOn
+        background.value = ClusterBackground.parse(p.clusterBg)
         loaded = true
     }
 
@@ -156,6 +164,11 @@ object ClusterDisplay {
         enabled.value = on
         Prefs(app).clusterOn = on
         if (on) { starting?.cancel(); show(app, ClusterLink.STATE_FULL) } else { starting?.cancel(); hide(app) }
+    }
+
+    fun setBackground(ctx: Context, b: ClusterBackground) {
+        background.value = b
+        runCatching { Prefs(ctx.applicationContext).clusterBg = b.name }
     }
 
     fun setStyle(ctx: Context, st: ClusterStyle) {
@@ -350,7 +363,7 @@ private fun CoverLayout(track: Track?, nowElapsed: Long, tyres: List<Tyre?>, lim
     val art = remember(track?.art) { track?.art?.asImageBitmap() }
     val colors = remember(track?.art) { track?.art?.let(::artColors) }
     val accent = colors?.accent ?: Sh.blue
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    Box(Modifier.fillMaxSize().background(ClusterDisplay.background.value.color)) {
         // The car blacks out its own top row (speed, gear) and bottom strip (range, trip): only the
         // band from WIN_TOP to WIN_TOP + WIN_H shows, so everything lives inside it.
         val card = style == ClusterStyle.CARD

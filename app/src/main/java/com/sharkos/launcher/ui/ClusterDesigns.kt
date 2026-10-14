@@ -130,7 +130,7 @@ private fun TyreStatus(tyres: List<Tyre?>, limits: TyreLimits, size: TextUnit) {
 private fun At(x: Int, y: Int, content: @Composable () -> Unit) = Box(Modifier.padding(start = x.cpx(), top = y.cpx())) { content() }
 
 @Composable
-private fun Window(content: @Composable () -> Unit) = Box(Modifier.fillMaxSize().background(Color.Black)) { content() }
+private fun Window(content: @Composable () -> Unit) = Box(Modifier.fillMaxSize().background(ClusterDisplay.background.value.color)) { content() }
 
 
 // ---- Stage: the cover centre stage ----
@@ -139,7 +139,7 @@ private fun Window(content: @Composable () -> Unit) = Box(Modifier.fillMaxSize()
 internal fun StageLayout(track: Track?, now: Long, tyres: List<Tyre?>, limits: TyreLimits) = Window {
     val art = rememberArt(track); val c = rememberAccent(track); val accent = c?.accent ?: Sh.blue
     Box(Modifier.padding(top = WIN_TOP.cpx()).fillMaxWidth().height(WIN_H.cpx()).background(Brush.horizontalGradient(
-        0f to Color.Black, 0.3f to accent.copy(alpha = 0.28f), 0.5f to (c?.shade ?: Color.Black).copy(alpha = 0.6f), 0.7f to accent.copy(alpha = 0.28f), 1f to Color.Black)))
+        0f to ClusterDisplay.background.value.color, 0.3f to accent.copy(alpha = 0.28f), 0.5f to (c?.shade ?: Color.Black).copy(alpha = 0.6f), 0.7f to accent.copy(alpha = 0.28f), 1f to ClusterDisplay.background.value.color)))
     At(758, WIN_TOP + 11) {
         val r = RoundedCornerShape(22.cpx())
         Cover(art, Modifier.size(404.cpx()).shadow(40.cpx(), r, ambientColor = accent, spotColor = accent).clip(r))
@@ -299,7 +299,7 @@ internal fun NightLayout(track: Track?, tyres: List<Tyre?>, limits: TyreLimits) 
     val accent = rememberAccent(track)?.accent ?: Color(0xFF5A6CFF)
     Box(Modifier.padding(top = 287.cpx()).fillMaxWidth().height(200.cpx())
         .background(Brush.verticalGradient(listOf(Color.Transparent, accent.copy(alpha = 0.16f), Color.Transparent)))
-        .background(Brush.horizontalGradient(0f to Color.Black, 0.25f to Color.Transparent, 0.75f to Color.Transparent, 1f to Color.Black)))
+        .background(Brush.horizontalGradient(0f to ClusterDisplay.background.value.color, 0.25f to Color.Transparent, 0.75f to Color.Transparent, 1f to ClusterDisplay.background.value.color)))
     Box(Modifier.padding(top = 385.cpx()).fillMaxWidth().height(5.cpx())
         .background(Brush.horizontalGradient(0f to Color.Transparent, 0.3f to accent.copy(alpha = 0.9f), 0.7f to accent.copy(alpha = 0.9f), 1f to Color.Transparent)))
     if (track != null) Box(Modifier.padding(top = 420.cpx()).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {

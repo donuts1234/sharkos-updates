@@ -551,6 +551,10 @@ private fun ClusterPage() {
     Group("Design") {
         Box(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) { ClusterGallery(columns = 2, thumbWidth = 300.dp) }
         Hint(ClusterDisplay.style.value.blurb)
+        Item("Background", "Match the grey BYD draws around SharkOS on the cluster.") {
+            Segmented(ClusterBackground.entries.map { it.label }, ClusterDisplay.background.value.ordinal,
+                onSelect = { ClusterDisplay.setBackground(ctx, ClusterBackground.entries[it]) }, modifier = Modifier.width(360.dp), greyFirst = false)
+        }
     }
     Group("Advanced") {
         Item("Map slot", "Which of the cluster's map slots SharkOS uses. 1 (BYD's own navigation) is the one that works on the Shark 6; 3 wakes BYD's Android Auto app, which blacks the cluster out.") {
