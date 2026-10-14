@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -420,6 +421,14 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                             start = settingsStart ?: if (update is com.sharkos.launcher.update.Updater.State.Available) SettingsPage.UPDATES else SettingsPage.GENERAL,
                         )
                     }
+                }
+                // The cluster design bubble: in SharkOS's own window, so BYD's bars stay hidden
+                LaunchedEffect(screen) { if (screen != Screen.HOME) ClusterDisplay.bubbleOpen.value = false }
+                if (ClusterDisplay.bubbleOpen.value && screen == Screen.HOME) {
+                    val none = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                    Box(Modifier.fillMaxSize().clickable(interactionSource = none, indication = null) { ClusterDisplay.bubbleOpen.value = false })
+                    Box(Modifier.align(Alignment.TopEnd).padding(top = 90.dp, end = 80.dp)
+                        .clickable(interactionSource = none, indication = null) {}) { ClusterBubble() }
                 }
                 NoticePill(notice, { notice = null }, Modifier.align(Alignment.TopCenter).padding(top = 16.dp))
                 TyreAlert(tyreAlert, { dismissedTyres = dismissedTyres + tyreAlert.map { it.key } }, Modifier.align(Alignment.TopCenter).padding(top = if (notice != null) 76.dp else 16.dp))

@@ -122,6 +122,8 @@ object ClusterDisplay {
     val slot = mutableStateOf(1)
     val style = mutableStateOf(ClusterStyle.FADE)
     val background = mutableStateOf(ClusterBackground.DARK)
+    /** The design bubble from the Home screen's pill. */
+    val bubbleOpen = mutableStateOf(false)
     /** The Custom background's red, green and blue (0–255). */
     val custom = mutableStateOf(Triple(21, 21, 21))
     val bgColor: Color get() = if (background.value == ClusterBackground.CUSTOM) custom.value.let { (r, g, b) -> Color(r, g, b) } else background.value.color

@@ -144,22 +144,14 @@ private fun Header(now: Long, t: Telemetry, link: CarLink, onSettings: () -> Uni
     }
 }
 
-/** The instrument cluster: which design it shows; tap for the bubble of designs. */
+/** The instrument cluster: which design it shows; tap for the bubble of designs (drawn by Root, inside
+ *  SharkOS's own window: a popup window would bring BYD's system bars up). */
 @Composable
 private fun ClusterPill() {
-    var open by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(false) }
     val on = ClusterDisplay.enabled.value
-    Box {
-        Chip(Modifier.press({ open = !open }, label = "Instrument cluster designs")) {
-            Glyph(ShIcons.gauge, if (on) Color(0xFF30B0C7) else Sh.faint, 20.dp)
-            Txt(if (on) ClusterDisplay.style.value.label else "Cluster off", Sh.text(16.sp, FontWeight.Medium))
-        }
-        if (open) androidx.compose.ui.window.Popup(
-            alignment = Alignment.TopEnd,
-            offset = with(androidx.compose.ui.platform.LocalDensity.current) { androidx.compose.ui.unit.IntOffset(0, 54.dp.roundToPx()) },
-            onDismissRequest = { open = false },
-            properties = androidx.compose.ui.window.PopupProperties(focusable = true),
-        ) { ClusterBubble() }
+    Chip(Modifier.press({ ClusterDisplay.bubbleOpen.value = !ClusterDisplay.bubbleOpen.value }, label = "Instrument cluster designs")) {
+        Glyph(ShIcons.gauge, if (on) Color(0xFF30B0C7) else Sh.faint, 20.dp)
+        Txt(if (on) ClusterDisplay.style.value.label else "Cluster off", Sh.text(16.sp, FontWeight.Medium))
     }
 }
 
