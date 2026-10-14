@@ -548,13 +548,32 @@ private fun ClusterPage() {
         }
         Hint(ClusterDisplay.status.value)
     }
+    Group("Background") {
+        Item("Background", "Match the grey BYD draws around SharkOS on the cluster.") {
+            Segmented(ClusterBackground.entries.map { it.label }, ClusterDisplay.background.value.ordinal,
+                onSelect = { ClusterDisplay.setBackground(ctx, ClusterBackground.entries[it]) }, modifier = Modifier.width(460.dp), greyFirst = false)
+        }
+        if (ClusterDisplay.background.value == ClusterBackground.CUSTOM) {
+            val (r, g, b) = ClusterDisplay.custom.value
+            Row(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(ClusterDisplay.bgColor).border(1.dp, Sh.faint, RoundedCornerShape(12.dp)))
+                Gap(14.dp)
+                Txt("Colour  R $r · G $g · B $b", Sh.text(17.sp, FontWeight.SemiBold), Modifier.weight(1f))
+            }
+            for ((label, value, set) in listOf<Triple<String, Int, (Int) -> Triple<Int, Int, Int>>>(
+                Triple("Red", r) { v -> Triple(v, g, b) }, Triple("Green", g) { v -> Triple(r, v, b) }, Triple("Blue", b) { v -> Triple(r, g, v) },
+            )) Item(label, "") {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    PillButton("−5", { ClusterDisplay.setCustom(ctx, set(value - 5)) })
+                    Stepper("$value", { ClusterDisplay.setCustom(ctx, set(value - 1)) }, { ClusterDisplay.setCustom(ctx, set(value + 1)) }, label)
+                    PillButton("+5", { ClusterDisplay.setCustom(ctx, set(value + 5)) })
+                }
+            }
+        }
+    }
     Group("Design") {
         Box(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) { ClusterGallery(columns = 2, thumbWidth = 300.dp) }
         Hint(ClusterDisplay.style.value.blurb)
-        Item("Background", "Match the grey BYD draws around SharkOS on the cluster.") {
-            Segmented(ClusterBackground.entries.map { it.label }, ClusterDisplay.background.value.ordinal,
-                onSelect = { ClusterDisplay.setBackground(ctx, ClusterBackground.entries[it]) }, modifier = Modifier.width(360.dp), greyFirst = false)
-        }
     }
     Group("Advanced") {
         Item("Map slot", "Which of the cluster's map slots SharkOS uses. 1 (BYD's own navigation) is the one that works on the Shark 6; 3 wakes BYD's Android Auto app, which blacks the cluster out.") {

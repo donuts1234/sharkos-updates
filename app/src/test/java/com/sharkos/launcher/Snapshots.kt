@@ -126,6 +126,12 @@ class Snapshots {
     @Test fun nightHomeClock() = paparazzi.snapshot {
         Frame(Screen.HOME) { com.sharkos.launcher.ui.NightHome(now, telemetry, clusterTrack(), home, com.sharkos.launcher.car.TyreLimits(), com.sharkos.launcher.ui.NightStyle.CLOCK) }
     }
+    @Test fun settingsClusterCustomBg() {
+        com.sharkos.launcher.ui.ClusterDisplay.background.value = com.sharkos.launcher.ui.ClusterBackground.CUSTOM
+        try { paparazzi.snapshot { androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
+            SettingsScreen(SettingsInfo("0.1", true, true, CarLink.CONNECTED, "test", true), SettingsActions({}, {}, {}, {}), start = SettingsPage.CLUSTER) } } }
+        finally { com.sharkos.launcher.ui.ClusterDisplay.background.value = com.sharkos.launcher.ui.ClusterBackground.DARK }
+    }
     @Test fun settingsNight() { com.sharkos.launcher.ui.ClusterDisplay.previewTrack = clusterTrack(); settingsPage(SettingsPage.NIGHT) }
 
     private fun clusterTrack(): Track {
