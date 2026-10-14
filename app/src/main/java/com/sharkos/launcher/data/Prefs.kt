@@ -63,7 +63,7 @@ class Prefs(context: Context) {
         get() = sp.getString("cluster_bg", "DARK") ?: "DARK"
         set(v) = sp.edit().putString("cluster_bg", v).apply()
     var clusterBgRgb: Int
-        get() = sp.getInt("cluster_bg_rgb", 0x111215)
+        get() = sp.getInt("cluster_bg_rgb", 0x151515)
         set(v) = sp.edit().putInt("cluster_bg_rgb", v).apply()
     var clusterSlot: Int
         get() = sp.getInt("cluster_slot", 1)

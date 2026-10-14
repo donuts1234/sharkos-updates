@@ -90,8 +90,8 @@ import kotlin.math.roundToInt
  */
 /** The cluster's background, to match the grey BYD draws around it. */
 enum class ClusterBackground(val label: String, val color: Color) {
-    BLACK("Black", Color(0xFF000000)), DARK("Dark grey", Color(0xFF111215)), GREY("Grey", Color(0xFF1A1B1F)),
-    CUSTOM("Custom", Color(0xFF111215));
+    BLACK("Black", Color(0xFF000000)), DARK("Dark grey", Color(0xFF151515)), GREY("Grey", Color(0xFF1A1B1F)),
+    CUSTOM("Custom", Color(0xFF151515));
     companion object { fun parse(s: String?) = entries.firstOrNull { it.name == s } ?: DARK }
 }
 
@@ -123,7 +123,7 @@ object ClusterDisplay {
     val style = mutableStateOf(ClusterStyle.FADE)
     val background = mutableStateOf(ClusterBackground.DARK)
     /** The Custom background's red, green and blue (0–255). */
-    val custom = mutableStateOf(Triple(17, 18, 21))
+    val custom = mutableStateOf(Triple(21, 21, 21))
     val bgColor: Color get() = if (background.value == ClusterBackground.CUSTOM) custom.value.let { (r, g, b) -> Color(r, g, b) } else background.value.color
     /** Latest tyres and drive, for the design previews on the head unit. */
     val liveTyres = mutableStateOf<List<com.sharkos.launcher.car.Tyre?>>(List(4) { null })
