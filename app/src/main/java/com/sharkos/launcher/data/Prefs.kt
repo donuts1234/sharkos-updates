@@ -42,6 +42,11 @@ class Prefs(context: Context) {
         get() = sp.getInt("carplay_top_gap", 12)
         set(v) = sp.edit().putInt("carplay_top_gap", v).apply()
 
+    /** Screen pixels hidden under the bezel along the top: SharkOS starts below them. */
+    var topEdge: Int
+        get() = sp.getInt("top_edge", 12)
+        set(v) = sp.edit().putInt("top_edge", v).apply()
+
     /** SharkOS on the instrument cluster: on at start-up, its style, and the cluster map slot it uses. */
     var clusterOn: Boolean
         get() = sp.getBoolean("cluster_on", true)

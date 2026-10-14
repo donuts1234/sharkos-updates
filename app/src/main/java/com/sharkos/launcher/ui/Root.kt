@@ -86,6 +86,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     val prefs = remember { com.sharkos.launcher.data.Prefs(ctx) }
     var autoLaunch by remember { mutableStateOf(prefs.autoLaunch) }
     var wallpaper by remember { mutableStateOf(Wallpaper.entries.firstOrNull { it.name == prefs.wallpaper } ?: Wallpaper.BLACK) }
+    var topEdge by remember { mutableStateOf(prefs.topEdge) }
     var corners by remember { mutableStateOf(Corners.entries.firstOrNull { it.name == prefs.corners } ?: Corners.LIGHT) }
     var tempSide by remember { mutableStateOf(TempSide.entries.firstOrNull { it.name == prefs.tempSide } ?: TempSide.RIGHT) }
     var carPlayInSharkOs by remember { mutableStateOf(prefs.carPlayInSharkOs) }
@@ -274,8 +275,10 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     val barArt = if (screen == Screen.MUSIC && musicArt != null) remember(musicArt) { artColors(musicArt) } else null
 
     CompositionLocalProvider(LocalIcons provides remember(apps) { apps.iconSource() }, LocalWallpaper provides wallpaper) {
-        // Rounded outer corners: the screen's black shows in them
-        Column(Modifier.fillMaxSize().background(Color.Black).clip(RoundedCornerShape(corners.radius.dp)).wallpaper(wallpaper)) {
+        // Rounded outer corners: the screen's black shows in them. The top few pixels of the panel sit
+        // under the bezel, so SharkOS starts below them (or its top corners would look cut off).
+        val edge = with(androidx.compose.ui.platform.LocalDensity.current) { topEdge.toDp() }
+        Column(Modifier.fillMaxSize().background(Color.Black).padding(top = edge).clip(RoundedCornerShape(corners.radius.dp)).wallpaper(wallpaper)) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AnimatedContent(screen, transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(120)) }, label = "screen") { s ->
                     when (s) {
@@ -372,6 +375,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 carPlayLinked = carPlayLinked,
                                 wallpaper = wallpaper,
                                 corners = corners,
+                                topEdge = topEdge,
                                 climate = climate,
                                 dock = dockApps,
                             ),
@@ -394,6 +398,7 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                                 setTempSide = { sd -> prefs.tempSide = sd.name; tempSide = sd },
                                 setWallpaper = { w -> prefs.wallpaper = w.name; wallpaper = w; com.sharkos.launcher.lights.AutoLights.wallpaperChanged(ctx, w) },
                                 setCorners = { c -> prefs.corners = c.name; corners = c },
+                                setTopEdge = { e -> prefs.topEdge = e; topEdge = e },
                                 allowOverlay = {
                                     val page = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:${ctx.packageName}"))
                                     if (!openSettings(ctx, page) && !openSettings(ctx, Settings.ACTION_MANAGE_OVERLAY_PERMISSION)) notice = HIDDEN_PAGE

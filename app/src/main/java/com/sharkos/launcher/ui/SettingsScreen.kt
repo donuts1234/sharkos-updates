@@ -66,6 +66,7 @@ class SettingsInfo(
     val canInstall: Boolean = true,
     val wallpaper: Wallpaper = Wallpaper.BLACK,
     val corners: Corners = Corners.LIGHT,
+    val topEdge: Int = 12,
     val tempSide: TempSide = TempSide.RIGHT,
     val tyreAlerts: Boolean = true,
     val homeCards: List<HomeCard> = HomeCard.DEFAULT,
@@ -96,6 +97,7 @@ class SettingsActions(
     val setWallpaper: (Wallpaper) -> Unit = {},
     val setTempSide: (TempSide) -> Unit = {},
     val setCorners: (Corners) -> Unit = {},
+    val setTopEdge: (Int) -> Unit = {},
     val reconnectCar: () -> Unit = {},
     val resetBar: () -> Unit = {},
     val restart: () -> Unit = {},
@@ -332,6 +334,9 @@ private fun AppearancePage(s: SettingsInfo, a: SettingsActions) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Txt("Rounds the outside edge of SharkOS, like a phone screen.", Sh.text(15.sp, color = Sh.dim))
             Segmented(Corners.entries.map { it.label }, s.corners.ordinal, { a.setCorners(Corners.entries[it]) }, Modifier.fillMaxWidth(), greyFirst = false)
+        }
+        Item("Top edge", "The top of the screen sits under its frame. SharkOS starts this far down so the top corners aren't cut off.") {
+            Stepper("${s.topEdge} px", { a.setTopEdge((s.topEdge - 2).coerceAtLeast(0)) }, { a.setTopEdge((s.topEdge + 2).coerceAtMost(40)) }, "Top edge")
         }
     }
 }
