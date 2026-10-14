@@ -120,6 +120,14 @@ class Snapshots {
         }
     }
 
+    @Test fun nightHomeGlow() = paparazzi.snapshot {
+        Frame(Screen.HOME) { com.sharkos.launcher.ui.NightHome(now, telemetry, clusterTrack(), home, com.sharkos.launcher.car.TyreLimits(), com.sharkos.launcher.ui.NightStyle.GLOW) }
+    }
+    @Test fun nightHomeClock() = paparazzi.snapshot {
+        Frame(Screen.HOME) { com.sharkos.launcher.ui.NightHome(now, telemetry, clusterTrack(), home, com.sharkos.launcher.car.TyreLimits(), com.sharkos.launcher.ui.NightStyle.CLOCK) }
+    }
+    @Test fun settingsNight() { com.sharkos.launcher.ui.ClusterDisplay.previewTrack = clusterTrack(); settingsPage(SettingsPage.NIGHT) }
+
     private fun clusterTrack(): Track {
         val b = android.graphics.Bitmap.createBitmap(300, 300, android.graphics.Bitmap.Config.ARGB_8888)
         val c = android.graphics.Canvas(b)

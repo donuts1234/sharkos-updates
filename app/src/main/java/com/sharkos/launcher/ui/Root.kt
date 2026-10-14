@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -60,6 +61,7 @@ enum class Screen { HOME, CLIMATE, APPS, OFFROAD, SETTINGS, MUSIC, TRIPS }
 @Composable
 fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
     val ctx = LocalContext.current
+    remember { NightMode.load(ctx); true }
     val car = app.car
     val apps = app.apps
     val scope = rememberCoroutineScope()
@@ -282,7 +284,11 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 AnimatedContent(screen, transitionSpec = { fadeIn(tween(160)) togetherWith fadeOut(tween(120)) }, label = "screen") { s ->
                     when (s) {
-                        Screen.HOME -> HomeScreen(
+                        Screen.HOME -> if (NightMode.active.value) NightHome(
+                            now = now.value, t = telemetry.value,
+                            track = shownTrack.value?.let { t -> t.copy(positionMs = t.positionAt(SystemClock.elapsedRealtime())) },
+                            a = homeActions, limits = tyreLimits, style = NightMode.style.value,
+                        ) else HomeScreen(
                             now = now.value,
                             telemetry = telemetry.value,
                             link = link,
@@ -418,7 +424,12 @@ fun Root(app: SharkOsApp, screen: Screen, onScreen: (Screen) -> Unit) {
                 NoticePill(notice, { notice = null }, Modifier.align(Alignment.TopCenter).padding(top = 16.dp))
                 TyreAlert(tyreAlert, { dismissedTyres = dismissedTyres + tyreAlert.map { it.key } }, Modifier.align(Alignment.TopCenter).padding(top = if (notice != null) 76.dp else 16.dp))
             }
-            BottomBar(climate, dockApps, screen, bar, style = barStyle, tempSide = tempSide, lights = barLights, art = barArt)
+            // At night the HVAC Bar stays usable, just dimmed
+            val night = NightMode.active.value
+            Box(if (night) Modifier.alpha(0.5f) else Modifier) {
+                BottomBar(climate, dockApps, screen, bar, style = barStyle, tempSide = tempSide, lights = barLights,
+                    art = if (night) null else barArt, plain = if (night) Color(0xFF050506) else null)
+            }
         }
     }
 }

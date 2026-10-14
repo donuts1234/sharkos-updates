@@ -128,6 +128,7 @@ private fun Header(now: Long, t: Telemetry, link: CarLink, onSettings: () -> Uni
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
             t.outsideTempC?.let { Chip { Glyph(ShIcons.cloud, Sh.dim, 18.dp); Txt("${it.roundToInt()}° outside", Sh.text(16.sp, FontWeight.Medium)) } }
+            NightPill()
             ClusterPill()
             Chip {
                 val (dot, text) = when (link) {

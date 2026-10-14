@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,7 +67,7 @@ class SettingsInfo(
     val canInstall: Boolean = true,
     val wallpaper: Wallpaper = Wallpaper.BLACK,
     val corners: Corners = Corners.LIGHT,
-    val topEdge: Int = 12,
+    val topEdge: Int = 4,
     val tempSide: TempSide = TempSide.RIGHT,
     val tyreAlerts: Boolean = true,
     val homeCards: List<HomeCard> = HomeCard.DEFAULT,
@@ -117,6 +118,7 @@ enum class SettingsPage(val label: String, val icon: ImageVector, val tint: Colo
     MEDIA("Now playing", ShIcons.music, Color(0xFFFF375F)),
     VEHICLE("Vehicle", ShIcons.car, Sh.green),
     CLUSTER("Instrument cluster", ShIcons.gauge, Color(0xFF30B0C7)),
+    NIGHT("Night time", ShIcons.moon, Color(0xFF5E5CE6)),
     UPDATES("Updates", ShIcons.download, Color(0xFF5E5CE6)),
     AMBIENT("Ambient lighting", ShIcons.bulb, Color(0xFFFFB340)),
     SYSTEM("System", ShIcons.chip, Color(0xFF636366)),
@@ -287,6 +289,7 @@ private fun PageContent(page: SettingsPage, s: SettingsInfo, a: SettingsActions)
             }
         }
         SettingsPage.CLUSTER -> ClusterPage()
+        SettingsPage.NIGHT -> NightPage()
         SettingsPage.UPDATES -> Group("Over the air") { Updates(s, a) }
         SettingsPage.AMBIENT -> AmbientPage(a.lights)
         SettingsPage.SYSTEM -> SystemPage(a)
@@ -557,5 +560,21 @@ private fun ClusterPage() {
         if (on) Item("Not showing?", "Puts SharkOS back on the cluster, for example after CarPlay directions kept it.") {
             PillButton("Show again", { ClusterDisplay.show(ctx, com.sharkos.launcher.car.ClusterLink.STATE_FULL) })
         }
+    }
+}
+
+/** Night mode: what the main screen looks like at night. Turned on and off with the moon pill on Home. */
+@Composable
+private fun NightPage() {
+    val cp by com.sharkos.launcher.car.CarPlayLink.song.collectAsStateWithLifecycle()
+    val session by com.sharkos.launcher.media.NowPlaying.track.collectAsStateWithLifecycle()
+    Group("Night mode") {
+        Item("Night mode", "Turn it on and off with the Night pill at the top of the Home screen. The main screen goes almost black, the HVAC Bar dims, and the instrument cluster shows its Night design.") {
+            Switch(NightMode.active.value, { NightMode.active.value = it }, "Night mode")
+        }
+    }
+    Group("Main screen at night") {
+        Box(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) { NightStylePicker(ClusterDisplay.previewTrack ?: chooseTrack(cp, session)) }
+        Hint(NightMode.style.value.blurb)
     }
 }

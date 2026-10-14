@@ -83,5 +83,6 @@ object ShIcons {
     val bulb = icon("bulb", listOf("M9 18h6", "M10 21h4", "M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"))
     val backArrow = icon("backArrow", listOf("M9 14 4 9l5-5", "M4 9h10.5a5.5 5.5 0 0 1 0 11H11"))
     val gauge = icon("gauge", listOf("M3.5 16a8.5 8.5 0 1 1 17 0", "M12 16l4-5", "M6 16h1.5M16.5 16H18M12 8.5V10"))
+    val moon = icon("moon", listOf("M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"))
     val sun = icon("sun", listOf("M12 8a4 4 0 1 1 0 8a4 4 0 1 1 0-8z", "M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"))
 }

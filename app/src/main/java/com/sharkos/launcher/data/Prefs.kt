@@ -44,8 +44,13 @@ class Prefs(context: Context) {
 
     /** Screen pixels hidden under the bezel along the top: SharkOS starts below them. */
     var topEdge: Int
-        get() = sp.getInt("top_edge", 12)
+        get() = sp.getInt("top_edge", 4)
         set(v) = sp.edit().putInt("top_edge", v).apply()
+
+    /** Night mode's main-screen look: GLOW (the glow line) or CLOCK (big clock). */
+    var nightStyle: String
+        get() = sp.getString("night_style", "GLOW") ?: "GLOW"
+        set(v) = sp.edit().putString("night_style", v).apply()
 
     /** SharkOS on the instrument cluster: on at start-up, its style, and the cluster map slot it uses. */
     var clusterOn: Boolean

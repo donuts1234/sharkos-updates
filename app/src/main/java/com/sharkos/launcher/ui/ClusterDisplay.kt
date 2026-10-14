@@ -327,7 +327,8 @@ internal fun ClusterPanel(app: SharkOsApp) {
     val limits = remember { Prefs(app).let { TyreLimits(it.tyreLow, it.tyreHigh) } }
     val trips by remember { app.car.trips(10_000) }.collectAsStateWithLifecycle(null)
     androidx.compose.runtime.SideEffect { ClusterDisplay.liveTyres.value = t.tyres; ClusterDisplay.liveDrive.value = trips?.drive }
-    ClusterLayout(chooseTrack(cp, session), now, t.tyres, limits, ClusterDisplay.style.value, trips?.drive)
+    ClusterLayout(chooseTrack(cp, session), now, t.tyres, limits,
+        if (NightMode.active.value) ClusterStyle.NIGHT else ClusterDisplay.style.value, trips?.drive)
 }
 
 @Composable
