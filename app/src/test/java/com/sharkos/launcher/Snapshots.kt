@@ -111,6 +111,23 @@ class Snapshots {
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
     }
 
+    @Test fun homeClusterBubble() = paparazzi.snapshot {
+        com.sharkos.launcher.ui.ClusterDisplay.previewTrack = clusterTrack()
+        com.sharkos.launcher.ui.ClusterDisplay.liveTyres.value = listOf(com.sharkos.launcher.car.Tyre(36.0, 0), com.sharkos.launcher.car.Tyre(37.0, 0), com.sharkos.launcher.car.Tyre(36.0, 0), com.sharkos.launcher.car.Tyre(37.0, 0))
+        Box(Modifier.fillMaxSize()) {
+            Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, track, true, Attitude(2.4f, -1.2f), home) }
+            Box(Modifier.align(androidx.compose.ui.Alignment.TopEnd).padding(top = 84.dp, end = 80.dp)) { com.sharkos.launcher.ui.ClusterBubble() }
+        }
+    }
+
+    private fun clusterTrack(): Track {
+        val b = android.graphics.Bitmap.createBitmap(300, 300, android.graphics.Bitmap.Config.ARGB_8888)
+        val c = android.graphics.Canvas(b)
+        c.drawRect(0f, 0f, 300f, 300f, android.graphics.Paint().apply { shader = android.graphics.LinearGradient(0f, 0f, 300f, 300f, intArrayOf(0xFF5B4BFF.toInt(), 0xFF2B1E8C.toInt(), 0xFF120C3A.toInt()), null, android.graphics.Shader.TileMode.CLAMP) })
+        c.drawCircle(110f, 190f, 60f, android.graphics.Paint().apply { color = 0xFFF2C7B0.toInt() })
+        return Track("logical", "Olivia Rodrigo", "CarPlay", b, true, 94_000, 230_000, 0, carPlay = true)
+    }
+
     @Test fun homeCarPlaySong() = paparazzi.snapshot {
         val t = Track("My Universe", "Coldplay", "CarPlay", null, true, 61_000, 227_000, 0, carPlay = true)
         Frame(Screen.HOME) { HomeScreen(now, telemetry, CarLink.CONNECTED, t, true, Attitude(2.4f, -1.2f), home) }

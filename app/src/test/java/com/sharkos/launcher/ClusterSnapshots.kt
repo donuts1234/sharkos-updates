@@ -39,5 +39,14 @@ class ClusterSnapshots {
     @Test fun clusterPanel() = paparazzi.snapshot { ClusterLayout(track, 0, tyres, TyreLimits()) }
     @Test fun clusterTyreLow() = paparazzi.snapshot { ClusterLayout(track, 0, tyres.toMutableList().also { it[2] = Tyre(29.0, 0) }, TyreLimits()) }
     @Test fun clusterCard() = paparazzi.snapshot { ClusterLayout(track, 0, tyres, TyreLimits(), com.sharkos.launcher.ui.ClusterStyle.CARD) }
+    private fun design(s: com.sharkos.launcher.ui.ClusterStyle) = paparazzi.snapshot {
+        ClusterLayout(track, 0, tyres, TyreLimits(), s, com.sharkos.launcher.car.Drive(km = 23.4, minutes = 32, avgKph = 46.0, evShare = 0.82))
+    }
+    @Test fun clusterStage() = design(com.sharkos.launcher.ui.ClusterStyle.STAGE)
+    @Test fun clusterVinyl() = design(com.sharkos.launcher.ui.ClusterStyle.VINYL)
+    @Test fun clusterField() = design(com.sharkos.launcher.ui.ClusterStyle.FIELD)
+    @Test fun clusterBackdrop() = design(com.sharkos.launcher.ui.ClusterStyle.BACKDROP)
+    @Test fun clusterTiles() = design(com.sharkos.launcher.ui.ClusterStyle.TILES)
+    @Test fun clusterNight() = design(com.sharkos.launcher.ui.ClusterStyle.NIGHT)
     @Test fun clusterNothingPlaying() = paparazzi.snapshot { ClusterLayout(null, 0, List(4) { null }, TyreLimits()) }
 }

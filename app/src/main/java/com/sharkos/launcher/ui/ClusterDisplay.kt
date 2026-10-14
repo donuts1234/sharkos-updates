@@ -89,8 +89,15 @@ import kotlin.math.roundToInt
  * then the cluster asked to show its map area (where that display appears). See [ClusterLink].
  */
 /** How the driver display shows the album cover. */
-enum class ClusterStyle(val label: String) {
-    CARD("Cover card"), FADE("Cover fade");
+enum class ClusterStyle(val label: String, val blurb: String) {
+    CARD("Cover card", "The whole cover as a rounded card, song in the middle, tyres on the right."),
+    FADE("Cover fade", "The cover against the left edge fading out, song in the middle, tyres on the right."),
+    STAGE("Stage", "The cover centre stage, glowing, in a wash of its own colours."),
+    VINYL("Vinyl", "The cover as a record sleeve, with a record that spins while music plays."),
+    FIELD("Colour field", "No cover: its colours as soft light, with the song title huge."),
+    BACKDROP("Backdrop", "The cover blurred right across the window, a sharp cover on top."),
+    TILES("Three tiles", "Now playing, this drive and tyres as three cards."),
+    NIGHT("Night", "Almost nothing: a glow line in the song's colour and the title, dimmed.");
     companion object { fun parse(s: String?) = entries.firstOrNull { it.name == s } ?: FADE }
 }
 
@@ -107,6 +114,11 @@ object ClusterDisplay {
      *  which then covers the cluster display in black; 1 is BYD's own navigation; 9 is one nobody uses. */
     val slot = mutableStateOf(1)
     val style = mutableStateOf(ClusterStyle.FADE)
+    /** Latest tyres and drive, for the design previews on the head unit. */
+    val liveTyres = mutableStateOf<List<com.sharkos.launcher.car.Tyre?>>(List(4) { null })
+    val liveDrive = mutableStateOf<com.sharkos.launcher.car.Drive?>(null)
+    /** Screenshot tests only: what the previews show as playing. */
+    internal var previewTrack: Track? = null
     val enabled = mutableStateOf(true)
     private var claimed: Int? = null
     private var starting: kotlinx.coroutines.Job? = null
@@ -290,16 +302,16 @@ object ClusterDisplay {
 
 /** Cluster pixels to dp: the panel is laid out in the display's own 1920 × 720 pixels. */
 @Composable
-private fun Int.cpx(): Dp = with(LocalDensity.current) { this@cpx.toDp() }
+internal fun Int.cpx(): Dp = with(LocalDensity.current) { this@cpx.toDp() }
 
 @Composable
-private fun Int.csp(): TextUnit = with(LocalDensity.current) { this@csp.toSp() }
+internal fun Int.csp(): TextUnit = with(LocalDensity.current) { this@csp.toSp() }
 
-private val ORANGE = Color(0xFFFF9F0A)
+internal val ORANGE = Color(0xFFFF9F0A)
 /** The part of the 1920 × 720 picture the cluster actually shows, measured from photos of the car. */
-private const val WIN_TOP = 175
-private const val WIN_H = 425
-private val GREY = Color(0xFF8E8E93)
+internal const val WIN_TOP = 175
+internal const val WIN_H = 425
+internal val GREY = Color(0xFF8E8E93)
 
 /**
  * The driver display: album art across the left third (fading into black so it melts into the
@@ -313,11 +325,27 @@ internal fun ClusterPanel(app: SharkOsApp) {
     val cp by CarPlayLink.song.collectAsStateWithLifecycle()
     val session by NowPlaying.track.collectAsStateWithLifecycle()
     val limits = remember { Prefs(app).let { TyreLimits(it.tyreLow, it.tyreHigh) } }
-    ClusterLayout(chooseTrack(cp, session), now, t.tyres, limits, ClusterDisplay.style.value)
+    val trips by remember { app.car.trips(10_000) }.collectAsStateWithLifecycle(null)
+    androidx.compose.runtime.SideEffect { ClusterDisplay.liveTyres.value = t.tyres; ClusterDisplay.liveDrive.value = trips?.drive }
+    ClusterLayout(chooseTrack(cp, session), now, t.tyres, limits, ClusterDisplay.style.value, trips?.drive)
 }
 
 @Composable
-internal fun ClusterLayout(track: Track?, nowElapsed: Long, tyres: List<Tyre?>, limits: TyreLimits, style: ClusterStyle = ClusterStyle.FADE) {
+internal fun ClusterLayout(
+    track: Track?, nowElapsed: Long, tyres: List<Tyre?>, limits: TyreLimits,
+    style: ClusterStyle = ClusterStyle.FADE, drive: com.sharkos.launcher.car.Drive? = null,
+) = when (style) {
+    ClusterStyle.CARD, ClusterStyle.FADE -> CoverLayout(track, nowElapsed, tyres, limits, style)
+    ClusterStyle.STAGE -> StageLayout(track, nowElapsed, tyres, limits)
+    ClusterStyle.VINYL -> VinylLayout(track, nowElapsed)
+    ClusterStyle.FIELD -> FieldLayout(track, nowElapsed)
+    ClusterStyle.BACKDROP -> BackdropLayout(track, nowElapsed)
+    ClusterStyle.TILES -> TilesLayout(track, nowElapsed, tyres, limits, drive)
+    ClusterStyle.NIGHT -> NightLayout(track, tyres, limits)
+}
+
+@Composable
+private fun CoverLayout(track: Track?, nowElapsed: Long, tyres: List<Tyre?>, limits: TyreLimits, style: ClusterStyle) {
     val art = remember(track?.art) { track?.art?.asImageBitmap() }
     val colors = remember(track?.art) { track?.art?.let(::artColors) }
     val accent = colors?.accent ?: Sh.blue
@@ -403,7 +431,7 @@ internal fun ClusterLayout(track: Track?, nowElapsed: Long, tyres: List<Tyre?>, 
 }
 
 @Composable
-private fun TyreReading(c: Corner, tyres: List<Tyre?>, warn: Map<Corner, TyreWarning>, modifier: Modifier, end: Boolean) {
+internal fun TyreReading(c: Corner, tyres: List<Tyre?>, warn: Map<Corner, TyreWarning>, modifier: Modifier, end: Boolean) {
     val psi = tyres.getOrNull(c.ordinal)?.psi?.takeIf { it >= 5 }
     val w = warn[c]
     Column(modifier.width(150.cpx()), horizontalAlignment = if (end) Alignment.End else Alignment.Start) {
@@ -415,7 +443,7 @@ private fun TyreReading(c: Corner, tyres: List<Tyre?>, warn: Map<Corner, TyreWar
 
 /** The Shark 6 from above: cab and tray, wheels lit orange when that tyre is out of range. Drawn in a 150 × 300 box. */
 @Composable
-private fun Ute(modifier: Modifier, lowCorners: Set<Corner>) = Canvas(modifier) {
+internal fun Ute(modifier: Modifier, lowCorners: Set<Corner>) = Canvas(modifier) {
     val k = size.width / 150f
     fun wheel(x: Float, y: Float, c: Corner) = drawRoundRect(if (c in lowCorners) ORANGE else Color(0xFF3A3A3C),
         Offset(x * k, y * k), Size(20 * k, 52 * k), CornerRadius(7 * k))
