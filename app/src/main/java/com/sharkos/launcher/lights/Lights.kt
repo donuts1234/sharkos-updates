@@ -169,6 +169,18 @@ object Lights {
         send(ctx, targets.filter { after.getValue(it).on }.map { z -> colorFrame(ctx, z, hue) }.distinct())
     }
 
+    /** Each zone its own colour, in one send (two separate [setHue] calls would overtake each other). */
+    fun setHues(ctx: Context, trims: Float, pockets: Float) {
+        init(ctx)
+        val hues = mapOf(Zone.TRIMS to trims, Zone.POCKETS to pockets)
+        val next = _zones.value.toMutableMap()
+        val e = prefs(ctx).edit()
+        for ((z, h) in hues) { next[z] = next.getValue(z).copy(hue = h); runCatching { e.putFloat("${z.name}_hue", h) } }
+        runCatching { e.apply() }
+        _zones.value = next
+        send(ctx, hues.filter { next.getValue(it.key).on }.map { (z, h) -> colorFrame(ctx, z, h) })
+    }
+
     /** Save the change for [targets]; returns every zone's new state. */
     private fun store(ctx: Context, targets: List<Zone>, change: (ZoneState) -> ZoneState): Map<Zone, ZoneState> {
         val next = _zones.value.toMutableMap()

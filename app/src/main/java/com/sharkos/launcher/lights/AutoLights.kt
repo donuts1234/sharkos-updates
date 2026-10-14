@@ -9,6 +9,8 @@ import com.sharkos.launcher.ui.Wallpaper
 import com.sharkos.launcher.ui.artColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +29,9 @@ import kotlinx.coroutines.launch
  * Turning both off puts back the colours the lights had before. Runs for the whole process, so it
  * keeps working while CarPlay or another app is in front. Only colour changes: brightness and
  * on/off stay the driver's.
+ *
+ * Colour changes fade over [FADE_MS], the short way round the colour wheel. Album art never turns
+ * the lights white: a cover with no real colour (black and white, greys) keeps the colour they have.
  */
 object AutoLights {
     private const val KEY_ART = "follow_art"
@@ -46,8 +51,13 @@ object AutoLights {
     private var art: Bitmap? = null
     private var playing = false
     private var wallpaper = Wallpaper.BLACK
-    /** The colours last sent, so nothing is resent unchanged. */
+    /** The colours last asked for, so nothing is resent unchanged. */
     private var applied: Pair<Float, Float>? = null
+    /** What the lights show right now, part way through a fade too. */
+    private var shown: Pair<Float, Float>? = null
+    private var fade: Job? = null
+    private const val FADE_MS = 2500L
+    private const val FADE_STEPS = 25
 
     fun start(ctx: Context) {
         if (app != null) return
@@ -99,18 +109,40 @@ object AutoLights {
         val want = target() ?: return
         if (want == applied || Lights.address(c) == null) return
         applied = want
-        if (want.first == want.second) Lights.setHue(c, null, want.first)
-        else {
-            Lights.setHue(c, Lights.Zone.TRIMS, want.first)
-            Lights.setHue(c, Lights.Zone.POCKETS, want.second)
+        val from = shown ?: Lights.zones.value.let { it.getValue(Lights.Zone.TRIMS).hue to it.getValue(Lights.Zone.POCKETS).hue }
+        fade?.cancel()
+        fade = scope.launch {
+            // White isn't on the colour wheel, so to or from white just switches
+            if (from.first < 0f || from.second < 0f || want.first < 0f || want.second < 0f) { show(c, want); return@launch }
+            for (i in 1..FADE_STEPS) {
+                val t = smooth(i / FADE_STEPS.toFloat())
+                show(c, mix(from.first, want.first, t) to mix(from.second, want.second, t))
+                if (i < FADE_STEPS) delay(FADE_MS / FADE_STEPS)
+            }
         }
     }
+
+    private fun show(c: Context, h: Pair<Float, Float>) {
+        shown = h
+        if (h.first == h.second) Lights.setHue(c, null, h.first)
+        else Lights.setHues(c, h.first, h.second)
+    }
+
+    /** Between two hues the short way round the wheel (red to purple goes through magenta, not green). */
+    internal fun mix(a: Float, b: Float, t: Float): Float {
+        var d = b - a
+        if (d > 0.5f) d -= 1f
+        if (d < -0.5f) d += 1f
+        return ((a + d * t) % 1f + 1f) % 1f
+    }
+
+    private fun smooth(t: Float) = t * t * (3f - 2f * t)
 
     /** The colours the switches call for now, or null to leave the lights alone. */
     private fun target(): Pair<Float, Float>? {
         val a = art
         return when {
-            _art.value && a != null && (playing || !_wall.value) -> hueOf(a).let { it to it }
+            _art.value && a != null && (playing || !_wall.value) -> hueOf(a)?.let { it to it } ?: if (_wall.value && !playing) wallpaper.lights else null
             _wall.value -> wallpaper.lights
             else -> null
         }
@@ -125,18 +157,21 @@ object AutoLights {
     }
 
     private fun restoreBefore(c: Context) {
-        applied = null
+        fade?.cancel()
+        applied = null; shown = null
         val p = prefs(c)
-        for (zone in Lights.Zone.entries) {
-            if (p.contains(KEY_BEFORE + zone.name)) Lights.setHue(c, zone, p.getFloat(KEY_BEFORE + zone.name, 0.6f))
-        }
+        if (!p.contains(KEY_BEFORE + Lights.Zone.TRIMS.name)) return
+        val z = Lights.zones.value
+        Lights.setHues(c,
+            p.getFloat(KEY_BEFORE + Lights.Zone.TRIMS.name, z.getValue(Lights.Zone.TRIMS).hue),
+            p.getFloat(KEY_BEFORE + Lights.Zone.POCKETS.name, z.getValue(Lights.Zone.POCKETS).hue))
     }
 
-    /** The art's main colour as a hue (0–1), or [Lights.WHITE] for covers with no real colour. */
-    fun hueOf(art: Bitmap): Float {
+    /** The art's main colour as a hue (0–1), or null for covers with no real colour (never white). */
+    fun hueOf(art: Bitmap): Float? {
         val accent = artColors(art).accent
         val hsv = FloatArray(3)
         android.graphics.Color.RGBToHSV((accent.red * 255).toInt(), (accent.green * 255).toInt(), (accent.blue * 255).toInt(), hsv)
-        return if (hsv[1] < 0.2f) Lights.WHITE else hsv[0] / 360f
+        return if (hsv[1] < 0.2f) null else hsv[0] / 360f
     }
 }
