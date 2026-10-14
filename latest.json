@@ -1,6 +1,6 @@
 {
-  "versionCode": 26,
-  "versionName": "0.1.25",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.25.apk",
-  "notes": "Instrument cluster page: cover card or cover fade, fitted to the cluster's window, starts by itself, returns after CarPlay routes. Lights fade smoothly between colours and never go white."
+  "versionCode": 27,
+  "versionName": "0.1.26",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.26.apk",
+  "notes": "Eight instrument cluster designs with a picker pill on Home; Night mode (pill, two night looks, dimmed bar, Night on the cluster); SharkOS starts 4px below the screen's top edge."
 }
