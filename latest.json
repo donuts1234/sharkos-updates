@@ -1,6 +1,6 @@
 {
-  "versionCode": 21,
-  "versionName": "0.1.20",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.20.apk",
-  "notes": "CarPlay with the HVAC Bar, full-screen music page, lights match album art and wallpaper, night dimming, 7 new wallpapers, tyre alerts, Trip page, new Climate page, Home card choices, notice pills fixed. Test: Settings > Now playing > Move CarPlay clear of the top edge."
+  "versionCode": 22,
+  "versionName": "0.1.21",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.21.apk",
+  "notes": "CarPlay: 12 px gap (adjustable), no more BYD picture showing through, rounded CarPlay and bar cards, dark grey bar in CarPlay, bar comes back after reversing or when CarPlay opens from BYD."
 }
