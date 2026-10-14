@@ -1,6 +1,6 @@
 {
-  "versionCode": 23,
-  "versionName": "0.1.22",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.22.apk",
-  "notes": "Test: SharkOS on the driver display (Settings > Vehicle > Driver display)."
+  "versionCode": 24,
+  "versionName": "0.1.23",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.23.apk",
+  "notes": "Driver display test: choose the cluster map slot (default 9, unused) so BYD's Android Auto app no longer blacks the panel out"
 }
