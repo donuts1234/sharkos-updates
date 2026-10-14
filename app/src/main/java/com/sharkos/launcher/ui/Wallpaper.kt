@@ -22,7 +22,7 @@ import kotlin.math.sin
 enum class Wallpaper(
     val label: String,
     internal val barTint: List<Color>,
-    /** Ambient lighting to match: door trims, then pockets and footwells (0–1 hue, below 0 white). */
+    /** Ambient lighting to match: door trims, then pockets and footwells (0–1 hue). */
     val lights: Pair<Float, Float>,
 ) {
     BLACK("Black", emptyList(), W to W),
@@ -41,7 +41,8 @@ enum class Wallpaper(
     NEON("Neon", listOf(Color(0xFFFF2D95), Color(0xFF7B2DFF), Color(0xFF00E5FF)), 0.87f to 0.5f),
 }
 
-private const val W = -1f   // white light
+/** Deep blue: the lights for wallpapers with no colour of their own (never white). */
+private const val W = 0.65f
 
 /** The background's colours, for the HVAC Bar to pick up a hint of. Provided once in Root. */
 val LocalWallpaper = staticCompositionLocalOf { Wallpaper.BLACK }
