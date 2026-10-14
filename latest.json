@@ -1,6 +1,6 @@
 {
-  "versionCode": 28,
-  "versionName": "0.1.27",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.27.apk",
-  "notes": "Instrument cluster background: dark grey to match BYD, with a Black / Dark grey / Grey choice in Settings."
+  "versionCode": 29,
+  "versionName": "0.1.28",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.28.apk",
+  "notes": "Instrument cluster background: Custom colour with red, green and blue controls."
 }
