@@ -221,15 +221,46 @@ object ClusterDisplay {
     }
 
     private suspend fun reclaim(app: Context, why: String) {
-        val type = claimed ?: slot.value
+        claim(app, claimed ?: slot.value, lastState)
+        status.value = "$why · took the driver display back · ${report(app)}"
+        Log.w(TAG, status.value)
+    }
+
+    /**
+     * Ask the cluster for SharkOS's view. Its own navigation view setting must be a map view (3 small
+     * or 4 full): on "simple" (2) it shows a text panel, "No navigation running", instead of the map
+     * area SharkOS draws in. The car can put that setting back after a restart or sleep, so check it.
+     */
+    private suspend fun claim(app: Context, type: Int, state: Int) {
+        if (!ClusterLink.connected) { ClusterLink.reconnect(app); repeat(20) { if (!ClusterLink.connected) delay(150) } }
+        if (ClusterLink.displayMode(app) !in 3..4) { ClusterLink.setDisplayMode(4); delay(300) }
         ClusterLink.requestMapFocus(type)
         delay(150)
         ClusterLink.naviState(true, type)
         delay(150)
-        ClusterLink.presentation(lastState, type)
+        ClusterLink.presentation(state, type)
         delay(500)
-        status.value = "$why · took the driver display back · map focus now ${ClusterLink.focusMap(app)}"
-        Log.w(TAG, status.value)
+    }
+
+    private fun report(app: Context) = "map focus ${ClusterLink.focusMap(app)} · cluster view ${ClusterLink.displayMode(app)}" +
+        (if (CarPlayLink.routeActive.value) " · CarPlay route on" else "")
+
+    /**
+     * Every few seconds while SharkOS is on the cluster: if the cluster has drifted (map focus moved
+     * on with no CarPlay route running, or its view went back to "simple"), ask again.
+     */
+    private var watchdog: kotlinx.coroutines.Job? = null
+    private fun startWatchdog(app: Context) {
+        if (watchdog?.isActive == true) return
+        watchdog = scope.launch {
+            while (true) {
+                delay(10_000)
+                if (!isShowing || !enabled.value || CarPlayLink.routeActive.value) continue
+                val type = claimed ?: continue
+                val drifted = ClusterLink.focusMap(app) != type || ClusterLink.displayMode(app) !in 3..4 || !ClusterLink.connected
+                if (drifted) reclaim(app, "Cluster had moved on")
+            }
+        }
     }
 
     fun setSlot(ctx: Context, s: Int) {
@@ -281,19 +312,16 @@ object ClusterDisplay {
             claimed = type
             lastState = state
             watchRoutes(app)
+            startWatchdog(app)
             if (CarPlayLink.routeActive.value) {
                 status.value = "Ready · CarPlay directions have the cluster; SharkOS comes back when the route ends"
                 return@launch
             }
-            ClusterLink.requestMapFocus(type)
-            delay(150)
-            ClusterLink.naviState(true, type)
-            delay(150)
-            ClusterLink.presentation(state, type)
-            delay(600)
+            startWatchdog(app)
+            claim(app, type, state)
             val focus = ClusterLink.focusMap(app)
-            status.value = (if (focus == type) "Showing on the cluster" else "Asked the cluster, but it reports map focus $focus") +
-                " · ${ClusterLink.describe(d)} · slot $type"
+            status.value = (if (focus == type) "Showing on the cluster" else "Asked the cluster, but it didn't take it") +
+                " · ${report(app)} · slot $type"
             Log.w(TAG, status.value)
         }
     }
@@ -312,6 +340,7 @@ object ClusterDisplay {
             view = null
             owner?.destroy(); owner = null
             routeWatch?.cancel(); routeWatch = null
+            watchdog?.cancel(); watchdog = null
             status.value = "Off · the cluster is back to BYD's view"
         }
     }

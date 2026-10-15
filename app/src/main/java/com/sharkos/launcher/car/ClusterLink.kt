@@ -43,16 +43,27 @@ object ClusterLink {
 
     val connected: Boolean get() = service != null
 
+    private var conn: ServiceConnection? = null
+
     fun start(ctx: Context) {
         if (bound) return
         val app = ctx.applicationContext
-        bound = runCatching {
-            app.bindService(Intent().setComponent(COMPONENT), object : ServiceConnection {
-                override fun onServiceConnected(name: ComponentName?, b: IBinder?) { service = b; Log.w(TAG, "cluster service connected") }
-                override fun onServiceDisconnected(name: ComponentName?) { service = null }
-            }, Context.BIND_AUTO_CREATE)
-        }.getOrDefault(false)
-        if (!bound) Log.w(TAG, "cluster service not found")
+        val c = object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName?, b: IBinder?) { service = b; Log.w(TAG, "cluster service connected") }
+            override fun onServiceDisconnected(name: ComponentName?) { service = null; Log.w(TAG, "cluster service gone") }
+            // The service's process went for good (e.g. restarted by the car): bind again from scratch
+            override fun onBindingDied(name: ComponentName?) { Log.w(TAG, "cluster binding died"); reconnect(app) }
+        }
+        bound = runCatching { app.bindService(Intent().setComponent(COMPONENT), c, Context.BIND_AUTO_CREATE) }.getOrDefault(false)
+        if (bound) conn = c else Log.w(TAG, "cluster service not found")
+    }
+
+    /** Drop the old binding and bind again. */
+    fun reconnect(ctx: Context) {
+        val app = ctx.applicationContext
+        conn?.let { c -> runCatching { app.unbindService(c) } }
+        conn = null; bound = false; service = null
+        start(app)
     }
 
     private fun send(data: Bundle): Boolean {
@@ -63,7 +74,7 @@ object ClusterLink {
             p.writeInt(CMD_NAVI)
             p.writeInt(1); data.writeToParcel(p, 0)
             b.transact(TX_SEND_COMMAND, p, r, 0)
-            true
+        } catch (e: android.os.DeadObjectException) { Log.w(TAG, "cluster service died"); service = null; false
         } catch (e: Exception) { Log.w(TAG, "send: ${e.message}"); false } finally { p.recycle(); r.recycle() }
     }
 

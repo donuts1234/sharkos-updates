@@ -151,6 +151,13 @@ object CarPlayLink {
 
         override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
             if (code !in 1..5) return super.onTransact(code, data, reply, flags)
+            // The phone disconnected (status 4): no route can still be running
+            if (code == 2 || code == 3) runCatching {
+                data.enforceInterface(STATE_CALLBACK)
+                val status = data.readInt()
+                Log.w(TAG, "session state $status")
+                if (status == 4) _routeActive.value = false
+            }
             if (code == CB_APP_STATE) runCatching {
                 data.enforceInterface(STATE_CALLBACK)
                 val appState = data.readInt()
