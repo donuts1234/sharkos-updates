@@ -6,3 +6,5 @@ local.properties
 keystore.properties
 *.keystore
 *.jks
+.kotlin/
+dist/
