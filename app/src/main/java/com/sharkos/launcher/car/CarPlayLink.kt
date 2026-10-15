@@ -164,7 +164,7 @@ object CarPlayLink {
                 val enable = data.readInt() != 0
                 val speechMode = data.readInt()
                 Log.w(TAG, "app state $appState enable=$enable speech=$speechMode")
-                if (appState == APP_STATE_NAVIGATION) _routeActive.value = enable
+                if (appState == APP_STATE_NAVIGATION) { _routeActive.value = enable; if (!enable) _guide.value = null }
             }.onFailure { Log.w(TAG, "state callback: ${it.message}") }
             return true
         }
@@ -199,6 +199,10 @@ object CarPlayLink {
         if (ok.isFailure) Log.w(TAG, "register failed: ${ok.exceptionOrNull()?.message}")
         runCatching { transact(binder, TX_REGISTER_STATE) { it.writeStrongBinder(stateCallback) } }
             .onFailure { Log.w(TAG, "state register failed: ${it.message}") }
+        runCatching { transact(binder, TX_REGISTER_ROUTE) { it.writeStrongBinder(routeCallback) } }
+            .onFailure { Log.w(TAG, "route register failed: ${it.message}") }
+        runCatching { transact(binder, TX_REGISTER_APP) { it.writeStrongBinder(appCallback) } }
+            .onFailure { Log.w(TAG, "app register failed: ${it.message}") }
     }
 
     private fun transact(b: IBinder, code: Int, write: (Parcel) -> Unit) {
@@ -208,6 +212,97 @@ object CarPlayLink {
             write(data)
             b.transact(code, data, null, IBinder.FLAG_ONEWAY)
         } finally { data.recycle() }
+    }
+
+    // ---- The driver display's CarPlay map and route guidance ----
+
+    private const val ROUTE_CALLBACK = "com.ts.carplay.common.aidl.IRouteGuidanceCallback"
+    private const val APP_CALLBACK = "com.ts.carplay.common.aidl.ICarPlayAppCallback"
+    private const val TX_REGISTER_APP = 1
+    private const val TX_REGISTER_ROUTE = 13
+    private const val TX_SHOW_UI = 56
+    private const val TX_STOP_UI = 57
+    private const val SCREEN_CLUSTER = 1
+
+    /** The next turn and the trip's remaining distance and time, as the iPhone sends them. */
+    data class RouteGuide(
+        val maneuver: Int, val distance: String, val distanceUnit: String, val road: String,
+        val remaining: String, val remainingUnit: String, val secondsLeft: Long, val state: Int,
+        val description: String, val receivedAt: Long = System.currentTimeMillis(),
+    )
+
+    private val _guide = MutableStateFlow<RouteGuide?>(null)
+    val guide: StateFlow<RouteGuide?> = _guide.asStateFlow()
+
+    /** The iPhone's "which picture to show on the cluster" id, needed to start the cluster map. */
+    @Volatile var clusterUrl: Int = -1
+        private set
+
+    private fun unit(u: Int) = when (u) { 0 -> "km"; 1 -> "mi"; 2 -> "m"; 3 -> "yd"; 4 -> "ft"; else -> "" }
+
+    internal val routeCallback = object : Binder() {
+        init { attachInterface(null, ROUTE_CALLBACK) }
+        override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
+            if (code != 1) return super.onTransact(code, data, reply, flags)
+            runCatching {
+                data.enforceInterface(ROUTE_CALLBACK)
+                if (data.readInt() == 0) { _guide.value = null; return true }
+                // RouteGuidanceInfo(Parcel), as far as the fields SharkOS shows
+                val maneuver = data.readInt()
+                val dist = data.readString().orEmpty()
+                val distUnits = data.readInt()
+                val road = data.readString().orEmpty()
+                val remaining = data.readString().orEmpty()
+                val remainingUnits = data.readInt()
+                val secondsLeft = data.readLong()
+                val state = data.readInt()
+                data.readInt(); data.readInt(); data.readInt()          // junction type, driving side, exit angle
+                data.readList(ArrayList<Any?>(), Integer::class.java.classLoader)
+                data.readLong(); data.readString(); data.readInt()        // distance between maneuvers
+                val current = data.readString().orEmpty()
+                data.readString()                                          // destination name
+                data.readLong(); data.readLong()                           // distances (raw)
+                data.readByte(); data.readByte()
+                data.readInt()                                             // maneuver state
+                val description = data.readString().orEmpty()
+                _guide.value = RouteGuide(maneuver, dist, unit(distUnits), road.ifBlank { current }, remaining, unit(remainingUnits),
+                    secondsLeft, state, description)
+            }.onFailure { Log.w(TAG, "route guidance: ${it.message}") }
+            return true
+        }
+    }
+
+    internal val appCallback = object : Binder() {
+        init { attachInterface(null, APP_CALLBACK) }
+        override fun onTransact(code: Int, data: Parcel, reply: Parcel?, flags: Int): Boolean {
+            if (code !in 1..6) return super.onTransact(code, data, reply, flags)
+            if (code == 3) runCatching {
+                data.enforceInterface(APP_CALLBACK)
+                clusterUrl = data.readInt()
+                Log.w(TAG, "cluster picture id $clusterUrl")
+            }
+            return true
+        }
+    }
+
+    /** Draw CarPlay's driver-display map into [surface] (null: stop drawing there). */
+    fun clusterSurface(surface: android.view.Surface?): Boolean {
+        val b = service ?: return false
+        return runCatching {
+            transact(b, TX_SET_SURFACE_WITH_TYPE) { p ->
+                if (surface != null) { p.writeInt(1); surface.writeToParcel(p, 0) } else p.writeInt(0)
+                p.writeInt(SCREEN_CLUSTER)
+            }
+        }.onFailure { Log.w(TAG, "cluster surface: ${it.message}") }.isSuccess
+    }
+
+    /** Start (or stop) the iPhone's driver-display map stream. */
+    fun clusterStream(on: Boolean): Boolean {
+        val b = service ?: return false
+        return runCatching {
+            if (on) transact(b, TX_SHOW_UI) { it.writeInt(SCREEN_CLUSTER); it.writeInt(clusterUrl) }
+            else transact(b, TX_STOP_UI) { it.writeInt(SCREEN_CLUSTER) }
+        }.onFailure { Log.w(TAG, "cluster stream: ${it.message}") }.isSuccess
     }
 
     // ---- CarPlay's screen (BYD's own CarPlay app draws it; SharkOS only asks and watches) ----

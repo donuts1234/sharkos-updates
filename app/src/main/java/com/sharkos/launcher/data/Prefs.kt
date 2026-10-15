@@ -65,6 +65,13 @@ class Prefs(context: Context) {
     var clusterBgRgb: Int
         get() = sp.getInt("cluster_bg_rgb", 0x151515)
         set(v) = sp.edit().putInt("cluster_bg_rgb", v).apply()
+    /** Test: CarPlay's driver-display map drawn inside SharkOS's cluster view during a route. */
+    var clusterCarPlayMap: Boolean
+        get() = sp.getBoolean("cluster_cp_map", false)
+        set(v) = sp.edit().putBoolean("cluster_cp_map", v).apply()
+    var clusterMapLayout: String
+        get() = sp.getString("cluster_map_layout", "CENTRE") ?: "CENTRE"
+        set(v) = sp.edit().putString("cluster_map_layout", v).apply()
     var clusterSlot: Int
         get() = sp.getInt("cluster_slot", 1)
         set(v) = sp.edit().putInt("cluster_slot", v).apply()

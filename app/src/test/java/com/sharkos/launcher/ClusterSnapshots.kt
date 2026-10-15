@@ -12,6 +12,7 @@ import com.sharkos.launcher.car.Tyre
 import com.sharkos.launcher.car.TyreLimits
 import com.sharkos.launcher.media.Track
 import com.sharkos.launcher.ui.ClusterLayout
+import androidx.compose.foundation.layout.fillMaxSize
 import org.junit.Rule
 import org.junit.Test
 
@@ -48,5 +49,14 @@ class ClusterSnapshots {
     @Test fun clusterBackdrop() = design(com.sharkos.launcher.ui.ClusterStyle.BACKDROP)
     @Test fun clusterTiles() = design(com.sharkos.launcher.ui.ClusterStyle.TILES)
     @Test fun clusterNight() = design(com.sharkos.launcher.ui.ClusterStyle.NIGHT)
+    private val guide = com.sharkos.launcher.car.CarPlayLink.RouteGuide(2, "300", "m", "Main Rd", "14", "km", 18 * 60, 1, "Turn right onto Main Rd")
+    @Test fun clusterMapCentre() = paparazzi.snapshot {
+        com.sharkos.launcher.ui.ClusterDisplay.previewMap = true
+        com.sharkos.launcher.ui.MapLayoutView(com.sharkos.launcher.ui.MapLayout.CENTRE, track, guide, tyres, TyreLimits()) { com.sharkos.launcher.ui.CarPlayMapView(androidx.compose.ui.Modifier.fillMaxSize()) }
+    }
+    @Test fun clusterMapWide() = paparazzi.snapshot {
+        com.sharkos.launcher.ui.ClusterDisplay.previewMap = true
+        com.sharkos.launcher.ui.MapLayoutView(com.sharkos.launcher.ui.MapLayout.WIDE, track, guide, tyres, TyreLimits()) { com.sharkos.launcher.ui.CarPlayMapView(androidx.compose.ui.Modifier.fillMaxSize()) }
+    }
     @Test fun clusterNothingPlaying() = paparazzi.snapshot { ClusterLayout(null, 0, List(4) { null }, TyreLimits()) }
 }

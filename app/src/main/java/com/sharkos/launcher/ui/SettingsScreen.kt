@@ -575,6 +575,16 @@ private fun ClusterPage() {
         Box(Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) { ClusterGallery(columns = 2, thumbWidth = 300.dp) }
         Hint(ClusterDisplay.style.value.blurb)
     }
+    Group("CarPlay directions (test)") {
+        Item("CarPlay's map inside SharkOS",
+            "During a CarPlay route SharkOS keeps the driver display and draws the iPhone's map inside its own view, with the next turn, arrival time and your song. A test: watch the head-up display's arrows; if they stop, turn this off.") {
+            Switch(ClusterDisplay.carPlayMap.value, { ClusterDisplay.setCarPlayMap(ctx, it) }, "CarPlay's map inside SharkOS")
+        }
+        if (ClusterDisplay.carPlayMap.value) Item("Layout", "") {
+            Segmented(MapLayout.entries.map { it.label }, ClusterDisplay.mapLayout.value.ordinal,
+                onSelect = { ClusterDisplay.setMapLayout(ctx, MapLayout.entries[it]) }, modifier = Modifier.width(400.dp), greyFirst = false)
+        }
+    }
     Group("Advanced") {
         Item("Map slot", "Which of the cluster's map slots SharkOS uses. 1 (BYD's own navigation) is the one that works on the Shark 6; 3 wakes BYD's Android Auto app, which blacks the cluster out.") {
             Segmented(listOf("1 · BYD", "3 · Auto"), listOf(1, 3).indexOf(ClusterDisplay.slot.value).coerceAtLeast(0),

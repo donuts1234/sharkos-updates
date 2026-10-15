@@ -124,6 +124,11 @@ object ClusterDisplay {
     val background = mutableStateOf(ClusterBackground.DARK)
     /** The design bubble from the Home screen's pill. */
     val bubbleOpen = mutableStateOf(false)
+    /** Test: during a CarPlay route, keep the cluster and draw CarPlay's map inside SharkOS's view. */
+    val carPlayMap = mutableStateOf(false)
+    val mapLayout = mutableStateOf(MapLayout.CENTRE)
+    /** A CarPlay route is on and SharkOS is drawing its map. */
+    val mapShowing = mutableStateOf(false)
     /** The Custom background's red, green and blue (0–255). */
     val custom = mutableStateOf(Triple(21, 21, 21))
     val bgColor: Color get() = if (background.value == ClusterBackground.CUSTOM) custom.value.let { (r, g, b) -> Color(r, g, b) } else background.value.color
@@ -132,6 +137,8 @@ object ClusterDisplay {
     val liveDrive = mutableStateOf<com.sharkos.launcher.car.Drive?>(null)
     /** Screenshot tests only: what the previews show as playing. */
     internal var previewTrack: Track? = null
+    /** Screenshot tests only: draw a stand-in map. */
+    internal var previewMap = false
     val enabled = mutableStateOf(true)
     private var claimed: Int? = null
     private var starting: kotlinx.coroutines.Job? = null
@@ -142,6 +149,8 @@ object ClusterDisplay {
         val p = Prefs(app)
         slot.value = p.clusterSlot; style.value = ClusterStyle.parse(p.clusterStyle); enabled.value = p.clusterOn
         background.value = ClusterBackground.parse(p.clusterBg)
+        carPlayMap.value = p.clusterCarPlayMap
+        mapLayout.value = MapLayout.entries.firstOrNull { it.name == p.clusterMapLayout } ?: MapLayout.CENTRE
         p.clusterBgRgb.let { custom.value = Triple(it shr 16 and 255, it shr 8 and 255, it and 255) }
         loaded = true
     }
@@ -173,7 +182,7 @@ object ClusterDisplay {
         if (!isShowing) { autoStart(app); return }
         scope.launch {
             delay(3000)
-            if (isShowing && !CarPlayLink.routeActive.value) reclaim(app, "Car woke up")
+            if (isShowing && (!CarPlayLink.routeActive.value || mapShowing.value)) reclaim(app, "Car woke up")
         }
     }
 
@@ -196,6 +205,50 @@ object ClusterDisplay {
         runCatching { Prefs(ctx.applicationContext).clusterBgRgb = (r shl 16) or (g shl 8) or b }
     }
 
+    fun setCarPlayMap(ctx: Context, on: Boolean) {
+        val app = ctx.applicationContext
+        carPlayMap.value = on
+        runCatching { Prefs(app).clusterCarPlayMap = on }
+        if (on && CarPlayLink.routeActive.value && isShowing) scope.launch { takeRoute(app) }
+        if (!on && mapShowing.value) scope.launch { releaseRoute(app) }
+    }
+
+    fun setMapLayout(ctx: Context, l: MapLayout) {
+        mapLayout.value = l
+        runCatching { Prefs(ctx.applicationContext).clusterMapLayout = l.name }
+    }
+
+    /** Route on with the test switch on: take the cluster back from BYD's CarPlay map and show ours. */
+    private suspend fun takeRoute(app: Context) {
+        delay(2500)                                       // let BYD's CarPlay set the route up (and hear the picture id)
+        if (!CarPlayLink.routeActive.value || !isShowing || !carPlayMap.value) return
+        mapShowing.value = true
+        claim(app, claimed ?: slot.value, ClusterLink.STATE_FULL)
+        status.value = "CarPlay route · SharkOS keeps the cluster and draws the map (picture id ${CarPlayLink.clusterUrl}) · ${report(app)}"
+        Log.w(TAG, status.value)
+    }
+
+    private suspend fun releaseRoute(app: Context) {
+        mapShowing.value = false
+        CarPlayLink.clusterStream(false)
+        CarPlayLink.clusterSurface(null)
+        if (isShowing) reclaim(app, "Map off")
+    }
+
+    /** The map's TextureView surface came or went (from the map layouts). */
+    internal fun mapSurface(surface: android.view.Surface?) {
+        scope.launch {
+            if (surface == null) { CarPlayLink.clusterStream(false); CarPlayLink.clusterSurface(null); return@launch }
+            // Start the stream fresh on SharkOS's surface: the iPhone only draws to a surface at the start of a stream
+            CarPlayLink.clusterStream(false)
+            delay(200)
+            CarPlayLink.clusterSurface(surface)
+            delay(200)
+            CarPlayLink.clusterStream(true)
+            Log.w(TAG, "cluster map stream asked for, picture id ${CarPlayLink.clusterUrl}")
+        }
+    }
+
     fun setStyle(ctx: Context, st: ClusterStyle) {
         style.value = st
         Prefs(ctx.applicationContext).clusterStyle = st.name
@@ -211,7 +264,9 @@ object ClusterDisplay {
         routeWatch = scope.launch {
             var wasRouting = CarPlayLink.routeActive.value
             CarPlayLink.routeActive.collect { routing ->
+                if (!wasRouting && routing && isShowing && carPlayMap.value) takeRoute(app)
                 if (wasRouting && !routing && isShowing) {
+                    if (mapShowing.value) { mapShowing.value = false; CarPlayLink.clusterStream(false); CarPlayLink.clusterSurface(null) }
                     delay(1500)                                  // let CarPlay finish closing its map first
                     if (!CarPlayLink.routeActive.value && isShowing) reclaim(app, "CarPlay route ended")
                 }
@@ -255,7 +310,7 @@ object ClusterDisplay {
         watchdog = scope.launch {
             while (true) {
                 delay(10_000)
-                if (!isShowing || !enabled.value || CarPlayLink.routeActive.value) continue
+                if (!isShowing || !enabled.value || (CarPlayLink.routeActive.value && !mapShowing.value)) continue
                 val type = claimed ?: continue
                 val drifted = ClusterLink.focusMap(app) != type || ClusterLink.displayMode(app) !in 3..4 || !ClusterLink.connected
                 if (drifted) reclaim(app, "Cluster had moved on")
@@ -314,6 +369,7 @@ object ClusterDisplay {
             watchRoutes(app)
             startWatchdog(app)
             if (CarPlayLink.routeActive.value) {
+                if (carPlayMap.value) { takeRoute(app); return@launch }
                 status.value = "Ready · CarPlay directions have the cluster; SharkOS comes back when the route ends"
                 return@launch
             }
@@ -394,6 +450,13 @@ internal fun ClusterPanel(app: SharkOsApp) {
     val limits = remember { Prefs(app).let { TyreLimits(it.tyreLow, it.tyreHigh) } }
     val trips by remember { app.car.trips(10_000) }.collectAsStateWithLifecycle(null)
     androidx.compose.runtime.SideEffect { ClusterDisplay.liveTyres.value = t.tyres; ClusterDisplay.liveDrive.value = trips?.drive }
+    val guide by CarPlayLink.guide.collectAsStateWithLifecycle()
+    if (ClusterDisplay.mapShowing.value) {
+        MapLayoutView(ClusterDisplay.mapLayout.value, chooseTrack(cp, session), guide, t.tyres, limits, mapSlot = {
+            CarPlayMapView(Modifier.fillMaxSize())
+        })
+        return
+    }
     ClusterLayout(chooseTrack(cp, session), now, t.tyres, limits,
         if (NightMode.active.value) ClusterStyle.NIGHT else ClusterDisplay.style.value, trips?.drive)
 }
