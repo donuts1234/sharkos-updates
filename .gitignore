@@ -1,15 +1,8 @@
-*.iml
 .gradle/
-.kotlin/
-/local.properties
-/.idea/
-.DS_Store
-/build/
+build/
 app/build/
-/captures/
-
-# Signing: the key and its passwords never go in git
+*.apk
+local.properties
 keystore.properties
-*.jks
 *.keystore
-dist/
+*.jks
