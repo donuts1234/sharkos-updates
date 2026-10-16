@@ -1,6 +1,6 @@
 {
-  "versionCode": 31,
-  "versionName": "0.1.30",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.1.30.apk",
-  "notes": "Cluster: keeps SharkOS on the driver display reliably (view-setting fix, watchdog, service reconnect). New test (off by default): CarPlay's map drawn inside SharkOS's cluster view during a route, with the next turn and arrival time."
+  "versionCode": 32,
+  "versionName": "0.2.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.2.0.apk",
+  "notes": "0.2.0 \u2014 new Power cluster design: live kW motor-power meter (drive/regen), Bar or Ring, in Settings \u2192 Driver display"
 }
