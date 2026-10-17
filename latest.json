@@ -1,6 +1,6 @@
 {
-  "versionCode": 32,
-  "versionName": "0.2.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.2.0.apk",
-  "notes": "0.2.0 \u2014 new Power cluster design: live kW motor-power meter (drive/regen), Bar or Ring, in Settings \u2192 Driver display"
+  "versionCode": 33,
+  "versionName": "0.2.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.2.1.apk",
+  "notes": "0.2.1 \u2014 fix the power meter reading 0 (motor permission was missing) and add a live power probe on the Power design to pin down the right drive/regen signal"
 }
