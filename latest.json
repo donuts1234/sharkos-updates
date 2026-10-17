@@ -1,6 +1,6 @@
 {
-  "versionCode": 33,
-  "versionName": "0.2.1",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.2.1.apk",
-  "notes": "0.2.1 \u2014 fix the power meter reading 0 (motor permission was missing) and add a live power probe on the Power design to pin down the right drive/regen signal"
+  "versionCode": 34,
+  "versionName": "0.2.2",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.2.2.apk",
+  "notes": "0.2.2 \u2014 power meter now reads the confirmed engine power signal and updates live (no more lag)"
 }
