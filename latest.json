@@ -1,6 +1,6 @@
 {
-  "versionCode": 34,
-  "versionName": "0.2.2",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.2.2.apk",
-  "notes": "0.2.2 \u2014 power meter now reads the confirmed engine power signal and updates live (no more lag)"
+  "versionCode": 36,
+  "versionName": "0.2.4",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.2.4.apk",
+  "notes": "0.2.4 \u2014 power meter scale dialed in (engine power), and a CarPlay-map-in-cluster fix attempt that no longer stops CarPlay navigating"
 }
