@@ -1,6 +1,6 @@
 {
-  "versionCode": 37,
-  "versionName": "0.3.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.0.apk",
-  "notes": "0.3.0 \u2014 Phase 1 of SharkOS's own maps: a live MapLibre map that follows your GPS (Maps button, top-right of Home). Needs the unit online; grant location when asked."
+  "versionCode": 38,
+  "versionName": "0.3.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.1.apk",
+  "notes": "0.3.1 \u2014 maps polish: lighter dark map style (smoother) and street-level zoom when it follows you"
 }
