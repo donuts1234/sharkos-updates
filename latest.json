@@ -1,6 +1,6 @@
 {
-  "versionCode": 40,
-  "versionName": "0.3.3",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.3.apk",
-  "notes": "Your SharkOS Maps route on the driver display (Map wide or Big art), and route progress keeps going outside Maps"
+  "versionCode": 41,
+  "versionName": "0.3.4",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.4.apk",
+  "notes": "HUD: SharkOS Maps turns + song/call tests; half-screen CarPlay test; grey driven route; arrow on the line"
 }
