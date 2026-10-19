@@ -1,6 +1,6 @@
 {
-  "versionCode": 38,
-  "versionName": "0.3.1",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.1.apk",
-  "notes": "0.3.1 \u2014 maps polish: lighter dark map style (smoother) and street-level zoom when it follows you"
+  "versionCode": 39,
+  "versionName": "0.3.2",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.2.apk",
+  "notes": "Maps phase 2: search places, route preview with an alternative, turn-by-turn with rerouting"
 }
