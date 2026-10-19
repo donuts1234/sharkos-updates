@@ -1,6 +1,6 @@
 {
-  "versionCode": 39,
-  "versionName": "0.3.2",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.2.apk",
-  "notes": "Maps phase 2: search places, route preview with an alternative, turn-by-turn with rerouting"
+  "versionCode": 40,
+  "versionName": "0.3.3",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.3.apk",
+  "notes": "Your SharkOS Maps route on the driver display (Map wide or Big art), and route progress keeps going outside Maps"
 }
