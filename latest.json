@@ -1,6 +1,6 @@
 {
-  "versionCode": 36,
-  "versionName": "0.2.4",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.2.4.apk",
-  "notes": "0.2.4 \u2014 power meter scale dialed in (engine power), and a CarPlay-map-in-cluster fix attempt that no longer stops CarPlay navigating"
+  "versionCode": 37,
+  "versionName": "0.3.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.0.apk",
+  "notes": "0.3.0 \u2014 Phase 1 of SharkOS's own maps: a live MapLibre map that follows your GPS (Maps button, top-right of Home). Needs the unit online; grant location when asked."
 }
