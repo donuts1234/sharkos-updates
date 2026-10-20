@@ -1,6 +1,6 @@
 {
-  "versionCode": 47,
-  "versionName": "0.3.10",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.10.apk",
-  "notes": "0.3.10: indicator glow now reads the car's turn signal (body.getTurnLightState: 2 left, 4 right; hazards light both sides)"
+  "versionCode": 48,
+  "versionName": "0.3.11",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.11.apk",
+  "notes": "0.3.11: indicator glow in time with the dash arrow (750 ms per flash, 400 ms lit, measured from video); stops the moment you cancel"
 }
