@@ -1,6 +1,6 @@
 {
-  "versionCode": 42,
-  "versionName": "0.3.5",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.5.apk",
-  "notes": "CarPlay layouts A/B/C (Settings \u2192 CarPlay), Settings tabs, HUD nav only"
+  "versionCode": 43,
+  "versionName": "0.3.6",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.6.apk",
+  "notes": "CarPlay layout B edge to edge with a slimmer strip; CarPlay dock back on the right"
 }
