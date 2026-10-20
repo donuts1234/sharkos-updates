@@ -1,6 +1,6 @@
 {
-  "versionCode": 50,
-  "versionName": "0.4.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.0.apk",
-  "notes": "0.4.0 (test): Car readout under Settings -> System -> Car readout (radar, gear, doors/windows/locks, charging/V2L, energy, tyre temps, sensors, health, audio EQ/chimes) + a Camera check that lists the cameras. Run these on the car and tell me what reports."
+  "versionCode": 51,
+  "versionName": "0.4.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.1.apk",
+  "notes": "0.4.1 (test): fixes the Car readout crash (BYD's audio device needs a car permission we don't hold; EQ is now gated behind it). The readout + Camera check now open safely."
 }
