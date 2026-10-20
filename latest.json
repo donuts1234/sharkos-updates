@@ -1,6 +1,6 @@
 {
-  "versionCode": 52,
-  "versionName": "0.4.2",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.2.apk",
-  "notes": "0.4.2 (test): camera check now copies the car's own QCarCam libraries and loads them the way SharkSight does, then counts the cameras. Run Camera check and send me the line."
+  "versionCode": 53,
+  "versionName": "0.4.3",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.3.apk",
+  "notes": "0.4.3 (test): camera check now has the car's QCarCam libraries bundled \u2014 run Camera check and send me the line (hoping for a camera count)."
 }
