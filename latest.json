@@ -1,6 +1,6 @@
 {
-  "versionCode": 54,
-  "versionName": "0.4.4",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.4.apk",
-  "notes": "0.4.4 (test): camera check loads the QCarCam libraries through the sphal namespace (fixes the libutils error). Run Camera check and send the line."
+  "versionCode": 55,
+  "versionName": "0.4.5",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.5.apk",
+  "notes": "0.4.5 (test): camera check resolves the namespace from libdl_android.so (fixes the unavailable error). Run Camera check."
 }
