@@ -1,6 +1,6 @@
 {
-  "versionCode": 51,
-  "versionName": "0.4.1",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.1.apk",
-  "notes": "0.4.1 (test): fixes the Car readout crash (BYD's audio device needs a car permission we don't hold; EQ is now gated behind it). The readout + Camera check now open safely."
+  "versionCode": 52,
+  "versionName": "0.4.2",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.2.apk",
+  "notes": "0.4.2 (test): camera check now copies the car's own QCarCam libraries and loads them the way SharkSight does, then counts the cameras. Run Camera check and send me the line."
 }
