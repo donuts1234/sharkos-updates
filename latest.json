@@ -1,6 +1,6 @@
 {
-  "versionCode": 58,
-  "versionName": "0.4.8",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.8.apk",
-  "notes": "0.4.8 (test): camera check diagnostic \u2014 tries every namespace lookup and reports which works. Run Camera check and send the whole line."
+  "versionCode": 59,
+  "versionName": "0.4.9",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.9.apk",
+  "notes": "0.4.9 (test): camera check loads the vendor camera library straight from /vendor through sphal. Run Camera check."
 }
