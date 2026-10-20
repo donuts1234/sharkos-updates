@@ -1,6 +1,6 @@
 {
-  "versionCode": 63,
-  "versionName": "0.4.13",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.13.apk",
-  "notes": "0.4.13 (test): camera check links the namespace to vndk for libutils. Run Camera check."
+  "versionCode": 64,
+  "versionName": "0.4.14",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.14.apk",
+  "notes": "0.4.14 (test): lists the 8 camera inputs' raw descriptors so I can decode resolutions/ids. Run Camera check once more."
 }
