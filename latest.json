@@ -1,6 +1,6 @@
 {
-  "versionCode": 43,
-  "versionName": "0.3.6",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.6.apk",
-  "notes": "CarPlay layout B edge to edge with a slimmer strip; CarPlay dock back on the right"
+  "versionCode": 45,
+  "versionName": "0.3.8",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.8.apk",
+  "notes": "0.3.8: slim HVAC Bar (floating or line, ambient lighting built in); new Home layouts Islands, Map first and Glance (Settings \u2192 General); ambient lighting in the CarPlay B strip; driver display tidied to Cover card, Power, Vinyl, Night \u2014 Power now uses the Cover card look"
 }
