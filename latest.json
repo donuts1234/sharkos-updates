@@ -1,6 +1,6 @@
 {
-  "versionCode": 45,
-  "versionName": "0.3.8",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.8.apk",
-  "notes": "0.3.8: slim HVAC Bar (floating or line, ambient lighting built in); new Home layouts Islands, Map first and Glance (Settings \u2192 General); ambient lighting in the CarPlay B strip; driver display tidied to Cover card, Power, Vinyl, Night \u2014 Power now uses the Cover card look"
+  "versionCode": 46,
+  "versionName": "0.3.9",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.3.9.apk",
+  "notes": "0.3.9: one slim HVAC Bar (driver temp left, fan right \u2014 swap in Settings; All apps button); drivers Josh and Vale with their own looks (badge top left of Home); indicator glow on the driver display (test + live readout in Settings \u2192 Instrument cluster)"
 }
