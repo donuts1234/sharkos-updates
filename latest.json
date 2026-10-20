@@ -1,6 +1,6 @@
 {
-  "versionCode": 62,
-  "versionName": "0.4.12",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.12.apk",
-  "notes": "0.4.12 (test): camera check uses a custom namespace bridged to sphal for the bundled libs. Run Camera check."
+  "versionCode": 63,
+  "versionName": "0.4.13",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.13.apk",
+  "notes": "0.4.13 (test): camera check links the namespace to vndk for libutils. Run Camera check."
 }
