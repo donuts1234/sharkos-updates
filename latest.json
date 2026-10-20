@@ -1,6 +1,6 @@
 {
-  "versionCode": 55,
-  "versionName": "0.4.5",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.5.apk",
-  "notes": "0.4.5 (test): camera check resolves the namespace from libdl_android.so (fixes the unavailable error). Run Camera check."
+  "versionCode": 56,
+  "versionName": "0.4.6",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.6.apk",
+  "notes": "0.4.6 (test): camera check binds the namespace function at load time. Run Camera check."
 }
