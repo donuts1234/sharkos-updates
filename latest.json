@@ -1,6 +1,6 @@
 {
-  "versionCode": 74,
-  "versionName": "0.4.24",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.24.apk",
-  "notes": "0.4.24 \u2014 camera: scan all 8 inputs for a live one (surround cams may be off while parked)"
+  "versionCode": 75,
+  "versionName": "0.4.25",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.25.apk",
+  "notes": "0.4.25 \u2014 camera capture: register QCarCam event callback (the step that starts streaming)"
 }
