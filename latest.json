@@ -1,6 +1,6 @@
 {
-  "versionCode": 81,
-  "versionName": "0.4.31",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.31.apk",
-  "notes": "0.4.31 \u2014 camera: warm-window trick (launch AVM to power, drop to background to release, grab id 8)"
+  "versionCode": 82,
+  "versionName": "0.4.32",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.32.apk",
+  "notes": "0.4.32 \u2014 camera: exec via linker64 + LD_LIBRARY_PATH, plain-linker load (SharkSight's exact method)"
 }
