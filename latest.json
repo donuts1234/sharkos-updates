@@ -1,6 +1,6 @@
 {
-  "versionCode": 64,
-  "versionName": "0.4.14",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.14.apk",
-  "notes": "0.4.14 (test): lists the 8 camera inputs' raw descriptors so I can decode resolutions/ids. Run Camera check once more."
+  "versionCode": 65,
+  "versionName": "0.4.15",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.15.apk",
+  "notes": "0.4.15 \u2014 camera: scan buffer for all 8 inputs' resolutions + ids"
 }
