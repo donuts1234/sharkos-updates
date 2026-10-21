@@ -1,6 +1,6 @@
 {
-  "versionCode": 80,
-  "versionName": "0.4.30",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.30.apk",
-  "notes": "0.4.30 \u2014 camera: count event-callback fires (is the server streaming to us at all?) + exec marker"
+  "versionCode": 81,
+  "versionName": "0.4.31",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.31.apk",
+  "notes": "0.4.31 \u2014 camera: warm-window trick (launch AVM to power, drop to background to release, grab id 8)"
 }
