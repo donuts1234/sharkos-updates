@@ -1,6 +1,6 @@
 {
-  "versionCode": 78,
-  "versionName": "0.4.28",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.28.apk",
-  "notes": "0.4.28 \u2014 camera: launch BYD AVM activity to power the sensors (SharkSight's real trick), then capture"
+  "versionCode": 79,
+  "versionName": "0.4.29",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.29.apk",
+  "notes": "0.4.29 \u2014 camera: run capture as a separate exec'd process (libcamhelper.so), like SharkSight"
 }
