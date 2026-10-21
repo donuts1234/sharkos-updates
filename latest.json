@@ -1,6 +1,6 @@
 {
-  "versionCode": 89,
-  "versionName": "0.4.39",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.39.apk",
-  "notes": "0.4.39 \u2014 Right blind-spot camera: now live the instant you indicate (no cold-start delay), and the amber frame no longer clipped."
+  "versionCode": 90,
+  "versionName": "0.4.40",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.40.apk",
+  "notes": "0.4.40 \u2014 Camera safety fix: SharkOS now tears the camera session down cleanly (and auto-recovers a prior unclean exit) so it won't lock the cameras. Right blind-spot still pops up instantly on indicator."
 }
