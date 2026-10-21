@@ -1,6 +1,6 @@
 {
-  "versionCode": 76,
-  "versionName": "0.4.26",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.26.apk",
-  "notes": "0.4.26 \u2014 camera: bind Desay AVM service to power the cameras, then capture (the SharkSight way)"
+  "versionCode": 77,
+  "versionName": "0.4.27",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.27.apk",
+  "notes": "0.4.27 \u2014 camera: watch AVM state settle + longer get_frame patience after power-up"
 }
