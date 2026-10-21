@@ -1,6 +1,6 @@
 {
-  "versionCode": 79,
-  "versionName": "0.4.29",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.29.apk",
-  "notes": "0.4.29 \u2014 camera: run capture as a separate exec'd process (libcamhelper.so), like SharkSight"
+  "versionCode": 80,
+  "versionName": "0.4.30",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.30.apk",
+  "notes": "0.4.30 \u2014 camera: count event-callback fires (is the server streaming to us at all?) + exec marker"
 }
