@@ -1,6 +1,6 @@
 {
-  "versionCode": 75,
-  "versionName": "0.4.25",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.25.apk",
-  "notes": "0.4.25 \u2014 camera capture: register QCarCam event callback (the step that starts streaming)"
+  "versionCode": 76,
+  "versionName": "0.4.26",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.26.apk",
+  "notes": "0.4.26 \u2014 camera: bind Desay AVM service to power the cameras, then capture (the SharkSight way)"
 }
