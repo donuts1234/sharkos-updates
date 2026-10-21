@@ -1,6 +1,6 @@
 {
-  "versionCode": 67,
-  "versionName": "0.4.17",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.17.apk",
-  "notes": "0.4.17 \u2014 camera capture test: open input 4, feed buffers, pull a frame"
+  "versionCode": 68,
+  "versionName": "0.4.18",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.18.apk",
+  "notes": "0.4.18 \u2014 camera capture: stream each step (so a hang shows where)"
 }
