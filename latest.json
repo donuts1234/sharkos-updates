@@ -1,6 +1,6 @@
 {
-  "versionCode": 86,
-  "versionName": "0.4.36",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.36.apk",
-  "notes": "0.4.36 \u2014 camera: self-healing live stream (auto re-open on stall, restart helper if it dies, waiting state)"
+  "versionCode": 87,
+  "versionName": "0.4.37",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.37.apk",
+  "notes": "0.4.37 \u2014 Right blind-spot camera: the right camera (rear-right crop of the fisheye) takes over the driver display's right third while the right indicator is on, then clears. Turn on in Settings \u2192 Vehicle \u2192 Instrument cluster \u2192 Right blind-spot camera."
 }
