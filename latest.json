@@ -1,6 +1,6 @@
 {
-  "versionCode": 72,
-  "versionName": "0.4.22",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.22.apk",
-  "notes": "0.4.22 \u2014 camera capture: full descriptor dump + descriptor-derived formats + plane-layout geometry"
+  "versionCode": 73,
+  "versionName": "0.4.23",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.23.apk",
+  "notes": "0.4.23 \u2014 camera capture: try the camera's declared format (0x07080102) + longer get_frame"
 }
