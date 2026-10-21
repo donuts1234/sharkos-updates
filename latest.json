@@ -1,6 +1,6 @@
 {
-  "versionCode": 70,
-  "versionName": "0.4.20",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.20.apk",
-  "notes": "0.4.20 \u2014 camera capture: probe which dmabuf source the app can open (dma_heap/ion), try all"
+  "versionCode": 71,
+  "versionName": "0.4.21",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.21.apk",
+  "notes": "0.4.21 \u2014 camera capture: ION dmabuf works; brute-force color_fmt to make start() succeed + dump descriptor"
 }
