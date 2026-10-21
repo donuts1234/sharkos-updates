@@ -1,6 +1,6 @@
 {
-  "versionCode": 77,
-  "versionName": "0.4.27",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.27.apk",
-  "notes": "0.4.27 \u2014 camera: watch AVM state settle + longer get_frame patience after power-up"
+  "versionCode": 78,
+  "versionName": "0.4.28",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.28.apk",
+  "notes": "0.4.28 \u2014 camera: launch BYD AVM activity to power the sensors (SharkSight's real trick), then capture"
 }
