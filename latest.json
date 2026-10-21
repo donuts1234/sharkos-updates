@@ -1,6 +1,6 @@
 {
-  "versionCode": 84,
-  "versionName": "0.4.34",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.34.apk",
-  "notes": "0.4.34 \u2014 camera: show the captured frames as images (UYVY \u2192 RGB) in the readout"
+  "versionCode": 85,
+  "versionName": "0.4.35",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.35.apk",
+  "notes": "0.4.35 \u2014 camera: live right-camera stream test (no screen takeover) to check if cameras run while driving"
 }
