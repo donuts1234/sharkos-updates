@@ -1,6 +1,6 @@
 {
-  "versionCode": 87,
-  "versionName": "0.4.37",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.37.apk",
-  "notes": "0.4.37 \u2014 Right blind-spot camera: the right camera (rear-right crop of the fisheye) takes over the driver display's right third while the right indicator is on, then clears. Turn on in Settings \u2192 Vehicle \u2192 Instrument cluster \u2192 Right blind-spot camera."
+  "versionCode": 88,
+  "versionName": "0.4.38",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.38.apk",
+  "notes": "0.4.38 \u2014 New CarPlay layout 'D \u00b7 Full + bar': CarPlay fills the full width with the normal slim HVAC bar across the bottom. Pick it in Settings \u2192 CarPlay \u2192 Layout \u2192 D, then reconnect your iPhone (Bluetooth off/on)."
 }
