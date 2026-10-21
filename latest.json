@@ -1,6 +1,6 @@
 {
-  "versionCode": 73,
-  "versionName": "0.4.23",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.23.apk",
-  "notes": "0.4.23 \u2014 camera capture: try the camera's declared format (0x07080102) + longer get_frame"
+  "versionCode": 74,
+  "versionName": "0.4.24",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.24.apk",
+  "notes": "0.4.24 \u2014 camera: scan all 8 inputs for a live one (surround cams may be off while parked)"
 }
