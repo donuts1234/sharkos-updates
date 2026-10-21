@@ -1,6 +1,6 @@
 {
-  "versionCode": 85,
-  "versionName": "0.4.35",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.35.apk",
-  "notes": "0.4.35 \u2014 camera: live right-camera stream test (no screen takeover) to check if cameras run while driving"
+  "versionCode": 86,
+  "versionName": "0.4.36",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.36.apk",
+  "notes": "0.4.36 \u2014 camera: self-healing live stream (auto re-open on stall, restart helper if it dies, waiting state)"
 }
