@@ -1,6 +1,6 @@
 {
-  "versionCode": 66,
-  "versionName": "0.4.16",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.16.apk",
-  "notes": "0.4.16 \u2014 camera check: show full result (no line clipping)"
+  "versionCode": 67,
+  "versionName": "0.4.17",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.17.apk",
+  "notes": "0.4.17 \u2014 camera capture test: open input 4, feed buffers, pull a frame"
 }
