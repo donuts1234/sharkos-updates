@@ -1,6 +1,6 @@
 {
-  "versionCode": 88,
-  "versionName": "0.4.38",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.38.apk",
-  "notes": "0.4.38 \u2014 New CarPlay layout 'D \u00b7 Full + bar': CarPlay fills the full width with the normal slim HVAC bar across the bottom. Pick it in Settings \u2192 CarPlay \u2192 Layout \u2192 D, then reconnect your iPhone (Bluetooth off/on)."
+  "versionCode": 89,
+  "versionName": "0.4.39",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.39.apk",
+  "notes": "0.4.39 \u2014 Right blind-spot camera: now live the instant you indicate (no cold-start delay), and the amber frame no longer clipped."
 }
