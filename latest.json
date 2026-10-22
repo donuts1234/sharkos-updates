@@ -1,6 +1,6 @@
 {
-  "versionCode": 90,
-  "versionName": "0.4.40",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.40.apk",
-  "notes": "0.4.40 \u2014 Camera safety fix: SharkOS now tears the camera session down cleanly (and auto-recovers a prior unclean exit) so it won't lock the cameras. Right blind-spot still pops up instantly on indicator."
+  "versionCode": 91,
+  "versionName": "0.4.41",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.41.apk",
+  "notes": "0.4.41 \u2014 CarPlay layout D: slimmer HVAC bar (96px) and CarPlay now follows your top-edge gap so the top isn't cropped. Reconnect your iPhone (Bluetooth off/on) after updating."
 }
