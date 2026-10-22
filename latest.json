@@ -1,6 +1,6 @@
 {
-  "versionCode": 91,
-  "versionName": "0.4.41",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.41.apk",
-  "notes": "0.4.41 \u2014 CarPlay layout D: slimmer HVAC bar (96px) and CarPlay now follows your top-edge gap so the top isn't cropped. Reconnect your iPhone (Bluetooth off/on) after updating."
+  "versionCode": 92,
+  "versionName": "0.4.42",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.42.apk",
+  "notes": "0.4.42 \u2014 Smoother blind-spot camera: frames now go through shared memory and render on the display refresh instead of a slow file poll, so it runs at the camera's full rate instead of ~10fps."
 }
