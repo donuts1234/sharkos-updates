@@ -1,6 +1,6 @@
 {
-  "versionCode": 94,
-  "versionName": "0.4.44",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.44.apk",
-  "notes": "0.4.44 \u2014 camera park/shut-off lockout fix (cameras in Drive/Neutral only + clean release on screen-off), nav 'turn on navigation first' placeholder fix, and Dynaudio EQ start-up restore"
+  "versionCode": 95,
+  "versionName": "0.4.45",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.45.apk",
+  "notes": "0.4.45 \u2014 restore cameras in Drive (0.4.44's gear gate was blocking it) and fix the aircon flipping into dual when you adjust temperature in SharkOS"
 }
