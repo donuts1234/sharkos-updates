@@ -1,6 +1,6 @@
 {
-  "versionCode": 92,
-  "versionName": "0.4.42",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.42.apk",
-  "notes": "0.4.42 \u2014 Smoother blind-spot camera: frames now go through shared memory and render on the display refresh instead of a slow file poll, so it runs at the camera's full rate instead of ~10fps."
+  "versionCode": 93,
+  "versionName": "0.4.43",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.43.apk",
+  "notes": "0.4.43 \u2014 Blind-spot camera no longer locks up: it now yields the cameras to BYD (reverse/360/blind-spot) like SharkSight does, instead of fighting for them \u2014 while staying instant-on. Also faster/smoother footage, and new CarPlay layout E (full screen, no bar; reconnect iPhone after choosing it)."
 }
