@@ -1,6 +1,6 @@
 {
-  "versionCode": 100,
-  "versionName": "0.4.50",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.50.apk",
-  "notes": "0.4.50 \u2014 SharkEYE dashcam (v1): records Front+Rear or 4-way to looping 3-minute MP4 clips on a USB drive, auto-deleting the oldest to make room, with lock-to-keep. Live preview when parked, frozen while recording to save CPU. Steps aside cleanly whenever the car uses the cameras. Turn it on in Settings \u2192 System \u2192 SharkEYE dashcam."
+  "versionCode": 104,
+  "versionName": "0.4.54",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.54.apk",
+  "notes": "0.4.54 \u2014 SharkEYE camera view fixed: proper full 3:2 picture (was a thin strip), the screen scrolls, and clips sit below. Recording now 3:2 (1440\u00d7960) like the source. Plus gear auto start/stop (record in Drive, stop in Reverse/Park \u2014 calibrate in Settings \u2192 System \u2192 SharkEYE), crash-safety so a camera glitch can't lock the cameras, and a live camera-state readout under the blind-spot setting."
 }
