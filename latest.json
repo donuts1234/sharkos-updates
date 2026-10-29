@@ -1,6 +1,6 @@
 {
-  "versionCode": 95,
-  "versionName": "0.4.45",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.45.apk",
-  "notes": "0.4.45 \u2014 restore cameras in Drive (0.4.44's gear gate was blocking it) and fix the aircon flipping into dual when you adjust temperature in SharkOS"
+  "versionCode": 96,
+  "versionName": "0.4.46",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.46.apk",
+  "notes": "0.4.46 \u2014 smooth GPU camera rendering: the live camera now converts on the GPU (like BYD) instead of the CPU, for much smoother video. New 'Smooth GPU video' toggle in Settings - Vehicle - Instrument cluster if you ever need the old path."
 }
