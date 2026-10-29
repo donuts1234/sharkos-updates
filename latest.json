@@ -1,6 +1,6 @@
 {
-  "versionCode": 97,
-  "versionName": "0.4.47",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.47.apk",
-  "notes": "0.4.47 \u2014 system monitor (Settings - System): live CPU, GPU, memory, temperature and the camera's on-screen frame rate. Plus a small render tweak for smoother camera."
+  "versionCode": 98,
+  "versionName": "0.4.48",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.48.apk",
+  "notes": "0.4.48 \u2014 system monitor diagnostic: Settings - System now lists which CPU/GPU sensor sources this unit allows, so the live readings can be wired to the ones that work."
 }
