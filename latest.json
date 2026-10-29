@@ -1,6 +1,6 @@
 {
-  "versionCode": 99,
-  "versionName": "0.4.49",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.49.apk",
-  "notes": "0.4.49 \u2014 system monitor shows SharkOS's own CPU, memory, camera frame rate and thermal; cleaner and honest about what a car app can read. EQ re-apply now shows the one adb permission it needs."
+  "versionCode": 100,
+  "versionName": "0.4.50",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.50.apk",
+  "notes": "0.4.50 \u2014 SharkEYE dashcam (v1): records Front+Rear or 4-way to looping 3-minute MP4 clips on a USB drive, auto-deleting the oldest to make room, with lock-to-keep. Live preview when parked, frozen while recording to save CPU. Steps aside cleanly whenever the car uses the cameras. Turn it on in Settings \u2192 System \u2192 SharkEYE dashcam."
 }
