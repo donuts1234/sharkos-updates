@@ -1,6 +1,6 @@
 {
-  "versionCode": 98,
-  "versionName": "0.4.48",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.48.apk",
-  "notes": "0.4.48 \u2014 system monitor diagnostic: Settings - System now lists which CPU/GPU sensor sources this unit allows, so the live readings can be wired to the ones that work."
+  "versionCode": 99,
+  "versionName": "0.4.49",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.49.apk",
+  "notes": "0.4.49 \u2014 system monitor shows SharkOS's own CPU, memory, camera frame rate and thermal; cleaner and honest about what a car app can read. EQ re-apply now shows the one adb permission it needs."
 }
