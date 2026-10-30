@@ -1,6 +1,6 @@
 {
-  "versionCode": 117,
-  "versionName": "0.4.67",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.67.apk",
-  "notes": "0.4.67 \u2014 Bass boost (clean low-end, no headroom cost) + Make-up level on the EQ page"
+  "versionCode": 118,
+  "versionName": "0.4.68",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.68.apk",
+  "notes": "0.4.68 \u2014 deep sub-bass boost (DynamicsProcessing <80 Hz, limited) on the EQ page"
 }
