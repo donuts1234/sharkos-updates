@@ -1,6 +1,6 @@
 {
-  "versionCode": 108,
-  "versionName": "0.4.58",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.58.apk",
-  "notes": "Fisheye de-warp: the dashcam footage and the SharkEYE live preview are now flattened so they don't look fisheye/bulged (ported from SharkSight). Always on. The blind-spot corner view is unchanged for now. Note: the flatten strength is an estimate and may need a tune once you see it."
+  "versionCode": 109,
+  "versionName": "0.4.59",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.59.apk",
+  "notes": "EQ re-apply now works: it nudges every band and sets it back (the amp only applies a band when the value changes, so re-writing the saved value did nothing). Covers bass/mid/high-mid/treble, not just bass."
 }
