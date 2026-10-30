@@ -1,6 +1,6 @@
 {
-  "versionCode": 104,
-  "versionName": "0.4.54",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.54.apk",
-  "notes": "0.4.54 \u2014 SharkEYE camera view fixed: proper full 3:2 picture (was a thin strip), the screen scrolls, and clips sit below. Recording now 3:2 (1440\u00d7960) like the source. Plus gear auto start/stop (record in Drive, stop in Reverse/Park \u2014 calibrate in Settings \u2192 System \u2192 SharkEYE), crash-safety so a camera glitch can't lock the cameras, and a live camera-state readout under the blind-spot setting."
+  "versionCode": 105,
+  "versionName": "0.4.55",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.55.apk",
+  "notes": "Welcome screen on the driver display (greeting + car check, ~10s on startup/wake); SharkEYE REC pill on Home (tap for the dashcam, shows recording status); fixed the screen static at boot/power-down; gear readout + SharkEYE auto start/stop now use the real gear codes."
 }
