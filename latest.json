@@ -1,6 +1,6 @@
 {
-  "versionCode": 114,
-  "versionName": "0.4.64",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.64.apk",
-  "notes": "0.4.64 \u2014 declare CAR_CONTROL_ENHANCED_AUDIO for the pm-grant test"
+  "versionCode": 115,
+  "versionName": "0.4.65",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.65.apk",
+  "notes": "0.4.65 \u2014 experimental output-EQ probe (Android audio effect); test on CarPlay audio"
 }
