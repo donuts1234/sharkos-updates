@@ -1,6 +1,6 @@
 {
-  "versionCode": 111,
-  "versionName": "0.4.61",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.61.apk",
-  "notes": "Two things: (1) SharkEYE recording fix \u2014 it was actually recording the whole time but the screen wrongly showed 'waiting'/grey because the status file was in the wrong folder; now it shows Recording + red pill correctly. (2) New EQ page in Settings - System - Audio: Deep Bass / Bass / Alto / Treble faders (-9 to +9) with a Flat reset, pushes to the amp when you let go of a fader."
+  "versionCode": 112,
+  "versionName": "0.4.62",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.62.apk",
+  "notes": "EQ should now actually work: decompiled BYD's settings app and found it builds the CarEqualizer object directly (new CarEqualizer(car, enhancedAudio)) and calls setBandLevel - we were using a lookup that returns null on this unit. The faders now drive the amp the same way BYD's own EQ screen does. If it still doesn't move, tap Re-apply and tell me the status line (it'll show CarEqualizer=ok or the exact error)."
 }
