@@ -1,6 +1,6 @@
 {
-  "versionCode": 113,
-  "versionName": "0.4.63",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.63.apk",
-  "notes": "0.4.63 \u2014 surface the real CarEqualizer error cause (unwrap InvocationTargetException + report which step failed)"
+  "versionCode": 114,
+  "versionName": "0.4.64",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.64.apk",
+  "notes": "0.4.64 \u2014 declare CAR_CONTROL_ENHANCED_AUDIO for the pm-grant test"
 }
