@@ -1,6 +1,6 @@
 {
-  "versionCode": 109,
-  "versionName": "0.4.59",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.59.apk",
-  "notes": "EQ re-apply now works: it nudges every band and sets it back (the amp only applies a band when the value changes, so re-writing the saved value did nothing). Covers bass/mid/high-mid/treble, not just bass."
+  "versionCode": 110,
+  "versionName": "0.4.60",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.60.apk",
+  "notes": "SharkEYE recording fix: dropped to the encoder-safe 960x640 @ 15fps preset (the 1440x960 I had was too much for the head unit's encoder, which caused the 'waiting for cameras'/no clips and made the blind-spot laggy). The blind-spot feed is now published ahead of the recording encode so it stays smooth. If recording still won't start, the SharkEYE 'Helper:' line now shows a live cap/enc count to pinpoint it."
 }
