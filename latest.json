@@ -1,6 +1,6 @@
 {
-  "versionCode": 107,
-  "versionName": "0.4.57",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.57.apk",
-  "notes": "Cameras no longer fight: the dashcam and the right blind-spot now run off one shared camera feed, so you can have both on at once without the lock-up. SharkEYE now has its own Settings tab (out of System). Recording is Drive + Neutral only, and hands over to BYD cleanly (reverse/360) then resumes on its own."
+  "versionCode": 108,
+  "versionName": "0.4.58",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.58.apk",
+  "notes": "Fisheye de-warp: the dashcam footage and the SharkEYE live preview are now flattened so they don't look fisheye/bulged (ported from SharkSight). Always on. The blind-spot corner view is unchanged for now. Note: the flatten strength is an estimate and may need a tune once you see it."
 }
