@@ -1,6 +1,6 @@
 {
-  "versionCode": 116,
-  "versionName": "0.4.66",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.66.apk",
-  "notes": "0.4.66 \u2014 real 5-band SharkOS EQ (output audio effect, works on CarPlay); per-driver, saved, master on/off"
+  "versionCode": 117,
+  "versionName": "0.4.67",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.67.apk",
+  "notes": "0.4.67 \u2014 Bass boost (clean low-end, no headroom cost) + Make-up level on the EQ page"
 }
