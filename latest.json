@@ -1,6 +1,6 @@
 {
-  "versionCode": 112,
-  "versionName": "0.4.62",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.62.apk",
-  "notes": "EQ should now actually work: decompiled BYD's settings app and found it builds the CarEqualizer object directly (new CarEqualizer(car, enhancedAudio)) and calls setBandLevel - we were using a lookup that returns null on this unit. The faders now drive the amp the same way BYD's own EQ screen does. If it still doesn't move, tap Re-apply and tell me the status line (it'll show CarEqualizer=ok or the exact error)."
+  "versionCode": 113,
+  "versionName": "0.4.63",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.63.apk",
+  "notes": "0.4.63 \u2014 surface the real CarEqualizer error cause (unwrap InvocationTargetException + report which step failed)"
 }
