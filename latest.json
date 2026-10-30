@@ -1,6 +1,6 @@
 {
-  "versionCode": 105,
-  "versionName": "0.4.55",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.55.apk",
-  "notes": "Welcome screen on the driver display (greeting + car check, ~10s on startup/wake); SharkEYE REC pill on Home (tap for the dashcam, shows recording status); fixed the screen static at boot/power-down; gear readout + SharkEYE auto start/stop now use the real gear codes."
+  "versionCode": 106,
+  "versionName": "0.4.56",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.56.apk",
+  "notes": "Climate pop-up on the driver display \u2014 a temperature/fan/airflow card for ~6 seconds whenever you touch the aircon, then fades back to your cluster design. Also: the welcome screen (and the new climate pop-up) now fade off instead of cutting."
 }
