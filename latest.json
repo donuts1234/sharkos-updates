@@ -1,6 +1,6 @@
 {
-  "versionCode": 106,
-  "versionName": "0.4.56",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.56.apk",
-  "notes": "Climate pop-up on the driver display \u2014 a temperature/fan/airflow card for ~6 seconds whenever you touch the aircon, then fades back to your cluster design. Also: the welcome screen (and the new climate pop-up) now fade off instead of cutting."
+  "versionCode": 107,
+  "versionName": "0.4.57",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.57.apk",
+  "notes": "Cameras no longer fight: the dashcam and the right blind-spot now run off one shared camera feed, so you can have both on at once without the lock-up. SharkEYE now has its own Settings tab (out of System). Recording is Drive + Neutral only, and hands over to BYD cleanly (reverse/360) then resumes on its own."
 }
