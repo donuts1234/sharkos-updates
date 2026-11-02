@@ -1,6 +1,6 @@
 {
-  "versionCode": 120,
-  "versionName": "0.4.70",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.70.apk",
-  "notes": "0.4.70 \u2014 blind-spot no longer throttled by dashcam encoding (encode moved to its own thread)"
+  "versionCode": 121,
+  "versionName": "0.4.71",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.71.apk",
+  "notes": "0.4.71 \u2014 full-screen cluster takeover test toggle (Settings \u2192 cluster \u2192 Advanced)"
 }
