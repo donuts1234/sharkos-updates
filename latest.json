@@ -1,6 +1,6 @@
 {
-  "versionCode": 118,
-  "versionName": "0.4.68",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.68.apk",
-  "notes": "0.4.68 \u2014 deep sub-bass boost (DynamicsProcessing <80 Hz, limited) on the EQ page"
+  "versionCode": 119,
+  "versionName": "0.4.69",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.69.apk",
+  "notes": "0.4.69 \u2014 sub boost now with a subsonic filter (<22 Hz cut) to protect the sub and tighten the bass"
 }
