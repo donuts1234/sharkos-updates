@@ -1,6 +1,6 @@
 {
-  "versionCode": 119,
-  "versionName": "0.4.69",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.69.apk",
-  "notes": "0.4.69 \u2014 sub boost now with a subsonic filter (<22 Hz cut) to protect the sub and tighten the bass"
+  "versionCode": 120,
+  "versionName": "0.4.70",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.70.apk",
+  "notes": "0.4.70 \u2014 blind-spot no longer throttled by dashcam encoding (encode moved to its own thread)"
 }
