@@ -1,6 +1,6 @@
 {
-  "versionCode": 122,
-  "versionName": "0.4.72",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.72.apk",
-  "notes": "0.4.72 \u2014 fix SharkEYE never saving clips (encoder created on the wrong thread)"
+  "versionCode": 123,
+  "versionName": "0.4.73",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.73.apk",
+  "notes": "Cleanup: removed old test/diagnostic pages (car readout, system monitor, cluster takeover test, HUD and camera-state diagnostics) for a cleaner Settings; fixed colourful static that could flash when powering off."
 }
