@@ -1,6 +1,6 @@
 {
-  "versionCode": 125,
-  "versionName": "0.4.75",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.75.apk",
-  "notes": "Real fix for cameras not working at speed: only yield to BYD when it's actually showing its camera view (reverse/360), not when AVM is merely disabled while driving \u2014 this was killing recording and the blind-spot above parking speed. Also: 'Recording' now only shows when a clip is genuinely being written."
+  "versionCode": 126,
+  "versionName": "0.4.76",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.76.apk",
+  "notes": "Add a drive trace to the SharkEYE screen (gear, AVM state, record state, frame count sampled every ~3s while driving) so a short drive shows exactly why the cameras aren't delivering at speed."
 }
