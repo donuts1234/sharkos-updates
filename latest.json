@@ -1,6 +1,6 @@
 {
-  "versionCode": 131,
-  "versionName": "0.4.81",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.81.apk",
-  "notes": "SharkEYE de-warp is now an adjustable strength slider (0% raw wide, no zoom; up to 100% full flatten) instead of on/off \u2014 so you can dial a gentle correction that keeps the wide view and quality. Blends raw and de-warped sampling by strength."
+  "versionCode": 132,
+  "versionName": "0.4.82",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.82.apk",
+  "notes": "SharkEYE much smoother: recording frame rate raised from 15 to 30 fps (the sensor rate) across all presets \u2014 the choppiness was 15fps playing at true speed. Tighter per-camera frame wait to avoid jitter, and turning the blind-spot off now gives recording the whole pipeline."
 }
