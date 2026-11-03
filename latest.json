@@ -1,6 +1,6 @@
 {
-  "versionCode": 121,
-  "versionName": "0.4.71",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.71.apk",
-  "notes": "0.4.71 \u2014 full-screen cluster takeover test toggle (Settings \u2192 cluster \u2192 Advanced)"
+  "versionCode": 122,
+  "versionName": "0.4.72",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.72.apk",
+  "notes": "0.4.72 \u2014 fix SharkEYE never saving clips (encoder created on the wrong thread)"
 }
