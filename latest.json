@@ -1,6 +1,6 @@
 {
-  "versionCode": 129,
-  "versionName": "0.4.79",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.79.apk",
-  "notes": "SharkEYE: fix sped-up playback (frames now timestamped by real capture time), and add a 'Flatten the fisheye' toggle (de-warp on = BYD-like rectilinear, off = raw wide fisheye) so you can pick the look. Also re-mapped blind-spot feed self-heal while recording."
+  "versionCode": 130,
+  "versionName": "0.4.80",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.80.apk",
+  "notes": "SharkEYE recordings now use bilinear (smooth) sampling instead of nearest-neighbour \u2014 noticeably cleaner, closer to the live/BYD look. Applies to both de-warp and raw. Turn on 'Flatten the fisheye' for the BYD-style straightened view."
 }
