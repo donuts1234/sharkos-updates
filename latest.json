@@ -1,6 +1,6 @@
 {
-  "versionCode": 123,
-  "versionName": "0.4.73",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.73.apk",
-  "notes": "Cleanup: removed old test/diagnostic pages (car readout, system monitor, cluster takeover test, HUD and camera-state diagnostics) for a cleaner Settings; fixed colourful static that could flash when powering off."
+  "versionCode": 124,
+  "versionName": "0.4.74",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.74.apk",
+  "notes": "SharkEYE/blind-spot fix: recover a dropped AVM camera connection automatically (both camera features could silently stop until an app restart); add a live AVM-state readout on the SharkEYE screen."
 }
