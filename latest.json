@@ -1,6 +1,6 @@
 {
-  "versionCode": 126,
-  "versionName": "0.4.76",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.76.apk",
-  "notes": "Add a drive trace to the SharkEYE screen (gear, AVM state, record state, frame count sampled every ~3s while driving) so a short drive shows exactly why the cameras aren't delivering at speed."
+  "versionCode": 127,
+  "versionName": "0.4.77",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.77.apk",
+  "notes": "THE recording fix: clip retention was deleting the segment currently being recorded (the live .mp4.tmp) every 30s, so every clip was orphaned and the final save failed even though frames recorded fine. Retention now only clears genuinely stale temp files. SharkEYE should save clips now."
 }
