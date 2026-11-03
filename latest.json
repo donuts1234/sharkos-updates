@@ -1,6 +1,6 @@
 {
-  "versionCode": 128,
-  "versionName": "0.4.78",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.78.apk",
-  "notes": "SharkEYE quality picker (Standard 960x640 / Sharp 1440x960 / Max 1920x1280 full sensor res) in Settings so recordings can be much sharper; and blind-spot now self-heals its feed so it shows while SharkEYE is recording (driving), not only in Park."
+  "versionCode": 129,
+  "versionName": "0.4.79",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.79.apk",
+  "notes": "SharkEYE: fix sped-up playback (frames now timestamped by real capture time), and add a 'Flatten the fisheye' toggle (de-warp on = BYD-like rectilinear, off = raw wide fisheye) so you can pick the look. Also re-mapped blind-spot feed self-heal while recording."
 }
