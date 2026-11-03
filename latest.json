@@ -1,6 +1,6 @@
 {
-  "versionCode": 130,
-  "versionName": "0.4.80",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.80.apk",
-  "notes": "SharkEYE recordings now use bilinear (smooth) sampling instead of nearest-neighbour \u2014 noticeably cleaner, closer to the live/BYD look. Applies to both de-warp and raw. Turn on 'Flatten the fisheye' for the BYD-style straightened view."
+  "versionCode": 131,
+  "versionName": "0.4.81",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.81.apk",
+  "notes": "SharkEYE de-warp is now an adjustable strength slider (0% raw wide, no zoom; up to 100% full flatten) instead of on/off \u2014 so you can dial a gentle correction that keeps the wide view and quality. Blends raw and de-warped sampling by strength."
 }
