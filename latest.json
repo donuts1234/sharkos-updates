@@ -1,6 +1,6 @@
 {
-  "versionCode": 127,
-  "versionName": "0.4.77",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.77.apk",
-  "notes": "THE recording fix: clip retention was deleting the segment currently being recorded (the live .mp4.tmp) every 30s, so every clip was orphaned and the final save failed even though frames recorded fine. Retention now only clears genuinely stale temp files. SharkEYE should save clips now."
+  "versionCode": 128,
+  "versionName": "0.4.78",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.78.apk",
+  "notes": "SharkEYE quality picker (Standard 960x640 / Sharp 1440x960 / Max 1920x1280 full sensor res) in Settings so recordings can be much sharper; and blind-spot now self-heals its feed so it shows while SharkEYE is recording (driving), not only in Park."
 }
