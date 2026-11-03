@@ -1,6 +1,6 @@
 {
-  "versionCode": 132,
-  "versionName": "0.4.82",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.82.apk",
-  "notes": "SharkEYE much smoother: recording frame rate raised from 15 to 30 fps (the sensor rate) across all presets \u2014 the choppiness was 15fps playing at true speed. Tighter per-camera frame wait to avoid jitter, and turning the blind-spot off now gives recording the whole pipeline."
+  "versionCode": 133,
+  "versionName": "0.4.83",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.83.apk",
+  "notes": "SharkEYE: CPU/GPU recording selector (Settings - System - SharkEYE - Recording engine). GPU does de-warp + scaling on the graphics chip and feeds the encoder directly, for much smoother high-res recording; CPU stays the proven default and GPU auto-falls-back if EGL can't start. First GPU cut."
 }
