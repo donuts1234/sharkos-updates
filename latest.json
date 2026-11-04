@@ -1,6 +1,6 @@
 {
-  "versionCode": 133,
-  "versionName": "0.4.83",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.4.83.apk",
-  "notes": "SharkEYE: CPU/GPU recording selector (Settings - System - SharkEYE - Recording engine). GPU does de-warp + scaling on the graphics chip and feeds the encoder directly, for much smoother high-res recording; CPU stays the proven default and GPU auto-falls-back if EGL can't start. First GPU cut."
+  "versionCode": 134,
+  "versionName": "0.5.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.5.0.apk",
+  "notes": "0.5.0 \u2014 new version numbers (the Tesla-style UI will be 1.0.0). New CarPlay layout F \u00b7 Full + slim bar: CarPlay full width over a thin 64 px climate bar \u2014 temps (linked unless Dual, LO/HI at the ends), fan 1\u20137, seat heat/cool 2 levels, Auto, A/C, recirc, demist. Pick it in Settings \u2192 CarPlay \u2192 Layout, then reconnect your iPhone."
 }
