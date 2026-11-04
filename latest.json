@@ -1,6 +1,6 @@
 {
-  "versionCode": 134,
-  "versionName": "0.5.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-0.5.0.apk",
-  "notes": "0.5.0 \u2014 new version numbers (the Tesla-style UI will be 1.0.0). New CarPlay layout F \u00b7 Full + slim bar: CarPlay full width over a thin 64 px climate bar \u2014 temps (linked unless Dual, LO/HI at the ends), fan 1\u20137, seat heat/cool 2 levels, Auto, A/C, recirc, demist. Pick it in Settings \u2192 CarPlay \u2192 Layout, then reconnect your iPhone."
+  "versionCode": 135,
+  "versionName": "1.0.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-1.0.0.apk",
+  "notes": "SharkOS 1.0.0 \u2014 the new Tesla-style look. Home: live map on the left, your Deep Sea Blue Shark 6 on the right (battery, range, now playing; tap the car for Controls). New bottom bar: volume, seat heat/cool and fan panels, linked temperatures with LO/HI (tap a temperature for Climate), Media/Maps/SharkEYE/Trips/Off-road/CarPlay/apps. Your Shark 6 spins at the top of Controls. Switch back any time in Settings \u2192 General \u2192 Home layout."
 }
