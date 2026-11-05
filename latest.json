@@ -1,6 +1,6 @@
 {
-  "versionCode": 136,
-  "versionName": "1.1.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-1.1.0.apk",
-  "notes": "1.1.0: Tesla-style sheets matched 1:1 to the mockups (Climate card, Settings, Media, All apps, Tyres, new bar + Home, Montserrat), faster speed, seat panel fix, and a Body controls test (locks, windows, tub light, mirrors, tailgate release)"
+  "versionCode": 137,
+  "versionName": "1.2.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-1.2.0.apk",
+  "notes": "1.2.0: light mode (follows the car's day/night, Auto/Light/Dark in Settings \u2192 Appearance) with a light driver display matched to BYD's colour; body controls on the Home car (lock, tub light, mirrors, windows); tailgate release test buttons B and C"
 }
