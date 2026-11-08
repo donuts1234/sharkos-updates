@@ -1,6 +1,6 @@
 {
-  "versionCode": 140,
-  "versionName": "1.3.2",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-1.3.2.apk",
-  "notes": "1.3.2 \u2014 snappier: Home stays loaded under other screens, car pictures cached; smaller centred Ute in drive; Tailgate button on the parked Ute; lock state now read correctly"
+  "versionCode": 141,
+  "versionName": "1.3.3",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-1.3.3.apk",
+  "notes": "1.3.3: one live map (Home's map is the navigation map, paused under other screens); freeze fixes (car/camera calls off the main thread); freeze recorder + memory trail in Recent problems; lower memory use"
 }
