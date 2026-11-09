@@ -1,6 +1,6 @@
 {
-  "versionCode": 142,
-  "versionName": "1.4.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-1.4.0.apk",
-  "notes": "1.4.0: speed limit sign and dash lights (headlights, high beam, fog lights, hazards) on Home while driving; Settings \u2192 Vehicle \u2192 Dash lights and speed limit to check readings"
+  "versionCode": 143,
+  "versionName": "2.0.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.0.0.apk",
+  "notes": "2.0.0 \u2014 new look: wallpaper Home with your Shark 6 and a card row (music, range, maps, tyres, quick controls), a thin customisable bar (hold a button to pick your climate buttons and apps), and Maps as its own full-screen page."
 }
