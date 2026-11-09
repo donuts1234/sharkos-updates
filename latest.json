@@ -1,6 +1,6 @@
 {
-  "versionCode": 143,
-  "versionName": "2.0.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.0.0.apk",
-  "notes": "2.0.0 \u2014 new look: wallpaper Home with your Shark 6 and a card row (music, range, maps, tyres, quick controls), a thin customisable bar (hold a button to pick your climate buttons and apps), and Maps as its own full-screen page."
+  "versionCode": 144,
+  "versionName": "2.1.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.1.0.apk",
+  "notes": "2.1.0 \u2014 Settings and the aircon in the new look: Settings menu on the right, Ambient Lighting, a new climate card with your Shark 6 from above, glass seat/fan pop-ups, and tyre pressures in psi."
 }
