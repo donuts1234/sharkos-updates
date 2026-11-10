@@ -1,6 +1,6 @@
 {
-  "versionCode": 144,
-  "versionName": "2.1.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.1.0.apk",
-  "notes": "2.1.0 \u2014 Settings and the aircon in the new look: Settings menu on the right, Ambient Lighting, a new climate card with your Shark 6 from above, glass seat/fan pop-ups, and tyre pressures in psi."
+  "versionCode": 145,
+  "versionName": "2.2.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.2.0.apk",
+  "notes": "2.2.0: new Settings (Appearance with six theme colours, permissions, Software page), thin top bar on every screen with the song, dash lights and notifications, Ambient Lighting with your lit cabin, a fully customisable 24-slot bar, SharkOS's bar on CarPlay, no car or speed on Home, audio EQ removed"
 }
