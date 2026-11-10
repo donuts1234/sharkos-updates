@@ -1,6 +1,6 @@
 {
-  "versionCode": 145,
-  "versionName": "2.2.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.2.0.apk",
-  "notes": "2.2.0: new Settings (Appearance with six theme colours, permissions, Software page), thin top bar on every screen with the song, dash lights and notifications, Ambient Lighting with your lit cabin, a fully customisable 24-slot bar, SharkOS's bar on CarPlay, no car or speed on Home, audio EQ removed"
+  "versionCode": 146,
+  "versionName": "2.3.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.3.0.apk",
+  "notes": "Four new driver display designs: Horizon (your wallpaper + tyre pressures), Centre stage, Power arc, Vinyl. Fuel % and km on Home and the top bar, real Bluetooth and signal icons, fewer false freeze reports, shutdown static fix, and lots of clean-up."
 }
