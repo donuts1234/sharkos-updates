@@ -1,6 +1,6 @@
 {
-  "versionCode": 146,
-  "versionName": "2.3.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.3.0.apk",
-  "notes": "Four new driver display designs: Horizon (your wallpaper + tyre pressures), Centre stage, Power arc, Vinyl. Fuel % and km on Home and the top bar, real Bluetooth and signal icons, fewer false freeze reports, shutdown static fix, and lots of clean-up."
+  "versionCode": 147,
+  "versionName": "2.3.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.3.1.apk",
+  "notes": "SharkOS now checks for updates every time the car starts or wakes, and shows a notice in the top bar when one is ready."
 }
