@@ -1,6 +1,6 @@
 {
-  "versionCode": 149,
-  "versionName": "2.4.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.4.0.apk",
-  "notes": "Reef Edition: Your range (learns your real range, drive history, charging and fuel log, Can I make it? in Maps), Media, apps, Trips, Off-road and SharkEYE in the new look, new wallpapers (also on the driver display), lock state fix, gentler driver-display start-up, blind-spot camera removed."
+  "versionCode": 150,
+  "versionName": "2.4.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.4.1.apk",
+  "notes": "Your range fixes: fill-ups no longer count as a drive (waits for the car's range readings at start-up), clearer Range when full labels."
 }
