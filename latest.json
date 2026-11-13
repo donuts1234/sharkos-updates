@@ -1,6 +1,6 @@
 {
-  "versionCode": 151,
-  "versionName": "2.4.2",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.4.2.apk",
-  "notes": "Start-up crash hunt: the range learner runs on its own thread, and Recent problems now shows where a crash happened."
+  "versionCode": 152,
+  "versionName": "2.5.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.5.0.apk",
+  "notes": "2.5.0: CarPlay framed with your Home cards + full-screen button, wide CarPlay route card with on-arrival estimate, no black CarPlay corners, smoother CarPlay opening, weather (Home card, top bar, rain warning), choose your Home cards, Trips card, arrival estimate on SharkOS Maps, drive-mode light flash, welcome light show, new app icon, start-up crash fix."
 }
