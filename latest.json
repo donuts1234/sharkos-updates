@@ -1,6 +1,6 @@
 {
-  "versionCode": 155,
-  "versionName": "2.5.3",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.5.3.apk",
-  "notes": "2.5.3: the 'Framed with Home cards' CarPlay layout rebuilt like the layouts that work (the iPhone now gets a picture exactly the frame's size) \u2014 pick it again and reconnect the iPhone. Other CarPlay layouts unchanged."
+  "versionCode": 156,
+  "versionName": "2.6.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.6.0.apk",
+  "notes": "2.6.0: My Car page (locks, windows, mirrors, tub light, tailgate, reading lights + daytime lights to try) and a tidier top bar (song moves to the right beside the dash lights, bigger dash lights, Bluetooth/signal icons removed)."
 }
