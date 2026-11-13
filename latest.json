@@ -1,6 +1,6 @@
 {
-  "versionCode": 153,
-  "versionName": "2.5.1",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.5.1.apk",
-  "notes": "2.5.1: the new 'Framed with Home cards' CarPlay layout now shows in Settings \u2192 CarPlay (it was off the edge); battery stops at 25 % (petrol takes over) in the arrival estimate and full-charge range."
+  "versionCode": 154,
+  "versionName": "2.5.2",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.5.2.apk",
+  "notes": "2.5.2: fixes the crashes on start-up and wake (the car's own service library), and the framed CarPlay layout no longer makes the iPhone keep disconnecting (the resize button is gone; use the Full screen layout for full)."
 }
