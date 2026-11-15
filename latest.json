@@ -1,6 +1,6 @@
 {
-  "versionCode": 157,
-  "versionName": "2.7.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.7.0.apk",
-  "notes": "2.7.0: ambient light fill around the framed CarPlay layout (CarPlay's colours glow out behind the cards and into the top and bottom bars), and notifications now pop over everything in the top bar so Dismiss is always tappable."
+  "versionCode": 158,
+  "versionName": "2.7.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.7.1.apk",
+  "notes": "Framed CarPlay: the glow is now a solid colour blur (no wallpaper under it) and the black corners are gone"
 }
