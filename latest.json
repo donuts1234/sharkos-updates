@@ -1,6 +1,6 @@
 {
-  "versionCode": 161,
-  "versionName": "2.7.4",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.7.4.apk",
-  "notes": "Framed CarPlay: smoother Apple-style corners, and the glow no longer picks up the CarPlay dock's colours"
+  "versionCode": 162,
+  "versionName": "2.7.5",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.7.5.apk",
+  "notes": "Framed CarPlay: corners a little less round so they don't crowd the CarPlay dock"
 }
