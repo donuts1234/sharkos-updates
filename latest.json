@@ -1,6 +1,6 @@
 {
-  "versionCode": 163,
-  "versionName": "2.8.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.8.0.apk",
-  "notes": "Framed CarPlay: Home cards, bar buttons and the whole theme now take CarPlay's colour"
+  "versionCode": 165,
+  "versionName": "2.8.2",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.8.2.apk",
+  "notes": "Bar temperatures in bordered pills; Name left/right option for bar buttons; drive-mode light flicker fix; reading lights try BYD's own switches (2 front + 2 rear)"
 }
