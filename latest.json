@@ -1,6 +1,6 @@
 {
-  "versionCode": 166,
-  "versionName": "2.9.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.9.0.apk",
-  "notes": "SharkOS Maps removed (CarPlay does navigation; Home Maps card opens CarPlay). Quick controls card now holds 6 controls you choose \u2014 hold one to change it. New controls for the card and the bar: driver/passenger/rear windows, tailgate, reading lights (test), daytime lights (test), SharkEYE on/off, save this clip, My Car, Your range."
+  "versionCode": 167,
+  "versionName": "2.9.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.9.1.apk",
+  "notes": "CarPlay calls on the driver display (with Vale's photo), cleaner Quick controls picker, new icons, reading lights and volume removed, code clean"
 }
