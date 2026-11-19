@@ -1,6 +1,6 @@
 {
-  "versionCode": 165,
-  "versionName": "2.8.2",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.8.2.apk",
-  "notes": "Bar temperatures in bordered pills; Name left/right option for bar buttons; drive-mode light flicker fix; reading lights try BYD's own switches (2 front + 2 rear)"
+  "versionCode": 166,
+  "versionName": "2.9.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.9.0.apk",
+  "notes": "SharkOS Maps removed (CarPlay does navigation; Home Maps card opens CarPlay). Quick controls card now holds 6 controls you choose \u2014 hold one to change it. New controls for the card and the bar: driver/passenger/rear windows, tailgate, reading lights (test), daytime lights (test), SharkEYE on/off, save this clip, My Car, Your range."
 }
