@@ -1,6 +1,6 @@
 {
-  "versionCode": 167,
-  "versionName": "2.9.1",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-2.9.1.apk",
-  "notes": "CarPlay calls on the driver display (with Vale's photo), cleaner Quick controls picker, new icons, reading lights and volume removed, code clean"
+  "versionCode": 168,
+  "versionName": "3.0.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.0.0.apk",
+  "notes": "New bubble look on every screen and menu, new Home and climate page, see-through climate bar, bright wallpapers (Day, Alpine, Golden), wallpaper that matches the sky outside, big CarPlay layout beside a bubble with an edge-matching glow, Automations, Grok voice (tap to talk), and a smooth drive-mode light fade."
 }
