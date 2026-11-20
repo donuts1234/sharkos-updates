@@ -1,6 +1,6 @@
 {
-  "versionCode": 169,
-  "versionName": "3.0.1",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.0.1.apk",
-  "notes": "3.0.1: send your xAI key from your phone \u2014 Settings \u2192 Grok \u2192 Show code, scan with the iPhone camera, paste, Save"
+  "versionCode": 170,
+  "versionName": "3.0.2",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.0.2.apk",
+  "notes": "3.0.2: Grok listens again for 8 s after answering, hears quieter speech (Settings \u2192 Grok \u2192 Hearing you), pauses your music while it talks, new unhinged prompt; updates now work from a private repo"
 }
