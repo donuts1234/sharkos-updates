@@ -1,6 +1,6 @@
 {
-  "versionCode": 171,
-  "versionName": "3.0.3",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.0.3.apk",
-  "notes": "Framed CarPlay: CarPlay's own picture now carries on, softly blurred, under the top bar and cards (Settings \u2192 CarPlay \u2192 Around the frame: Picture or Glow). Big-beside-a-bubble layout shows the CarPlay route's arrival time and battery/fuel on arrival."
+  "versionCode": 172,
+  "versionName": "3.1.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.0.apk",
+  "notes": "Build your own driver display: 26 widgets with versions and options, drag and resize, 4 presets per driver with night versions; calls and car warnings take over the right third. Separate Lock and Unlock buttons. Grok can use every bar control (daytime lights, demists, airflow and more), asks before moving windows while driving. Tailgate only opens in P. Updates work again."
 }
