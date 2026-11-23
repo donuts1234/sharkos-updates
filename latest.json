@@ -1,6 +1,6 @@
 {
-  "versionCode": 172,
-  "versionName": "3.1.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.0.apk",
-  "notes": "Build your own driver display: 26 widgets with versions and options, drag and resize, 4 presets per driver with night versions; calls and car warnings take over the right third. Separate Lock and Unlock buttons. Grok can use every bar control (daytime lights, demists, airflow and more), asks before moving windows while driving. Tailgate only opens in P. Updates work again."
+  "versionCode": 173,
+  "versionName": "3.1.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.1.apk",
+  "notes": "Grok credit: shows roughly how much credit is left (type what you put on, AUD or USD) and warns when it's low. When the credit runs out, Grok now says to top up at console.x.ai instead of 'xAI error 402'."
 }
