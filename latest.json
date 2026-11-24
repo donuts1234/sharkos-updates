@@ -1,6 +1,6 @@
 {
-  "versionCode": 179,
-  "versionName": "3.1.7",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.7.apk",
-  "notes": "Screens off test: one-tap Go dark (main screen, HUD, driver display, ambient, DRLs, air con, volume + music), all back after 20 s; volume control permission back"
+  "versionCode": 180,
+  "versionName": "3.1.8",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.8.apk",
+  "notes": "3.1.8: Go dark fades music out (car volume) and only cuts the fan; ADB Debugging switch in Settings > System; SharkEYE never records to the head unit, always max quality + GPU, USB folders Dashcam/Sentry each with Locked; settings scroll anywhere; easier move/resize in Build your own driver display; widgets can go higher on the driver display"
 }
