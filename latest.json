@@ -1,6 +1,6 @@
 {
-  "versionCode": 176,
-  "versionName": "3.1.4",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.4.apk",
-  "notes": "Sentry test 2: searches the car for BYD's stay-powered code, plus an adb-level keeper"
+  "versionCode": 177,
+  "versionName": "3.1.5",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.5.apk",
+  "notes": "Screens off test (Settings \u2192 SharkEYE): SharkSight's way (BYD screen saver, driver display brightness 1, HUD off), every control restores after 10 s; adb keeper fix"
 }
