@@ -1,6 +1,6 @@
 {
-  "versionCode": 181,
-  "versionName": "3.1.9",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.9.apk",
-  "notes": "3.1.9: Go dark switches the aircon straight off and puts it back exactly as it was (Auto or manual fan level, A/C, recirc, airflow)"
+  "versionCode": 182,
+  "versionName": "3.1.10",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.10.apk",
+  "notes": "Go dark keeps the aircon off (BYD's Rest scene was switching it on at fan 7); aircon comes back exactly as it was"
 }
