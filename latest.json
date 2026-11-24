@@ -1,6 +1,6 @@
 {
-  "versionCode": 184,
-  "versionName": "3.2.1",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.2.1.apk",
-  "notes": "Sentry: driver/passenger doors fixed, full quality on the GPU, your fisheye setting, keeps 1 GB free on the USB"
+  "versionCode": 185,
+  "versionName": "3.2.2",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.2.2.apk",
+  "notes": "Sentry sensitivity (Low/Normal/High), 1-minute clips that keep going while there's movement, and a new clip viewer in SharkEYE (quad or one camera, synced, movement marks)"
 }
