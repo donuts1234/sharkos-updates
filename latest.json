@@ -1,6 +1,6 @@
 {
-  "versionCode": 177,
-  "versionName": "3.1.5",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.5.apk",
-  "notes": "Screens off test (Settings \u2192 SharkEYE): SharkSight's way (BYD screen saver, driver display brightness 1, HUD off), every control restores after 10 s; adb keeper fix"
+  "versionCode": 178,
+  "versionName": "3.1.6",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.6.apk",
+  "notes": "Screens off test: BYD Scene Mode's way (driver display off, HUD off, Rest mode), each back to normal after 10 s"
 }
