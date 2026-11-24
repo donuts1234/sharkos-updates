@@ -1,6 +1,6 @@
 {
-  "versionCode": 183,
-  "versionName": "3.2.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.2.0.apk",
-  "notes": "Sentry: SharkEYE \u2192 Sentry tab. Car stays on in P but looks off; records when something moves; unlock shows Welcome back; hold 3 s to stop; out of P wakes everything"
+  "versionCode": 184,
+  "versionName": "3.2.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.2.1.apk",
+  "notes": "Sentry: driver/passenger doors fixed, full quality on the GPU, your fisheye setting, keeps 1 GB free on the USB"
 }
