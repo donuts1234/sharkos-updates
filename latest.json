@@ -1,6 +1,6 @@
 {
-  "versionCode": 187,
-  "versionName": "3.2.4",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.2.4.apk",
-  "notes": "3.2.4: smoother dashcam + sentry (every frame at 30 fps, camera timestamps, one encoder per camera), low beam on the info bar, bush filter + half-second rule for sentry movement, smoother clip playback, full screen in the clip viewer, Recording figure on Last sentry"
+  "versionCode": 188,
+  "versionName": "3.2.5",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.2.5.apk",
+  "notes": "3.2.5: SharkEYE dashcam runs in its own process \u2014 keeps recording if SharkOS crashes or is closed for memory, restarts itself after updates; sentry takes the cameras over cleanly"
 }
