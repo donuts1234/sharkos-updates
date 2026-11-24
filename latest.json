@@ -1,6 +1,6 @@
 {
-  "versionCode": 173,
-  "versionName": "3.1.1",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.1.apk",
-  "notes": "Grok credit: shows roughly how much credit is left (type what you put on, AUD or USD) and warns when it's low. When the credit runs out, Grok now says to top up at console.x.ai instead of 'xAI error 402'."
+  "versionCode": 175,
+  "versionName": "3.1.3",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.1.3.apk",
+  "notes": "Sentry test (Settings \u2192 SharkEYE), driver display take-over fix with an on/off button, new HVAC bar look"
 }
