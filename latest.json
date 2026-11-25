@@ -1,6 +1,6 @@
 {
-  "versionCode": 188,
-  "versionName": "3.2.5",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-3.2.5.apk",
-  "notes": "3.2.5: SharkEYE dashcam runs in its own process \u2014 keeps recording if SharkOS crashes or is closed for memory, restarts itself after updates; sentry takes the cameras over cleanly"
+  "versionCode": 190,
+  "versionName": "4.0.0",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-4.0.0.apk",
+  "notes": "4.0.0 Colour islands: new look that follows the song, new Home, restyled My Car / Media / Settings; CarPlay modes = BYD mode, Full screen, CarPlay + widgets (bigger, surround follows CarPlay); smoother dashcam recording + info bar"
 }
