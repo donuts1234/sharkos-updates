@@ -1,6 +1,6 @@
 {
-  "versionCode": 193,
-  "versionName": "4.3.0",
-  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-4.3.0.apk",
-  "notes": "4.3.0: Performance islands look (dunes wallpaper, dark islands, floating bar, new climate panel), Settings revamp (list on the right with summaries, big switch cards), and Blackout (both screens off, HUD on, tap to end)"
+  "versionCode": 194,
+  "versionName": "4.3.1",
+  "apkUrl": "https://raw.githubusercontent.com/donuts1234/sharkos-updates/main/apk/SharkOS-4.3.1.apk",
+  "notes": "4.3.1: Blackout now switches the driver display off (BYD Rest mode, driver display only) and keeps the aircon as you had it"
 }
